@@ -46,7 +46,9 @@ running 40 tests, your config file will get executed 40 times.
 Note that while config files are running, the current directory
 is set to the testfile's directory.  For convenience, in each
 config file, the MYFILE variable gives the full pathname to the config
-file, and MYPATH gives its dirname.
+file, and MYDIR gives just the directory portion (MYFILE and MYDIR
+are available when running the test script too -- MYDIR is just the
+current working directory).
 
 Any output produced by the config files goes straight to the screen.
 It will not contaminate the test results.  tmtest only cares about

@@ -8,11 +8,14 @@ tmtest - <<-EOL
 	it ran
 EOL
 
-# This test displays the wrong line number (it's a bash3ism, see BUGS).
-# If we convert it to "LINE" then it will never trip us up.
-MODIFY: s/line \d+/line LINE/
+# The wrong line number is displayed when the test is fed on stdin
+# as it is here.  It's a bash3ism, see BUGS.
+# Furthermore, the filename and line are never even displayed
+# on bash2.  Therefore, just wipe the filename and line nuber out
+# completely and this test should pass everywhere.
+MODIFY: s/ on.*line \d+//
 
 STDOUT:
-ABRT (STDIN)                   : assertion failed on line LINE: "-1 -eq 1"
+ABRT (STDIN)                   : assertion failed: "-1 -eq 1"
 
 1 test run, 0 successes, 1 failure.

@@ -13,9 +13,12 @@
 ASSERT ()
 {
 	if [ ! $* ]; then
-		line=${BASH_LINENO[0]}
-		file=${BASH_SOURCE[1]}
-		ABORT assertion failed on $file line $line: \"$*\"
+		msg=''
+		if [ ${BASH_VERSINFO[0]} -ge 3 ]; then
+			# bash2 doesn't provide BASH_SOURCE or BASH_LINENO
+			msg=" on ${BASH_SOURCE[1]} line ${BASH_LINENO[0]}"
+		fi
+		ABORT assertion failed$msg: \"$*\"
 	fi  
 }    
 
