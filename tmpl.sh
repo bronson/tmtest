@@ -3,6 +3,8 @@ set -e
 # PS4='TEST: '
 # set -x
 
+ADD_CWD_TO_PATH () { PATH="$(dirname ${BASH_SOURCE[1]}):$PATH"; }
+
 TITLE='%(TESTFILE)'
 AUTHOR='%(AUTHOR)'
 DATE='%(DATE)'
