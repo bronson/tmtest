@@ -1,0 +1,7 @@
+Requires:
+	re2c:     http://re2c.org/
+	libpcre:  http://pcre.org/
+
+Uses (included in the source distribution):
+	pcrs:     http://www.oesterhelt.org/pcrs/
+
