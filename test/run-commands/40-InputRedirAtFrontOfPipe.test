@@ -5,7 +5,10 @@
 # This tests a rather complex pipeline.  This example
 # comes from the testfile documentation.
 
-40-tmpfile = <<-EOF
+interpolate: stdin
+eachline: s/\/\S+tt\.file/tt.file/
+
+tt.file: file = <<-EOF
 	nope
 	just some random file contents
 	nope
@@ -16,7 +19,7 @@ EOF
 # Here we actually run the test, passing the single complex command:
 
 tmtest -o - <<-EOF
-	cat < 40-tmpfile | tr [a-z] [A-Z] | \
+	cat < $(tt.file) | tr [a-z] [A-Z] | \
 		grep -vi nope | sort
 	------ STDOUT: exit code 0 - no error
 	AYUP, SOME MORE DATA
@@ -26,7 +29,7 @@ EOF
 # And the output of the above tmtest command:
 
 ------ STDOUT: exit code 0 - no error
-cat < 40-tmpfile | tr [a-z] [A-Z] | \
+cat < tt.file | tr [a-z] [A-Z] | \
 	grep -vi nope | sort
 ------ STDOUT: exit code 0 - no error
 AYUP, SOME MORE DATA

@@ -8,12 +8,12 @@ desc:	This is exactly like 60-EachLine.test, except that the \
 
 # first we create a configuration file that specifies which command to run.
 
-/tmp/61-EachLine.conf = <<EOL
+EachLine.conf: file = <<EOL
 eachline: s/go/GO/gi;
 EOL
 
 
-tmtest -o -f /tmp/61-EachLine.conf - <<-EOL
+tmtest -o -f $(EachLine.conf) - <<-EOL
 	cat <<EOL
 	Bondage a gogo.
 	Go to work.

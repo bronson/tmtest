@@ -5,7 +5,10 @@
 # We should be able to redirect both stdout and stderr from an executed file.
 # This example comes from the testfile documentation.
 
-41-tmpfile = +x <<-EOF
+interpolate: stdin
+eachline: s/\/\S+tt\.file/tt.file/
+
+tt.file: execfile = <<-EOF
 	#!/bin/sh
 	perl -e 'print STDOUT "this goes to out\n"'
 	perl -e 'print STDERR "this goes to err\n"'
@@ -15,7 +18,7 @@ EOF
 
 tmtest -o - <<-EOF
 
-	./41-tmpfile
+	exec $(tt.file)
 
 	------ STDERR:
 	this goes to err
@@ -27,7 +30,7 @@ EOF
 
 ------ STDOUT: exit code 0 - no error
 
-./41-tmpfile
+exec tt.file
 
 ------ STDERR:
 this goes to err

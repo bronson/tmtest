@@ -11,12 +11,12 @@ tmtest -Z - <<-EOL
 
 	# ensure that tmtest can read test descriptions that contain files.
 
-	tmpfile1 = <<-EOsL
+	file1: file = <<-EOsL
 		line 1
 		line 2
 	EOsL
 
-	tmpfile2 = <<-EOsL
+	file2: file = <<-EOsL
 		line 3
 		line 4
 	EOsL
@@ -32,14 +32,15 @@ testfile: STDIN
 title: Create File
 author: Scott Bronson
 date: 29 Mar 2004
-file: tmpfile1
+
+file: file1
 file-descr:
   # ensure that tmtest can read test descriptions that contain files.
   
 file-contents:
   line 1
   line 2
-file: tmpfile2
+file: file2
 file-descr:
   
 file-contents:

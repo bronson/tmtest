@@ -1,0 +1,20 @@
+title:	Header Interp
+author:	Scott Bronson
+date:	3 Nov 2004
+
+tmtest -o - <<-EOL
+	arg: YES!
+	aname: arg
+	arg2: $($(aname))
+	echo $(arg2)
+	------ STDOUT: exit code 0 - no error
+	YES!
+EOL
+
+------ STDOUT: exit code 0 - no error
+arg: YES!
+aname: arg
+arg2: $($(aname))
+echo $(arg2)
+------ STDOUT: exit code 0 - no error
+YES!

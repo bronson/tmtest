@@ -13,18 +13,18 @@ tmtest -o - <<-EOL
 	# We test that we can create multiple files and then run multiple
 	# commands.
 
-	07-tmpfile1 = <<-EOL
+	ttf1: file = <<-EOL
 		ho!
 	EOL
 
-	07-tmpfile2 = +x <<-EOL
+	ttf2: execfile = <<-EOL
 		#!/bin/sh
 		echo "the derry-o"
 	EOL
 
 	echo "hi!"
-	cat 07-tmpfile1
-	./07-tmpfile2
+	cat $(ttf1)
+	exec $(ttf2)
 	
 	------ STDOUT: exit code 0 - no error
 	hi!
@@ -40,18 +40,18 @@ EOL
 # We test that we can create multiple files and then run multiple
 # commands.
 
-07-tmpfile1 = <<-EOL
+ttf1: file = <<-EOL
 	ho!
 EOL
 
-07-tmpfile2 = +x <<-EOL
+ttf2: execfile = <<-EOL
 	#!/bin/sh
 	echo "the derry-o"
 EOL
 
 echo "hi!"
-cat 07-tmpfile1
-./07-tmpfile2
+cat $(ttf1)
+exec $(ttf2)
 
 ------ STDOUT: exit code 0 - no error
 hi!

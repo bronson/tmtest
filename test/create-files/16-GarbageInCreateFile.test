@@ -11,7 +11,7 @@ tmtest -o - <<-EOL
 	# author: Scott Bronson
 	# date:   31 Mar 2004
 
-	10-tmpfile1 = blah blah
+	file1: file = blah blah <<EOsL
 		line 1
 		line 2
 	EOsL
@@ -22,5 +22,5 @@ tmtest -o - <<-EOL
 EOL
 
 ------ STDERR:
-STDIN line 6: garbage in file declaration: 'blah blah'
+STDIN line 9: Couldn't understand file specification: "file = blah blah <<EOsL"
 ------ STDOUT: exit code 255 - abort!

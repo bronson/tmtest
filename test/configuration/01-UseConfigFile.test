@@ -8,14 +8,14 @@ desc: 	Ensures that -f works to import a config file. \
 
 # create the config file
 
-/tmp/01-UseConfigFile.conf = <<-EOL
+tt.conf: file = <<-EOL
 	require-tmtest: 100
 EOL
 
 
 # run the test
 
-tmtest -f /tmp/01-UseConfigFile.conf - <<-EOL
+tmtest -f $(tt.conf) - <<-EOL
 	echo "may"
 	------ STDOUT: exit code 0 - no error
 	may

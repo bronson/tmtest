@@ -1,0 +1,16 @@
+title:	EnvVar
+author:	Scott Bronson
+date:	22 July 2004
+
+doc:	Ensures setting an envvar is propagated to child processes too.
+
+tmtest -o - <<-EOL
+	VAR=hi sh -c 'echo var: \$VAR'
+	------ STDOUT: exit code 0 - no error
+	hi
+EOL
+
+------ STDOUT: exit code 0 - no error
+VAR=hi sh -c 'echo var: \$VAR'
+------ STDOUT: exit code 0 - no error
+var: hi

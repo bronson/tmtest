@@ -1,0 +1,16 @@
+title:	EnvVar
+author:	Scott Bronson
+date:	22 July 2004
+
+doc:	Ensures that setting an envvar works for the immediate command.
+
+tmtest -o - <<-EOL
+	VAR=hi env | grep ^VAR
+	------ STDOUT: exit code 0 - no error
+	VAR=hi
+EOL
+
+------ STDOUT: exit code 0 - no error
+VAR=hi env | grep ^VAR
+------ STDOUT: exit code 0 - no error
+VAR=hi

@@ -1,0 +1,58 @@
+title:	Header Here
+author:	Scott Bronson
+date:	1 Nov 2004
+
+# Ensures that header continuations work.
+# Also ensures that we can execute a command interpolated from
+# a multi-line header (header that uses line continuations)
+
+tmtest -o - <<-EOL
+	title: tit
+	author: sb
+
+	arg1: <<-EOsL
+		This is some stuff
+		For the arg2 header.
+	EOsL
+
+	arg2:
+		This is some stuff
+		For the arg2 header.
+
+	arg3: This is some stuff
+		For the arg3 header.
+	
+	echo $(arg1)
+	echo $(arg2)
+	echo $(arg3)
+
+	------ STDOUT: exit code 0 - no error
+	This is some stuff For the arg1 header.
+	This is some stuff For the arg2 header.
+	This is some stuff For the arg3 header.
+EOL
+
+------ STDOUT: exit code 0 - no error
+title: tit
+author: sb
+
+arg1: <<-EOsL
+	This is some stuff
+	For the arg2 header.
+EOsL
+
+arg2:
+	This is some stuff
+	For the arg2 header.
+
+arg3: This is some stuff
+	For the arg3 header.
+
+echo $(arg1)
+echo $(arg2)
+echo $(arg3)
+
+------ STDOUT: exit code 0 - no error
+This is some stuff For the arg2 header.
+This is some stuff For the arg2 header.
+This is some stuff For the arg3 header.

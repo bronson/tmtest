@@ -1,0 +1,22 @@
+# Create After Command
+# author: Scott Bronson
+# date:   21 Nov 2004
+
+# Ensures we can pass a $ all the way out
+
+tmtest -o - <<-EOL
+	title: subtest
+
+	echo 'First \$interp'
+
+	------ STDOUT: exit code 0 - no error
+	First \\$interp
+EOL
+
+------ STDOUT: exit code 0 - no error
+title: subtest
+
+echo 'First \$interp'
+
+------ STDOUT: exit code 0 - no error
+First $interp

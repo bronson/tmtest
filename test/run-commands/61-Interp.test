@@ -1,0 +1,26 @@
+# Create After Command
+# author: Scott Bronson
+# date:   21 Nov 2004
+
+# Ensures that we can still make crfiles even after we've run a
+# command.  Technically we should fire the whole battery of
+# tests at this...
+
+tmtest -o - <<-EOL
+	title: subtest
+	interp: shot
+
+	echo 'First $(interp)'
+
+	------ STDOUT: exit code 0 - no error
+	First shot
+EOL
+
+------ STDOUT: exit code 0 - no error
+title: subtest
+interp: shot
+
+echo 'First $(interp)'
+
+------ STDOUT: exit code 0 - no error
+First shot

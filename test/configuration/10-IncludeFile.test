@@ -7,7 +7,11 @@ desc: 	Ensures that including a file works.
 
 # create the config file
 
-/tmp/10-IncludeFile.inc = <<-EOL
+# Note that we can't use a temporary crfile because we have no way
+# (currently) of modifying the heredoc to pass the filename to the
+# subprocess.  Keep things simple for now and hardcode it.
+
+/tmp/10-IncludeFile.inc: file = <<-EOL
 	new-header: yo
 EOL
 

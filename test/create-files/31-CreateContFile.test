@@ -1,0 +1,26 @@
+# Garbage In Create File
+# author: Scott Bronson
+# date:   2 Nov 2004
+
+# This is like 27, except that the = has moved to the next line.
+
+tmtest -o - <<-EOL
+	# Garbage In Create File
+	# author: Scott Bronson
+	# date:   31 Mar 2004
+
+	file1: file
+		= <<EOsL
+	Content1
+	Content2
+	EOsL
+
+	echo "This is the test"
+	cat $(file1)
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDERR:
+STDIN line 6: We don't support multi-line file declarations.
+------ STDOUT: exit code 255 - abort!

@@ -7,7 +7,7 @@ desc:	Ensures we fail if it can't parse the executable header
 
 # first we create a configuration file that specifies which command to run.
 
-/tmp/50-ExecutableHeader.conf = <<EOL
+header.conf: file = <<EOL
 executable: echo/tmp/50-ExecutableHeader.echo
 EOL
 
@@ -16,7 +16,7 @@ EOL
 # Now, run tmtest.  If everything works, it should run the fabricated
 # command in /tmp, rather than the built-in echo.
 
-tmtest -o -f /tmp/50-ExecutableHeader.conf - <<EOL
+tmtest -o -f $(header.conf) - <<EOL
 echo potato!
 ------ STDOUT: exit code 0 - no error
 one potato!

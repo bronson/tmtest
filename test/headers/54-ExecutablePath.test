@@ -2,28 +2,32 @@ title: 	Executable Header
 author:	Scott Bronson
 date: 	21 July 2004
 
-desc:	Ensures that $(PATH) substitution works
+desc:	Ensures that PATH substitution works
+
+interpolate: header.conf
 
 
-# first we create a configuration file that specifies which command to run.
+# First we create the command
 
-/tmp/54-ExecutableHeader.conf = <<EOL
-executable: echo=$(CURPATH)/54-echo.cmd
-EOL
-
-
-# Then we create the command
-
-/tmp/54-echo.cmd = +x <<EOL
+./54-echo.cmd: execfile = <<EOL
 #!/bin/sh
 echo one $*
 EOL
 
 
+# Then create the config file that runs that command
+
+header.conf: file = <<EOL
+executable: echo=$(CURPATH)/54-echo.cmd
+EOL
+
+
+
+
 # Now, run tmtest.  If everything works, it should run the fabricated
 # command in /tmp, rather than the built-in echo.
 
-tmtest -o -f /tmp/54-ExecutableHeader.conf - <<EOL
+tmtest -o -f $(header.conf) - <<EOL
 echo potato!
 ------ STDOUT: exit code 0 - no error
 one potato!

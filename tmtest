@@ -7,15 +7,20 @@
 # Copyright (C) 2000-2004 Scott Bronson, bronson@rinspin.com
 # This file is covered by the GNU GPL v2.
 
+# Please don't look at this code.  It's needed a rewrite for
+# a good three years now...
+
 
 use strict; 
+use Config;
 use Getopt::Long ();
 use File::Spec ();
 use File::Basename ();
+use File::Temp ();
 require 'shellwords.pl';
 
 use vars qw( $VERSION );
-$VERSION = "0.87";
+$VERSION = "0.88";
 
 my $diff = "/usr/bin/diff";		# full path to the diff program
 my $mv = "/bin/mv";				# the mv executable (used when exploding)
@@ -64,6 +69,11 @@ my $extract_cmd = undef;	# deprecated?
 my $custom_file = undef;
 my $debug = 0;
 my $editor = 0;
+
+# Need to know if signal raised on child is sigint.
+my %signum;
+my @signame;
+get_signals();
 
 Getopt::Long::Configure ("bundling");
 my $result = Getopt::Long::GetOptions(
@@ -121,7 +131,7 @@ if( @ARGV == 1 && $ARGV[0] eq "-" ) {
 				process_test(read_test_file($file, File::Spec->rel2abs(File::Spec->curdir()), 1));
 				chdir $cwd;
 			} else {
-				print("skip \"$_\" (filename doesn't end in .test).\n");
+				print("skip $_ (filename doesn't end in .test).\n");
 			}
 		} elsif(-d $_) {
 			# search this dir and all subdirs for tests
@@ -146,6 +156,56 @@ if($test_dumpstats && !$quiet) {
 exit 0;
 
 
+# Dunno why this isn't in the stdlibs yet!
+
+sub get_signals
+{
+	defined $Config{sig_name} or die "No signals on this system??\n";
+	my $i = 0;
+	foreach my $name (split(' ', $Config{sig_name})) {
+		$signum{$name} = $i;
+		$signame[$i] = $name;
+		$i++;
+	}
+}
+
+
+# or this!
+
+sub slurp_file
+{
+	my $file = shift;
+
+	my(@data, $data);
+
+	open FH, $file or die "can't open $file: $!\n";
+	if(wantarray) {
+		@data = <FH>;
+	} else {
+		local $/;
+		$data = <FH>;
+	}
+
+	close FH or die "cannot close $file: $!";
+
+	return wantarray ? @data : $data;
+}
+
+
+# Converts all newlines in the input string to the given $chr, space by default.
+
+sub trimnl
+{
+	my $str = shift;
+	my $chr = shift;
+	$chr = ' ' unless defined $chr;
+
+	$str =~ s/\n$//;		# trailing newline is just deleted
+	$str =~ s/\n/$chr/g;	# but all others are converted into $chr
+	return $str;
+}
+
+
 # For enabling and disabling, we support i.e. "disabled: yes, because you smell."
 # This just grabs the important fragment "yes" or "no" up front.
 
@@ -161,7 +221,7 @@ sub is_affirmative
 {
 	my $word = lc grab_frag(shift);
 
-	for(qw(y yes 1 t true)) {
+	for(qw(y yes 1 t true on)) {
 		return 1 if $word eq $_;
 	}
 
@@ -173,7 +233,7 @@ sub is_negative
 {
 	my $word = lc grab_frag(shift);
 
-	for(qw(n no 0 f false)) {
+	for(qw(n no 0 f false off)) {
 		return 1 if $word eq $_;
 	}
 
@@ -191,7 +251,7 @@ sub get_required_version
 
 	for (qw(require require-tmtest require-version version-required version)) {
 		if(exists $test->{header}->{$_}) {
-			return $test->{header}->{$_}->{value};
+			return trimnl($test->{header}->{$_}->{value}, '');
 		}
 	}
 
@@ -279,7 +339,7 @@ sub search_test_dirs
 
 		# first, process files
 		for( @names ) {
-			next if $_ eq '.' || $_ eq '..';
+			next if $_ =~ /^\./;
 			-f && /$file_re/o && process_test(
 				read_test_file($_, File::Spec->rel2abs(File::Spec->curdir()), 1));
 		}
@@ -287,7 +347,7 @@ sub search_test_dirs
 		# then, process directories
 		for( @names ) {
 			next unless $_;
-			next if $_ eq '.' || $_ eq '..';
+			next if $_ =~ /^\./;
 			next if $_ eq 'CVS';
 			-d && search_test_dirs( $_, "$base/$_" );
 		}
@@ -328,7 +388,9 @@ sub explode_file
 		mkdir($dir, 0777) or die "Couldn't create dir $dir: $!";
 	}
 
-	printf("Exploding %d cmd%s from %s...\n", 0+@{$test->{cmds}},
+	my $ncmds = @{$test->{cmds}};
+
+	printf("Exploding $ncmds cmd%s from %s...\n",
 		0+@{$test->{cmds}} == 1 ? "" : "s", $testfile);
 
 	# if the output directory already contains files, we'll move
@@ -370,20 +432,23 @@ sub explode_file
 EOL
 
 	for(my $i=1; $i <= @{$test->{cmds}}; $i++) {
-		my $filename = "$dir/cmd-$i";
-		my $herename = "$dir/here-$i";
+		my $istr = ('0' x (length($ncmds) - length($i))) . $i;
+		my $filename = "$dir/cmd-$istr";
+		my $herename = "$dir/here-$istr";
 		my $cs = get_test_cs($test, $i);
 
 		# if this command is actually a crfile, create the file
 		if($cs->{crfile}) {
-			my $name = create_crfile($cs);
-			printf("Created $name\n");
+			my $name = create_crfile($cs, $test, $herename);
+			printf("  created $name\n");
+			$test->{header}->{lc $cs->{name}} = {value => $name};
 			print RUN "# command $i created $name\n";
 			next;
 		}
 
 		my $cmd = get_executable_command($test, $cs);
-		my $here = get_heredoc($cs);
+		my $here = get_heredoc($cs, should_interpolate($test->{header}, "stdin") ?
+				$test->{header} : undef);
 
 		# create the cmd file
 		open(FD, ">$filename") or die "Couldn't open $filename: $!\n";
@@ -423,10 +488,15 @@ sub clean_results
 	return unless exists $test->{header}->{eachline};
 	my $each = $test->{header}->{eachline}->{value};
 
-	for(@{$results->{result}}, @{$results->{logfile}}) {
+	for($results->{stdout}, $results->{stderr}) {
 		my $s = $_;
-		eval $each;
-		die $@ if $@;
+		# this splits on newline but keeps the newline as a part of the preceding string
+		my @a = split(/(?<=\n)/, $_);
+		for(@a) {
+			eval $each;
+			die $@ if $@;
+		}
+		$_ = join('', @a);
 		if($debug && $s ne $_) {
 			print "Clean: old='$s' new='$_'\n";
 		}
@@ -456,6 +526,18 @@ sub process_test
 		my $cs = get_test_cs($test, $extract_here);
 		my $here = get_heredoc($cs);
 		defined $here or die "Command $extract_here does not have a here doc!\n";
+		if($cs->{crfile}) {
+			if(	should_interpolate($test->{header}, $cs->{name}) ||
+				should_interpolate($test->{header}, "files") ||
+				($cs->{executable} && should_interpolate($test->{header}, "execfiles"))
+			) {
+				$here = interpolate_headers($test->{header}, $here);
+			}
+		} else {
+			if(should_interpolate($test->{header}, "stdin")) {
+				$here = interpolate_headers($test->{header}, $here);
+			}
+		}
 		print $here;
 		exit(0);
 	} else {
@@ -481,7 +563,7 @@ sub process_test
 				}
 			} else {
 				$outword = 'dis ';
-				$skip_msg = $test->{file} . " says that it is disabled.";
+				$skip_msg = $test->{file} . " says that it is disabled.\n";
 			}
 		} else {
 			$outword = 'skip';
@@ -594,11 +676,13 @@ sub has_here_doc
 			 $cmdtrail .= ' ' if $cmdtrail && length($cmdtrail);
 			 $cmdtrail .= $_;
 		 }
-		 if(/^\<\<(\-?)(\w+)(.*)$/) {
+		 if(/^\<\<(\-?)(\w*)(.*)$/) {
 			 $pipe and parse_die($filename, $line, "We don't " .
 				"support sending here docs deep into a pipeline.\n");
 			 $strip_tabs = $1;
 			 $here_word = $2;
+			 defined($here_word) or parse_die($filename, $line,
+				"You must specify a word for the here doc.\n");
 			 $3 and parse_die($filename, $line, "Garbage after here word: $3\n");
 		 } else {
 			 $cmdbeg .= ' ' if $cmdbeg && length($cmdbeg);
@@ -610,9 +694,44 @@ sub has_here_doc
 		 parse_die($filename, $line, "garbage after here doc: '$cmdtrail'\n");
 	}
 
-	$debug and print "CmdWithoutHereWord: $cmdbeg\n";
+	# $debug and print "CmdWithoutHereWord: $cmdbeg\n";
 
 	return ($cmdbeg || $cmd, $strip_tabs, $here_word);
+}
+
+
+sub should_interpolate_proc
+{
+	my $header = shift;
+	my $area = lc shift;
+
+	return 1 if $area =~ /^commands?$/i;
+	return 1 if $area =~ /^headers?$/i;
+	return 0 unless exists $header->{interpolate};
+
+	my $interp = $header->{interpolate}->{value};
+	for(split(' ', $interp)) {
+		my $str = lc $_;
+		return 1 if $area eq $str;
+		return 1 if 'everything' eq $str || 'all' eq $str;
+		return 1 if $area eq 'files' &&
+			("allfiles" eq $str || "all-files" eq $str);
+	}
+
+	return 0;
+}
+
+
+sub should_interpolate
+{
+	my $header = shift;
+	my $area = lc shift;
+
+	# this just calls the real routine and prints its output.
+	my $val = should_interpolate_proc($header, $area);
+	$debug && print "  should_interpolate returned " .
+		($val ? "true" : "false") . " for area \"$area\"\n";
+	return $val;
 }
 
 
@@ -623,9 +742,22 @@ sub get_interp_value
 {
 	my $hdr = shift;
 	my $str = lc shift;
+	my $warn = shift;
+
+	my $var = ($warn == 2 ? $str : ($warn == 1 ? "($str)" : "{$str}"));
 
 	if(exists $hdr->{$str}) {
-		return $hdr->{$str}->{value};
+		my $val = $hdr->{$str}->{value};
+		$val =~ s/[\r\n]$//g;	# get rid of all trailing newlines
+		$debug && print "    interpolating <<<$val>>> for \"\$$var\".\n";
+		return $val;
+	} else {
+		$debug && print "    interpolating empty for \"\$$var\".\n";
+		if($warn) {
+			print STDERR "WARNING: Tried to interpolate \"\$$var\" but it doesn't exist!\n";
+			print STDERR "  Use \"\\\$$str\" to escape it and use it in the command.\n";
+			print STDERR "  Use \"\${$str}\" to make it optional.\n";
+		}
 	}
 
 	return '';
@@ -640,9 +772,62 @@ sub interpolate_headers
 	my $hdr = shift;		# all available headers
 	my $str = shift;
 
-	$str =~ s/\$\{([0-9a-zA-Z_-]+)\}/get_interp_value($hdr, $1)/ge;
-	$str =~ s/\$\(([0-9a-zA-Z_-]+)\)/get_interp_value($hdr, $1)/ge;
+	# matches a header name.
+	my $ltr = '[0-9a-zA-Z_\.\/-]+';
+
+	while($str =~ s/(^|[^\\])\$\{($ltr)\}/$1 . get_interp_value($hdr, $2, 0)/geo) {}
+	while($str =~ s/(^|[^\\])\$\(($ltr)\)/$1 . get_interp_value($hdr, $2, 1)/geo) {}
+	if( exists($hdr->{"interpolate-bare"}) && is_affirmative($hdr->{"interpolate-bare"}->{value}) ||
+		exists($hdr->{"bare-interpolation"}) && is_affirmative($hdr->{"bare-interpolation"}->{value})
+	) {
+		while($str =~ s/(^|[^\\])\$($ltr)/$1 . get_interp_value($hdr, $2, 2)/geo) {}
+	}
+	$str =~ s/\\\$/\$/g;
+	$str =~ s/\\\\/\\/g;
+
 	return $str;
+}
+
+
+sub read_heredoc
+{
+	my $line = shift;
+	my $file = shift;
+	my $filename = shift;
+	my $here_word = shift;
+	my $strip_tabs = shift;
+
+	my $here = [];
+	my $orig = [];
+
+	my $stripper = undef;
+	while($$line < @$file && $file->[$$line] ne "$here_word\n") {
+		my $ll = $file->[$$line];
+		my $llc = $ll;
+		push @$orig, $ll;
+		chomp $llc;
+		if($strip_tabs) {
+			if(!defined $stripper && $llc =~ /\S/) {
+				# define the whitespace that needs to be stripped
+				$llc =~ /^(\s+)\S/;
+				$stripper = $1;
+			}
+			# strip out the whitespace if it's identical
+			if(defined($stripper) && substr($llc,0,length $stripper) eq $stripper) {
+				substr($llc, 0, length $stripper, '');
+				substr($ll, 0, length $stripper, '');
+			}
+		}
+		$debug && print "heredoc: $ll";
+		push @$here, $ll;
+		$$line += 1;
+	}
+
+	$$line >= @$file and parse_die($filename, $$line,
+		"did you forget to terminate the here doc?\n");
+	$debug && print "hereend: $file->[$$line]";
+
+	return ($here, $orig);
 }
 
 
@@ -670,6 +855,13 @@ sub read_test_file
 # The somewhat odd header syntax (is it a header? is it a comment?) also
 # makes this routine weird.
 
+# It's rather funny.  tmtest started with comments and a single test,
+# so no continuations were needed.  When I added multiple tests, I
+# used indentation to continue.  Then I added headers, which I hacked
+# in to use \ for continuation.  Then I realized that was exactly
+# backwards and fixed it without rewriting it.  And that is why read_test
+# is so completely bonkers.
+
 sub read_test
 {
 	my $file = shift;
@@ -688,8 +880,8 @@ sub read_test
 	$test->{"desc"} = [];
 	$test->{"command"} = [];
 	$test->{"rdesc"} = [];
-	$test->{"result"} = [];
-	$test->{"logfile"} = [];
+	$test->{"stdout"} = "";
+	$test->{"stderr"} = "";
 
 	$test->{header} = {};		# hash of all headers (both in this test and inherited)
 
@@ -706,13 +898,16 @@ sub read_test
 	$test->{header}->{'curfile'} = { key => 'curfile', value => $filename };
 	$test->{header}->{'curpath'} = { key => 'curpath', value => $path };
 
-	print "Parsing $filename ----------\n" if $debug;
+	print "\n...   Parsing $filename   ...\n\n" if $debug;
 
 	my @desc;
 
 	# read the test headers
 	while($line < @$file) {
 		my $header;
+		my ($here, $orig, $post);
+		my $herepre;
+
 		# "hash" refers to the "#" character, not the hash data structure.
 		if($file->[$line] =~ /^(\#)?(\s*\S+\s*)\:(.*)$/) {
 			# this line definitely looks like a header
@@ -752,28 +947,111 @@ sub read_test
 		$header->{key} =~ s/^\s*|\s*$//g;
 		$header->{origvalue} = $header->{value};
 		$header->{value} =~ s/^\s*|\s*$//g;
+		$header->{herepre} = $header->{herepost} = "";
 
-		# slurp any lines continued by a backslash
-		while($file->[$line+1] && $file->[$line+1] =~ /^\s/) {
+		# slurp a here document if the header has one.  The here document
+		# key must be the last item on the line.
+		if($header->{value} =~ /\<\<(\-?)(\w*)\s*$/) {
+			my $strip_tabs = $1;
+			my $here_word = $2;
+			defined($here_word) or parse_die($filename, $line,
+					"You must specify a word for the here doc.\n");
 			$line += 1;
-			my $val = $file->[$line];
-			chomp $val;
-			$header->{origvalue} .= "\n" . $val;
-			$val =~ s/^\#?\s*//;
-			$header->{value} .= $val;
+			($here, $orig) = read_heredoc(\$line, $file, $filename, $here_word, $strip_tabs);
+			$post = $file->[$line];
+			$line += 1;
+		} else {
+			# slurp any lines continued by indenting
+			# You can't use continuations and heredocs in the same header.
+			# Too hard to sort the ambiguity until a rewrite happens.
+			while($file->[$line+1] && $file->[$line+1] =~ /^\s/) {
+				$line += 1;
+				my $val = $file->[$line];
+				chomp $val;
+				$header->{origvalue} .= "\n" . $val;
+				$val =~ s/^\#?\s*//;
+				$header->{value} .= (defined($header->{value}) &&
+					length($header->{value}) ? "\n" : "") . $val;
+			}
 		}
 
-		# some headers require some runtime munging...
-		$header->{value} = interpolate_headers(
-			$test->{header}, $header->{value});
+		if($debug) {
+			print "Reading header \"" . $header->{key} . "\" with a ";
+			if(defined($here)) {
+				my $cnt = @$here;
+				print "$cnt line heredoc.\n";
+			} else {
+				my $cnt = ($header->{origvalue} =~ tr/\n//);
+				print "$cnt line continuation.\n";
+			}
+		}
 
-		$debug && print "  ... stored in header: " . $header->{hash} .
-			($header->{pkey} ?
-				($header->{hash} ?
-					$header->{origkey} :
-					$header->{key}).': '
-				: '') .
-			$header->{value} . "\n";
+		# crfile magic.  this stores crfiles when declared in header.
+		# we store the crfiles declared in the body below.
+
+		# Ensure that we only check for the heredoc in the first line of the header
+		$header->{value} =~ /^([^\n]*)(.*)$/s;
+		my($hdrline, $hdrrest) = ($1, $2);
+
+		if($hdrline =~ /^\s*(exec)?file(?:$|\s*=)/i) {
+			if($hdrrest =~ /\S/) {
+				parse_die($filename, $line,
+					"We don't support multi-line file declarations.\n");
+			}
+			unless($hdrline =~ /^\s*(exec)?file\s*(?:\=\s*\<\<\S+)?\s*$/) {
+				parse_die($filename, $line,
+					"Couldn't understand file specification: \"" . trimnl($hdrline) . "\"\n");
+			}
+			my $name = $header->{key};
+			my $args = $2;
+			my $exec = (defined($1) && length($1) ? 1 : 0);
+			my $parms = {
+				desc => $header->{desc},
+				pre => [$header->{origkey} . ":" . $header->{origvalue}],
+				cmd => $header->{value},
+				executable => $exec,
+				name => $name, crfile => 1
+			};
+			if(defined $here) {
+				# file content is defined by a heredoc
+				$parms->{here} = $here;
+				$parms->{orighere} = $orig;
+				$parms->{herepost} = $post;
+			} else {
+				$args and length($args) and parse_die($filename, $line,
+					"tmtest doesn't currently support specifying files other than by heredocs\n");
+				# file is defined to be empty
+				$parms->{pre} = [trimnl($header->{origkey} . ":" . $header->{origvalue})],
+			}
+			push @{$test->{"cmds"}}, $parms;
+			$debug && print "  ...stored in file '$name'\n";
+			next;
+		}
+
+		if(defined $here) {
+			unless($header->{value} =~ /^\s*\<\<(\-?)(\w*)\s*$/) {
+				parse_die($filename, $line,
+					"If you define a header using a heredoc, the heredoc tag is the only thing that can appear on the same line as the header.\n");
+			}
+			$header->{herepre} = $header->{origvalue} . "\n";
+			$header->{value} = join("", @$here);
+			$header->{origvalue} = join("", @$orig);
+			$header->{herepost} = $post;
+		}
+
+		if(should_interpolate($header, "headers")) {
+			my $str = $header->{value};
+			$header->{value} = interpolate_headers(
+				$test->{header}, $header->{value});
+			if($str ne $header->{value}) {
+				$debug && print "  old value: " . (defined($str) ? "<<<$str>>>" : "(undef)")  . "\n";
+				$debug && print "  new value: <<<" . $header->{value} . ">>>\n";
+			} else {
+				$debug && print "  but interpolating didn't change the header's value.\n";
+			}
+		}
+
+		$debug && print "  ... stored header \"" . $header->{key} . "\".\n";
 		push @{$test->{headers}}, $header;
 
 		my $key = lc $header->{key};
@@ -811,13 +1089,28 @@ sub read_test
 		# of the output clause.
 		last if $file->[$line] =~ /^\-\-\-\-/;
 
-		# collect all lines that end with a continuation char
 		my @command = ();
-		while($line < @$file) {
-			$debug && print "command: $file->[$line]";
+		# header hack -- different continuation if it's a header vs. a command.
+		# luckily we don't allow continued file headers.  Needs a rewrite.
+		if($file->[$line] =~ /^\s*\S+\s*\:\s*(?:exec)?file(.*)$/ &&
+			defined($1) && $1 !~ /\<\<\S/)
+		{
+			# File declaration without a heredoc.  Need to check for continuation.
+			if($file->[1+$line] =~ /^\s+\S/) {
+				parse_die($filename, $line,
+					"We don't support multi-line file declarations.\n");
+			}
 			push @command, $file->[$line];
 			chomp $command[-1];
-			last unless $file->[$line++] =~ /\\\s*$/;
+			$line += 1;
+		} else {
+			# not a header
+			# collect all lines that end with a continuation char
+			while($line < @$file) {
+				push @command, $file->[$line];
+				chomp $command[-1];
+				last unless $file->[$line++] =~ /\\\s*$/;
+			}
 		}
 
 		# convert the command into a single line
@@ -829,7 +1122,7 @@ sub read_test
 			$cmd .= ' ' if length $cmd;
 			$cmd .= $_;
 		}
-		$debug && print "cmd: $cmd\n";
+		$debug && print "command: $cmd\n";
 
 		# did the previous line contain a here document?  if so, collect it.
 		my $orig = undef;	# orignal here document, w/o tab stripping
@@ -838,58 +1131,39 @@ sub read_test
 		
 		my ($cmdbeg, $strip_tabs, $here_word) = has_here_doc($cmd, $filename, $line);
 		if($here_word) {
-			$here = [];
-			$orig = [];
-			my $stripper = undef;
-			while($line < @$file && $file->[$line] ne "$here_word\n") {
-				my $ll = $file->[$line];
-				my $llc = $ll;
-				push @$orig, $ll;
-				chomp $llc;
-				if($strip_tabs) {
-					if(!defined $stripper && $llc =~ /\S/) {
-						# define the whitespace that needs to be stripped
-						$llc =~ /^(\s+)\S/;
-						$stripper = $1;
-					}
-					# strip out the whitespace if it's identical
-					if(defined($stripper) && substr($llc,0,length $stripper) eq $stripper) {
-						substr($llc, 0, length $stripper, '');
-						substr($ll, 0, length $stripper, '');
-					}
-				}
-				$debug && print "heredoc: $ll";
-				push @$here, $ll;
-				$line += 1;
-			}
-
-			$line >= @$file and parse_die($filename, $line,
-				"did you forget to terminate the here doc?\n");
-			$debug && print "hereend: $file->[$line]";
+			($here, $orig) = read_heredoc(\$line, $file, $filename, $here_word, $strip_tabs);
 			$post = $file->[$line];
 			$line += 1;
 		}
 
 		# the previous block must have either been a command or a file.
-		# store it in the appropriate place.
-		if($cmdbeg =~ /^\s*((?:\S|\\\s)+)\s*\=\s*(\S.*)?$/) {
-			my ($name, $args) = ($1, $2);
-			my $exec = 0;
-			if(defined $args && length $args) {
-				if($args =~ /^\s*\+x\s*$/) {
-					$exec = 1;
-				} else {
+		# now decide which one and store it appropriately.
+		if($cmdbeg =~ /^\s*(\S+)\s*\:\s*(exec)?file/) {
+			my $name = $1;
+			my $exec = (defined($2) && length($2) ? 1 : 0);
+			my $parms = {
+				desc => [@desc],
+				pre => [@command],
+				cmd => $cmd,
+				executable => $exec,
+				name => $name,
+				crfile => 1
+			};
+
+			if($cmdbeg =~ /^\s*(\S+)\s*\:\s*(exec)?file\s*$/) {
+				# empty file -- do nothing
+			} else {
+				# hereword has already been stripped and heredoc slurped.
+				unless($cmdbeg =~ /^\s*(\S+)\s*\:\s*(exec)?file\s*\=\s*$/) {
 					parse_die($filename, $line,
-						"garbage in file declaration: '$args'\n")
-						if $args && length $args;
+						"Couldn't understand file specification: \"$cmdbeg\"\n");
 				}
+				$parms->{here} = $here;
+				$parms->{orighere} = $orig;
+				$parms->{herepost} = $post;
 			}
 
-			push @{$test->{"cmds"}}, {
-				desc => [@desc], pre => [@command], cmd => $cmd,
-				here => $here, orighere => $orig, herepost => $post,
-				executable => $exec, name => $name, crfile => 1
-			};
+			push @{$test->{"cmds"}}, $parms;
 			$debug && print "  ...stored in file '$name'\n";
 		} else {
 			push @{$test->{cmds}}, {
@@ -927,8 +1201,7 @@ sub read_test
 		$line += 1;
 		until( $line >= @$file || $file->[$line] =~ /^\-\-\-\-/ ) {
 			$debug && print "error: " . $file->[$line];
-			push @{$test->{"logfile"}}, $file->[$line];
-			chomp $test->{"logfile"}->[-1];
+			$test->{stderr} .= $file->[$line];
 			$line += 1;
 		}
 		$line >= @$file && parse_die($filename, $line, "Could not find output clause.\n");
@@ -951,8 +1224,7 @@ sub read_test
 
 	while($line < @$file) {
 		$debug && print "output: " . $file->[$line];
-		push @{$test->{"result"}}, $file->[$line];
-		chomp $test->{"result"}->[-1];
+		$test->{stdout} .= $file->[$line];
 		$line += 1;
 	}
 
@@ -1002,13 +1274,15 @@ sub print_test
 	print "result descr:\n";
 	for(@{$test->{rdesc}}) { print "  $_\n"; }
 
-	print "logfile:\n";
-	for(@{$test->{logfile}}) { print "  $_\n"; }
+	print "logfile:";
+	for(split('\n', $test->{stderr})) { print "\n  $_"; }
+	print "\n";
 
-	print "exit status: $test->{exitvalue}\n";
+	print "exit status: " . $test->{exitvalue} . "\n";
 
-	print "result:\n";
-	for(@{$test->{result}}) { print "  $_\n"; }
+	print "result:";
+	for(split('\n', $test->{stdout})) { print "\n  $_"; }
+	print "\n";
 }
 
 
@@ -1033,7 +1307,8 @@ sub print_results
 		}
 		print(($header->{hash} || '') .
 			($header->{pkey} ? $header->{origkey}.':' : '') .
-			$header->{origvalue} . "\n");
+			$header->{herepre} . $header->{origvalue} .
+			$header->{herepost} . "\n");
 	}
 	for my $cs (@{$test->{cmds}}) {
 		for(@{$cs->{desc}}) { print "$_\n"; }
@@ -1048,12 +1323,17 @@ sub print_results
 		}
 	}
 	for(@{$test->{rdesc}}) { print "$_\n"; }
-	if(@{$results->{"logfile"}}) {
+	if(length($results->{stderr})) {
 		print "------ STDERR:\n";
-		for(@{$results->{"logfile"}}) { print "$_\n"; };
+		print $results->{stderr};
+		# need to add a newline to separate the output sections
+		# even if there wasn't a newline in the actual output.
+		print "\n" unless $results->{stderr} =~ /\n$/;
 	}
 	print "------ STDOUT: $exitval\n";
-	for(@{$results->{"result"}}) { print "$_\n"; }
+	print $results->{stdout};
+	# but no need to print a newline here.  user will be able to see
+	# if test ends in a newline or not.
 }
 
 
@@ -1067,12 +1347,12 @@ sub diff_results
 	my $oldfd = select(FD);
 	print_results($test, $results);
 	select($oldfd);
-	my $done = close(FD);
+	close(FD);
+
 	# diff returns an exit code of 0 if the files are identical,
 	# 1 if they're different, and 2 if there was an error.  So,
-	# we'll assume success if it returns 0 or 1.
-	die "$diff returned $?: $!\n" unless $done == (0<<8) || $done == (1<<8);
-	print("\n\n");
+	# we'll assume success if it returns 0 or 1 and didn't signal or core.
+	die "$diff returned $?: $!\n" unless $? == (0<<8) || $? == (1<<8);
 }
 
 
@@ -1120,33 +1400,46 @@ sub get_executable_command
 	my $test = shift;
 	my $cs = shift;
 
-	my $cmd = $cs->{cmd};
-	return $cmd unless exists $test->{header}->{executable};
-
-	# separate out each executable
-	my %sub;
-	for(shellwords($test->{header}->{executable}->{value})) {
-		my($key, $val) = /^([^=]+)=(.*)$/
-			or die "Needs an '=' (cmd=path/to/cmd): $_\n";
-		$sub{$key} = $val;
-	}
-
-	# split the string as the shell would.  Then, the first word
-	# and the first word after each pipe char is the command.
-	my @words = subtle_shellwords($cmd);
-	my $is_cmd = 1;
 	my $str = '';
-	for(@words) {
-		$str .= ' ' if length($str);
-		if($is_cmd) {
-			$str .= do_cmd_sub(\%sub, $_, $test->{header});
-		} else {
-			$str .= $_;
+	my $cmd = $cs->{cmd};
+	if(exists $test->{header}->{executable}) {
+		# separate out each executable
+		my %sub;
+		for(shellwords($test->{header}->{executable}->{value})) {
+			my($key, $val) = /^([^=]+)=(.*)$/
+				or die "Needs an '=' (cmd=path/to/cmd): $_\n";
+			$sub{$key} = $val;
 		}
-		$is_cmd = ($_ eq '|');
+
+		# split the string as the shell would.  Then, the first word
+		# and the first word after each pipe char is the command.
+		my @words = subtle_shellwords($cmd);
+		my $is_cmd = 1;
+		for(@words) {
+			$str .= ' ' if length($str);
+			if($is_cmd) {
+				$str .= do_cmd_sub(\%sub, $_, $test->{header});
+			} else {
+				$str .= $_;
+			}
+			$is_cmd = ($_ eq '|');
+		}
+	} else {
+		$str = $cmd;
 	}
 
-	return interpolate_headers($test->{header}, $str);
+	if(should_interpolate($test->{header}, "commands")) {
+		my $old = $str;
+		$str = interpolate_headers($test->{header}, $str);
+		if($old ne $str) {
+			$debug && print "  old value: " . (defined($old) ? "<<<$old>>>" : "(undef)")  . "\n";
+			$debug && print "  new value: <<<$str>>>\n";
+		} else {
+			$debug && print "  but interpolating didn't change the command's value.\n";
+		}
+	}
+
+	return trimnl($str);
 }
 
 
@@ -1155,9 +1448,12 @@ sub get_executable_command
 sub get_heredoc
 {
 	my $cs = shift;
+	my $hdr = shift;
 
 	if(exists $cs->{here} && defined $cs->{here}) {
-		return join('', @{$cs->{here}});
+		my $val = join('', @{$cs->{here}});
+		$val = interpolate_headers($hdr, $val) if $hdr;
+		return $val;
 	}
 
 	return undef;
@@ -1167,15 +1463,52 @@ sub get_heredoc
 sub create_crfile
 {
 	my $file = shift;
+	my $test = shift;
+	my $dstfile = shift;
 
 	my $name = $file->{name};
-	$debug && print "Creating file: '$name'\n";
-	open(FH, ">$name") or die "Could not create $name\: $!\n";
-	my $here = get_heredoc($file);
-	print FH $here if defined $here;
-	close FH;
+
+#	my $extension = "";
+#	if($name =~ /(\.[^\/]+)$/) {
+#		$extension = $1;
+#	}
+
+	my $template = "tmtest-$$.XXXXXX";
+
+	# check to see if filename includes path operations
+	if($name =~ /^(.*\/)?([^\/]*)$/) {
+		die "Illegal file name \"$name\"\n" unless defined($2) && length($2);
+		$template = undef if $1;
+	}
+
+	my $fh;
+	if($template) {
+		if($dstfile) {
+			$name = $dstfile;
+			open($fh, ">$name") or die "Could not create $name\: $!\n";
+		} else {
+			($fh, $name) = File::Temp::tempfile($template,
+				SUFFIX => ".$name", DIR => File::Spec->tmpdir);
+		}
+	} else {
+		open($fh, ">$name") or die "Could not create $name\: $!\n";
+	}
+	$debug && print "  created file: '$name'\n";
+	my $header;
+	if(	should_interpolate($test->{header}, $file->{name}) ||
+		should_interpolate($test->{header}, "files") ||
+		($file->{executable} && should_interpolate($test->{header}, "execfiles"))
+	) {
+		$header = $test->{header};
+	}
+
+	my $here = get_heredoc($file, $header);
+	$debug && print "  filled it with <<<$here>>>\n";
+	print $fh $here if defined $here;
+	close $fh;
+
 	if($file->{executable}) {
-		$debug && print "   ... and marking it executable.\n";
+		$debug && print "   ... and marked it executable.\n";
 		# leave permissions as-is except mark all executable.
 		chmod( ((stat($name))[2])|0777, $name );
 	}
@@ -1189,34 +1522,46 @@ sub run_test
 	my $test = shift;
 
 	my $result = {
-			# organized by command:
-			"cmdout" => [],
-			"cmderr" => [],
-			"cmdexit" => [],
-			# aggregated:
-			"result" => [],
-			"logfile" => [],
-			"exitvalue" => 0,
+			"stdout" => "",		# aggregated stdout
+			"stderr" => "",		# aggregated stderr
+			"exitvalue" => 0,	# nonzero if any command returned an error
 		};
 
 	my %unlink = ();
 
+	print "\n...   Running Tests   ...\n\n" if $debug;
+
+	my $index = 0;
 	for my $cs (@{$test->{cmds}}) {
 
+		$debug && print "Reading command " . ++$index . ".\n";
+
 		if($cs->{crfile}) {
-			my $name = create_crfile($cs);
+			my $name = create_crfile($cs, $test);
+			# add the created file to the headers
+			$debug && print "  added header \"" . $cs->{name} . "\" value \"$name\"\n";
+			$test->{header}->{lc $cs->{name}} = {value => $name};
 			$unlink{$name}++;
 			next;
 		}
 
 		my $cmd = get_executable_command($test, $cs);
-		my $here = get_heredoc($cs);
+		my $here = get_heredoc($cs, should_interpolate($test->{header}, "stdin") ?
+				$test->{header} : undef);
 
-		my $stdout = "/tmp/tmtest.$$.".(1+@{$result->{result}}).".stdout";
-		my $stderr = "/tmp/tmtest.$$.".(1+@{$result->{result}}).".stderr";
+		my (undef, $stdout) = File::Temp::tempfile("tmtest.$$.XXXXXX",
+			SUFFIX => ".stdout", DIR => File::Spec->tmpdir);
+		my (undef, $stderr) = File::Temp::tempfile("tmtest.$$.XXXXXX",
+			SUFFIX => ".stderr", DIR => File::Spec->tmpdir);
 
-		$debug && print "Running command: $cmd\n";
-		$debug && defined($here) && print "Feeding on stdin: <<<$here>>>\n";
+		if($debug) {
+			print "  output to $stdout\n  error to $stderr\n";
+			if(defined($here)) { 
+				print "  feeding on stdin: <<<$here>>>\n";
+			} else {
+				print "  not passing anything to command on stdin.\n";
+			}
+		}
 
 		# can't use Perl open or system calls because we need to
 		# redirect stdout and stderr before execing.
@@ -1224,6 +1569,7 @@ sub run_test
 		$SIG{PIPE} = 'IGNORE';
 		$SIG{ABRT} = sub { die "child aborted!\n" };
 		pipe RH,WH;
+		$debug && print "  Running command: $cmd\n";
 		my $pid = fork();
 		if($pid == 0) {
 			# child
@@ -1251,11 +1597,17 @@ sub run_test
 		my $signal_num  = $? & 127;
 		my $dumped_core = $? & 128;
 
+		# If sigint was raised on child, raise sigint on tmtest.
+		# Otherwise it can be very difficult to cancel a test.
+		# We won't raise ther signals like ABRT (i.e. assert()) on tmtest.
+		if($signame[$signal_num] eq 'INT') {
+			kill $signal_num => $$;
+		}
 
-		# If our child got a signal, raise the very same signal on
-		# ourselves.  This is so we interrupt cleanly if the
-		# user hits interrupt while a test is running.
-		$signal_num && kill $signal_num => $$;
+		if($signal_num && $debug) {
+			print "CHILD DIED BY SIGNAL $signal_num: SIG" .
+				$signame[$signal_num] . "\n";
+		}
 
 		if( $exit_value_hack ) {
 			# This is a gross, awful, kludgy hack.  @-n needs to return
@@ -1266,57 +1618,33 @@ sub run_test
 			$exit_value = 0 if $exit_value == 125;
 		}
 		
-		my $cmdout = -f $stdout ? read_file($stdout) : [];
-		my $cmderr = -f $stderr ? read_file($stderr) : [];
-		# store results individually
-		push @{$result->{cmdout}}, $cmdout;
-		push @{$result->{cmderr}}, $cmderr;
-		push @{$result->{cmdexit}}, $exit_value;
-		# also store results as strings (not sure why anymore...)
-		push @{$result->{result}}, @$cmdout;
-		push @{$result->{logfile}}, @$cmderr;
+		$result->{stdout} .= slurp_file($stdout) if -f $stdout;
+		$result->{stderr} .= slurp_file($stderr) if -f $stderr;
 		$result->{exitvalue} = $exit_value;
 
-		last if $exit_value;
-	
-		-f $stdout && (unlink $stdout or die "Couldn't unlink $stdout: $!\n");
-		-f $stderr && (unlink $stderr or die "Couldn't unlink $stderr: $!\n");
+		if(-f $stdout) {
+			unlink $stdout or die "Couldn't unlink $stdout: $!\n";
+			$debug && print "  Removed $stdout\n";
+		}
+		if(-f $stderr) {
+			unlink $stderr or die "Couldn't unlink $stderr: $!\n";
+			$debug && print "  Removed $stderr\n";
+		}
+
+		last if $exit_value or $signal_num;
 	}
 
-	# don't delete the transient files if the test exited with an error.
-	# the user might want to look at them.
+	# delete the transient files
 	if(keys %unlink) {
-		if($? == 0) {
-			my $num = unlink(keys %unlink);
-			$debug && print "Removed $num files: (" . join(", ", keys %unlink) . ")\n";
-			$debug && $num != (keys %unlink) && print "   Error was: $!\n";
-		} else {
-			$debug && print "Test resulted in an error -- not removing files.\n";
-		}
+		my $num = unlink(keys %unlink);
+		$debug && print "Removed $num files: (" . join(", ", keys %unlink) . ")\n";
+		$debug && $num != (keys %unlink) && print "   Error was: $!\n";
 	}
+
+	$debug && print "Done running tests!\n\n";
 
 	return $result;
 }
-
-
-sub compare_arrays 
-{
-	# returns 0 if they differ, 1 if the same
-	my ($first, $second) = @_;
-
-	return 0 unless @$first == @$second;
-
-	for( my $i = 0; $i < @$first; $i++ )
-	{
-		return 0 if
-			not defined $first->[$i] or
-			not defined $second->[$i] or
-			$first->[$i] ne $second->[$i];
-	}
-
-	return 1;
-}
-
 
 
 sub check_results
@@ -1326,8 +1654,8 @@ sub check_results
 
 	# return 0 if they differ, 1 if the same
 	return 0 if
-		!compare_arrays($test->{"logfile"}, $results->{"logfile"}) ||
-		!compare_arrays($test->{"result"}, $results->{"result"}) ||
+		$test->{"stdout"} ne $results->{"stdout"} ||
+		$test->{"stderr"} ne $results->{"stderr"} ||
 		$test->{"exitvalue"} != $results->{"exitvalue"};
 
 	return 1;

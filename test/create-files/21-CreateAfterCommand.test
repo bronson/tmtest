@@ -1,0 +1,90 @@
+# Create After Command
+# author: Scott Bronson
+# date:   21 Nov 2004
+
+# Ensures that we can still make crfiles even after we've run a
+# command.  Technically we should fire the whole battery of
+# tests at this...
+
+tmtest -o - <<-EOL
+	title: subtest
+
+	echo "First command"
+
+	file1: file = <<-EOsL
+		line 1
+		line 2
+	EOsL
+
+	file2.ext  : execfile= <<-EOsL
+		#!/bin/sh
+		echo line 3
+		echo line 4
+	EOsL
+
+	  /tmp/file3.ext: execfile = <<-EOsL
+		#!/bin/sh
+		echo line 5
+		echo line 6
+	EOsL
+
+	echo "Second command"
+
+	cat $(file1)
+	exec $(file2.ext)
+	/tmp/file3.ext
+
+	echo "Third command"
+
+	------ STDOUT: exit code 0 - no error
+	First command
+	Second command
+	line 1
+	line 2
+	line 3
+	line 4
+	line 5
+	line 6
+	Third command
+EOL
+
+------ STDOUT: exit code 0 - no error
+title: subtest
+
+echo "First command"
+
+file1: file = <<-EOsL
+	line 1
+	line 2
+EOsL
+
+file2.ext  : execfile= <<-EOsL
+	#!/bin/sh
+	echo line 3
+	echo line 4
+EOsL
+
+  /tmp/file3.ext: execfile = <<-EOsL
+	#!/bin/sh
+	echo line 5
+	echo line 6
+EOsL
+
+echo "Second command"
+
+cat $(file1)
+exec $(file2.ext)
+/tmp/file3.ext
+
+echo "Third command"
+
+------ STDOUT: exit code 0 - no error
+First command
+Second command
+line 1
+line 2
+line 3
+line 4
+line 5
+line 6
+Third command

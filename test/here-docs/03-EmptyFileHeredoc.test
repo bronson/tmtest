@@ -10,9 +10,9 @@ tmtest -o - <<-EOL
 	# author: Scott Bronson
 	# date:   29 Mar 2004
 
-	/tmp/03-tmpfile = <<-EOsL
+	tt: file = <<-EOsL
 	EOsL
-	cat /tmp/03-tmpfile
+	cat $(tt)
 	echo "nada"
 
 	------ STDOUT: exit code 0 - no error
@@ -24,9 +24,9 @@ EOL
 # author: Scott Bronson
 # date:   29 Mar 2004
 
-/tmp/03-tmpfile = <<-EOsL
+tt: file = <<-EOsL
 EOsL
-cat /tmp/03-tmpfile
+cat $(tt)
 echo "nada"
 
 ------ STDOUT: exit code 0 - no error

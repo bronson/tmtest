@@ -1,0 +1,36 @@
+# Garbage In Create File
+# author: Scott Bronson
+# date:   2 Nov 2004
+
+# Ensures we can create and use an empty file.
+
+tmtest -o - <<-EOL
+	# Garbage In Create File
+	# author: Scott Bronson
+	# date:   31 Mar 2004
+
+	echo "Precommand"
+
+	file1: file
+
+	echo -n "File size: "
+	stat -c %s $(file1)
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Garbage In Create File
+# author: Scott Bronson
+# date:   31 Mar 2004
+
+echo "Precommand"
+
+file1: file
+
+echo -n "File size: "
+stat -c %s $(file1)
+
+------ STDOUT: exit code 0 - no error
+Precommand
+File size: 0

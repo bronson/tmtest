@@ -13,17 +13,17 @@ tmtest - <<-EOL
 	# this test the code path where we can't create the file.
 	# directories a/b/c/d should not exist.
 
-	11-tmpfile = <<-EOsL
+	file1: file = <<-EOsL
 		line 1
 		line 2
 	EOsL
 
-	11-tmpfile = <<-EOsL
+	file1: file = <<-EOsL
 		line 3
 		line 4
 	EOsL
 
-	cat 11-tmpfile
+	cat $(file1)
 
 	------ STDOUT: exit code 0 - no error
 	line 3

@@ -11,7 +11,9 @@ tmtest -o - <<-EOL
 	# author: Scott Bronson
 	# date:   31 Mar 2004
 
-	10-tmpfile1 = garbage garbage +x blah blah <<EOsL
+	echo "First a command"
+
+	file1: execfile = blah blah <<EOsL
 		line 1
 		line 2
 	EOsL
@@ -22,5 +24,5 @@ tmtest -o - <<-EOL
 EOL
 
 ------ STDERR:
-STDIN line 9: garbage in file declaration: 'garbage garbage +x blah blah'
+STDIN line 11: Couldn't understand file specification: "file1: execfile = blah blah"
 ------ STDOUT: exit code 255 - abort!

@@ -4,15 +4,17 @@ date: 	22 July 2004
 
 desc:	Ensures that the eachline header works.
 
+# TODO: if you change Hi.conf to anything else (Hia.conf),
+# something goes into an infinite loop.
 
 # first we create a configuration file that specifies which command to run.
 
-/tmp/60-EachLine.conf = <<EOL
+Hi.conf: file = <<EOL
 eachline: s/go/GO/gi
 EOL
 
 
-tmtest -o -f /tmp/60-EachLine.conf - <<-EOL
+tmtest -o -f $(Hi.conf) - <<-EOL
 	cat <<EOL
 	Bondage a gogo.
 	Go to work.

@@ -2,30 +2,31 @@ title: 	Executable Header
 author:	Scott Bronson
 date: 	21 July 2004
 
-desc:	Ensures that $(PATH) substitution works more than once.
+desc:	Ensures that PATH substitution works more than once.
 
 #		(I originally forgot the g at the end of the s///g)
 
 
-# first we create a configuration file that specifies which command to run.
+# First create the command to run.
 
-/tmp/55-ExecutableHeader.conf = <<EOL
-executable: echo1=$(CURPATH)/55-echo.cmd echo2=$(CURPATH)/55-echo.cmd
-EOL
-
-
-# Then we create the command
-
-/tmp/55-echo.cmd = +x <<EOL
+./55-echo.cmd: execfile = <<EOL
 #!/bin/sh
 echo one $*
 EOL
 
 
+# first we create a configuration file that specifies which command to run.
+
+./55-ExecutableHeader.conf: file = <<EOL
+executable: echo1=$(CURPATH)/55-echo.cmd echo2=$(CURPATH)/55-echo.cmd
+EOL
+
+
+
 # Now, run tmtest.  If everything works, it should run the fabricated
 # command in /tmp, rather than the built-in echo.
 
-tmtest -o -f /tmp/55-ExecutableHeader.conf - <<EOL
+tmtest -o -f ./55-ExecutableHeader.conf - <<EOL
 echo1 potato!
 echo2 potato!
 ------ STDOUT: exit code 0 - no error

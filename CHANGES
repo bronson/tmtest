@@ -1,16 +1,59 @@
-0.9 TODO
-- make -df (debug config file) -dp (debug testfile parsing) -dc (syntax check) -dh (dump headers)
-- keywords?
+Changes that potentially break backward compatibility
+are marked with a '*'.
 
-0.88:
-- make debugging output much more presentable
-- make tmtest work with test files starting with a shebang
-- get rid of exit_value_hack
-- add an alarm that will time out a stalled child processes
+TODO:
+- make patching work when you supply multiple files
+- define headers on cmdline using -Dheader=value or --define-header=header=value
 - allow headers or options to tell where to explode the file
-- fix the goddamn headers once and for all
 - make it read a global configuration from /etc
-- make it unnecessary to enter filenames: it should name them for you.  Maybe :1:, then substitute $1 in the commands.
+- get rid of exit_value_hack
+- make tmtest work with test files starting with a shebang
+- add an alarm that will time out a stalled child processes
+- maybe allow crfiles to work backwards too: "execfile: postscr = <<EOF".  Seems more natural, though technically wrong.
+- work with spaces in the filenames.
+- maybe make headers use = as well as :, might appear cleaner for some headers.
+  - we can do this now that we're not using = to specify a crfile.
+  - this would also allow us to add += to replace "hdr = $(hdr) blah"
+- rename the eachline header, mabye fixstdout, fixstderr, and fixoutput?
+- make debugging output much more presentable.
+  - Split into parsing debug and running debug.
+  - Turn it back into a one-letter option(s).
+  - make -xf (debug config file) -xp (debug testfile parsing) -xc (syntax check) -dh (dump headers)
+- fix the goddamn headers once and for all and break backward compat.
+  - this will require rewriting the testfile parser.  Maybe move to C?
+  - make headers and commands able to come in any order in the testfile.
+  - get rid of test title grandfathering.
+  - make it take the test title from the filename if a title isn't specified.
+  - take the date from the mtime of the testfile if not specified?
+- maybe backslash is overloaded.  $$ should escape a $ when interpolating, not \$?
+- maybe add a switch to turn off header and command interpolation.
+- maybe implement a related-to header, where a test can name related tests.
+- maybe implement a keyword header and search?  add keywords to tests?
+- maybe write a gui front-end
+
+0.88:	3 Nov 2004		169/169 tests passed
+- Made interpolation support indirect args: $($(argname))
+- Turned off bare interpolation, added interpolate-bare header to re-enable.
+- Turned off interpolation by default, added the interpolate header to re-enable.
+- Now supports setting environment variables using "VAR=val cmd"
+- Simplified output processing, got rid of erroneous newlines.
+- got rid of "+x" to mark a crfile executable.  It's now "execfile=".
+- Made tmtest safer against tmpfile attacks. (no guarantee of coure over what tests do)
+- create files are always deleted after the test runs regardless of success/fail.
+* Changed the create file syntax since it conflicts with sh's setting of environment vars.
+  It also resembles headers now so should be easier to remember.
+  However, it breaks backward compatibility with testfiles that use createfiles.
+- Added temporary create files.  Should always use this over traditional create files.
+- Made headers preserve newlines in continuations.
+  (the nls are converted to spaces when the command is executed).
+- Added a warning when $(paren) or $bare and interpolating a nonexistant header.
+- Now you can escape interpolations to pass $s on to the shell.
+- Re-implemented bare interpolation.  Not sure I'm going to leave it in though.
+- Now path search skips hidden files and directories.
+- tmtest used to raise every child signal on itself.  Now only does it for INT.
+- added header interpolation in heredocs and stdin.  dangerous... but very useful.
+- Added support for heredocs in headers (been doc'd for a while but never impl'd).
+- Start converting all -Z tests that fail to -o tests.  -Z exposes too many internals.
 
 0.87:	29 Sep 2004
 - Now uses Getopt::Long for more sensible argument handling.

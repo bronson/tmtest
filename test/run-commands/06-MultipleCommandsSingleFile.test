@@ -13,12 +13,12 @@ tmtest -o - <<-EOL
 	# Demonstrates running multiple commands when we also specify a
 	# single file
 
-	06-tmpfile = <<-EOL
+	ttf: file = <<-EOL
 		ho!
 	EOL
 	
 	echo "hi!"
-	cat 06-tmpfile
+	cat $(ttf)
 	echo "the derry-o"
 	
 	------ STDOUT: exit code 0 - no error
@@ -35,12 +35,12 @@ EOL
 # Demonstrates running multiple commands when we also specify a
 # single file
 
-06-tmpfile = <<-EOL
+ttf: file = <<-EOL
 	ho!
 EOL
 
 echo "hi!"
-cat 06-tmpfile
+cat $(ttf)
 echo "the derry-o"
 
 ------ STDOUT: exit code 0 - no error

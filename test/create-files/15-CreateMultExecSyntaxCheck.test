@@ -13,12 +13,12 @@ tmtest -Z - <<-EOL
 	# Ensures that the syntax check code works properly with multiple
 	# files, even when the files are marked executable.
 
-	10-tmpfile1 = +x <<-EOsL
+	file1: execfile = <<-EOsL
 		line 1
 		line 2
 	EOsL
 
-	10-tmpfile2 = +x <<-EOsL
+	file2: execfile = <<-EOsL
 		line 3
 		line 4
 	EOsL
@@ -37,7 +37,8 @@ testfile: STDIN
 title: Create File
 author: Scott Bronson
 date: 30 Mar 2004
-file: 10-tmpfile1   (executable)
+
+file: file1   (executable)
 file-descr:
   # Ensures that the syntax check code works properly with multiple
   # files, even when the files are marked executable.
@@ -45,7 +46,7 @@ file-descr:
 file-contents:
   line 1
   line 2
-file: 10-tmpfile2   (executable)
+file: file2   (executable)
 file-descr:
   
 file-contents:

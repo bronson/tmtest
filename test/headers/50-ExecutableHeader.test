@@ -3,27 +3,28 @@ author:	Scott Bronson
 date: 	21 July 2004
 
 desc:	Ensures that the executable header works.
+interpolate: exec.conf
 
 
-# first we create a configuration file that specifies which command to run.
+# First create the command file.
 
-/tmp/50-ExecutableHeader.conf = <<EOL
-executable: echo=/tmp/50-ExecutableHeader.echo
+exec.echo: execfile = <<-EOL
+	#!/bin/sh
+	echo one $*
 EOL
 
 
-# Then we create the command
+# then create the config file based on the command file
 
-/tmp/50-ExecutableHeader.echo = +x <<EOL
-#!/bin/sh
-echo one $*
+exec.conf: file = <<EOL
+executable: echo=$(exec.echo)
 EOL
 
 
 # Now, run tmtest.  If everything works, it should run the fabricated
-# command in /tmp, rather than the built-in echo.
+# command in exec.echo, rather than the built-in echo.
 
-tmtest -o -f /tmp/50-ExecutableHeader.conf - <<EOL
+tmtest -o -f $(exec.conf) - <<EOL
 echo potato!
 ------ STDOUT: exit code 0 - no error
 one potato!

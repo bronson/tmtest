@@ -4,7 +4,7 @@
 #
 # Ensures tmtest supports indented comments
 
-tmtest -Z - <<EOL
+tmtest -o - <<EOL
 # Indented Comments
 # author: Scott Bronson
 # date  : 1 Apr 2004
@@ -22,20 +22,17 @@ tmtest -Z - <<EOL
 EOL
 
 ------ STDOUT: exit code 0 - no error
-testfile: STDIN
-title: Indented Comments
-author: Scott Bronson
-date: 1 Apr 2004
-result descr:
-  # Now tmtest supports indented comments
-  
-  # line one
-  
-   # line two
-  	# line two point five
-  
-  			# line three
-  # last line
-logfile:
-exit status: 0
-result:
+# Indented Comments
+# author: Scott Bronson
+# date  : 1 Apr 2004
+
+# Now tmtest supports indented comments
+
+# line one
+
+ # line two
+	# line two point five
+
+			# line three
+# last line
+------ STDOUT: exit code 0 - no error

@@ -13,12 +13,12 @@ tmtest - <<-EOL
     # CREATE FILES:
 
         # create a regular file continaing a single line:
-    01-crfile = <<-EOL
+    tmpf1: file = <<-EOL
         some more output
     EOL
 
         # create a bash script:
-    01-execout = +x <<-EOL
+    tmpf2: execfile = <<-EOL
         #!/bin/bash
         echo "... and even more output!"
     EOL
@@ -29,13 +29,13 @@ tmtest - <<-EOL
         # 1. a simple command
     echo "some output"
         # 2. taking its input from the first create file
-    cat 01-crfile
+    cat $(tmpf1)
         # 3. taking its stdin from a here document:
     cat <<-EOL
         a little more
     EOL
         # 4. executing the second here document that we created:
-    ./01-execout
+    exec $(tmpf2)
 
 
     # OUTPUT CLAUSE:

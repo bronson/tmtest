@@ -5,10 +5,10 @@ Date:   29 Sept 2004
 # Explodes the given test all over the /tmp/tmtest directory.
 
 # This ensures that we don't get a "Moved existing files to tmpdir" message.
-# Note that it's inherently dangerous!!  I may want to rethink this...
+# Note that this is inherently dangerous!!  I may want to rethink this...
 rm -rf /tmp/tmtest
 
-tmtest -e <<-EOL
+tmtest -e - <<-EOL
 	title: The test to be exploded
 	author: Sam the Tester
 	date: 31 Mar 2004
@@ -19,9 +19,20 @@ tmtest -e <<-EOL
 	howdy!
 EOL
 
-/tmp/tmtest/cmd-1
+echo
+
+find /tmp/tmtest | sort
+
+echo
+
+/tmp/tmtest/RUN
 
 ------ STDOUT: exit code 0 - no error
-Exploding 1 cmd from 01-TrivialRun.test...
-Wrote /tmp/tmtest/cmd-1 and /tmp/tmtest/here-1
-ok   STDIN
+Exploding 1 cmd from STDIN...
+Wrote /tmp/tmtest/cmd-1
+
+/tmp/tmtest
+/tmp/tmtest/RUN
+/tmp/tmtest/cmd-1
+
+howdy!

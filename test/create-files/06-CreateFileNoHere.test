@@ -13,29 +13,15 @@ tmtest -o - <<-EOL
 	# what happens when you create a file but don't specify a here
 	# document?
 
-	08-tmpfile =
+	file1: file =
 
 	echo one
-	cat 08-tmpfile
+	cat $(file1)
 	echo two
 
 	------ STDOUT: exit code 0 - no error
 EOL
 
------- STDOUT: exit code 0 - no error
-# Create File
-# author: Scott Bronson
-# date:   31 Mar 2004
-
-# what happens when you create a file but don't specify a here
-# document?
-
-08-tmpfile =
-
-echo one
-cat 08-tmpfile
-echo two
-
------- STDOUT: exit code 0 - no error
-one
-two
+------ STDERR:
+STDIN line 9: Couldn't understand file specification: "file ="
+------ STDOUT: exit code 255 - abort!

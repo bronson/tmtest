@@ -10,19 +10,19 @@ tmtest -o - <<-EOL
 	# author: Scott Bronson
 	# date:   30 Mar 2004
 
-	12-tmpfile-pre = +x <<-EOsL
+	file-pre: execfile = <<-EOsL
 		#!/bin/sh
 		echo Entering the pre
 	EOsL
 
-	12-tmpfile-post = +x <<-EOsL
+	file-post: execfile = <<-EOsL
 		#!/bin/sh
 		echo Exiting the post
 	EOsL
 
-	./12-tmpfile-pre
+	exec $(file-pre)
 	echo Running the test
-	./12-tmpfile-post
+	exec $(file-post)
 
 	------ STDOUT: exit code 0 - no error
 	Entering the pre
@@ -35,19 +35,19 @@ EOL
 # author: Scott Bronson
 # date:   30 Mar 2004
 
-12-tmpfile-pre = +x <<-EOsL
+file-pre: execfile = <<-EOsL
 	#!/bin/sh
 	echo Entering the pre
 EOsL
 
-12-tmpfile-post = +x <<-EOsL
+file-post: execfile = <<-EOsL
 	#!/bin/sh
 	echo Exiting the post
 EOsL
 
-./12-tmpfile-pre
+exec $(file-pre)
 echo Running the test
-./12-tmpfile-post
+exec $(file-post)
 
 ------ STDOUT: exit code 0 - no error
 Entering the pre

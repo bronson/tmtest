@@ -11,12 +11,12 @@ tmtest - <<-EOL
 
 	# ensure that tmtest can read test descriptions that contain files.
 
-	08-tmpfile = <<-EOsL
+	file1: file = <<-EOsL
 		line 1
 		line 2
 	EOsL
 
-	cat 08-tmpfile
+	cat $(file1)
 
 	------ STDOUT: exit code 0 - no error
 	line 1

@@ -7,12 +7,12 @@ desc:	Ensures that the eachline header can handle multiple subsitutions.
 
 # first we create a configuration file that specifies which command to run.
 
-/tmp/60-EachLine.conf = <<EOL
+EachLine.conf: file = <<EOL
 eachline: s/oo/ooh/g; s/go/GO/gi;
 EOL
 
 
-tmtest -o -f /tmp/60-EachLine.conf - <<-EOL
+tmtest -o -f $(EachLine.conf) - <<-EOL
 	cat <<EOL
 	oo!  Bondage a gogo.
 	Go to work.  oo no.

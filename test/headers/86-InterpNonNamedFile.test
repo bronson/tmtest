@@ -1,0 +1,196 @@
+title:	Header Here
+author:	Scott Bronson
+date:	2 Nov 2004
+
+eachline: s/pid=\d+/pid=(PID)/
+
+# ensures that we can name a file for interpolation that is not used 
+# and nothing will change.
+
+
+tmtest -o - <<-EOL
+	title: tit
+	author: sb
+
+	interpolate: ffg
+
+	# headers (interp'd by default)
+
+	arg1: <<-EOsL
+		#1 The author is $(author), bare $author, who makes \$\$ .  ne=(${ne}).
+	EOsL
+
+	arg2:
+		#2 The author is $(author), bare $author, who makes \$\$\.  ne=(${ne}).
+		
+	arg3: #3 The author is $(author), bare $author, who makes \$\$.  ne=($ne).
+	
+
+	# commands (interp'd by default)
+
+	echo
+	echo "commands:"
+
+	echo 'author=$(author)' pid=\$\$
+	echo 'bare=$author' pid=$$
+	echo '$(arg1)'
+	echo '$(arg2)'
+	echo '$(arg3)'
+	echo "doesn't exist: " 'reg=($(ne))' 'bare=($ne)'
+
+
+	# files
+
+	echo
+	echo "files:"
+
+	ff: file = <<-EOsL
+		author: $(author) ne=(${ne})
+		bare: $author
+		arg1: $(arg1)
+		arg2: $(arg2)
+		arg3: $(arg3)
+	EOsL
+
+	cat $(ff)
+
+
+	# execfiles
+
+	echo
+	echo "execfiles:"
+
+	ef: execfile = <<-EOsL
+		#!/bin/bash
+		echo 'author=$(author)' pid=\$\$
+		echo 'bare=$author' pid=$$
+		echo '$(arg1)' '${ne}'
+	EOsL
+
+	exec $(ef)
+
+
+	# stdin
+
+	echo
+	echo "stdin:"
+
+	cat <<-EOsL
+		author: $(author) ne=(${ne})
+		bare: $author
+		arg1: $(arg1)
+		arg2: $(arg2)
+		arg3: $(arg3)
+	EOsL
+
+	------ STDOUT: exit code 0 - no error
+	REPLACE
+EOL
+
+------ STDERR:
+WARNING: Tried to interpolate "$(ne)" but it doesn't exist!
+  Use "\$ne" to escape it and use it in the command.
+  Use "${ne}" to make it optional.
+------ STDOUT: exit code 0 - no error
+title: tit
+author: sb
+
+interpolate: ffg
+
+# headers (interp'd by default)
+
+arg1: <<-EOsL
+	#1 The author is $(author), bare $author, who makes \$\$ .  ne=(${ne}).
+EOsL
+
+arg2:
+	#2 The author is $(author), bare $author, who makes \$\$\.  ne=(${ne}).
+	
+arg3: #3 The author is $(author), bare $author, who makes \$\$.  ne=($ne).
+
+
+# commands (interp'd by default)
+
+echo
+echo "commands:"
+
+echo 'author=$(author)' pid=\$\$
+echo 'bare=$author' pid=$$
+echo '$(arg1)'
+echo '$(arg2)'
+echo '$(arg3)'
+echo "doesn't exist: " 'reg=($(ne))' 'bare=($ne)'
+
+
+# files
+
+echo
+echo "files:"
+
+ff: file = <<-EOsL
+	author: $(author) ne=(${ne})
+	bare: $author
+	arg1: $(arg1)
+	arg2: $(arg2)
+	arg3: $(arg3)
+EOsL
+
+cat $(ff)
+
+
+# execfiles
+
+echo
+echo "execfiles:"
+
+ef: execfile = <<-EOsL
+	#!/bin/bash
+	echo 'author=$(author)' pid=\$\$
+	echo 'bare=$author' pid=$$
+	echo '$(arg1)' '${ne}'
+EOsL
+
+exec $(ef)
+
+
+# stdin
+
+echo
+echo "stdin:"
+
+cat <<-EOsL
+	author: $(author) ne=(${ne})
+	bare: $author
+	arg1: $(arg1)
+	arg2: $(arg2)
+	arg3: $(arg3)
+EOsL
+
+------ STDOUT: exit code 0 - no error
+
+commands:
+author=sb pid=(PID)
+bare=$author pid=(PID)
+#1 The author is sb, bare $author, who makes $$ .  ne=().
+#2 The author is sb, bare $author, who makes $$\.  ne=().
+#3 The author is sb, bare $author, who makes $$.  ne=($ne).
+doesn't exist:  reg=() bare=($ne)
+
+files:
+author: $(author) ne=(${ne})
+bare: $author
+arg1: $(arg1)
+arg2: $(arg2)
+arg3: $(arg3)
+
+execfiles:
+author=$(author) pid=$$
+bare=$author pid=(PID)
+$(arg1) ${ne}
+
+stdin:
+author: $(author) ne=(${ne})
+bare: $author
+arg1: $(arg1)
+arg2: $(arg2)
+arg3: $(arg3)

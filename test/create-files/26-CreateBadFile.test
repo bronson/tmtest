@@ -1,0 +1,44 @@
+# Create After Command
+# author: Scott Bronson
+# date:   21 Nov 2004
+
+# Ensures that we can still make crfiles even after we've run a
+# command.  Technically we should fire the whole battery of
+# tests at this...
+
+tmtest -o - <<-EOL
+	title: subtest
+
+	# get rid of the pid and custom part of the tmpfile name.
+	eachline: s/tmtest-.*\.file1/tmtest-GARBAGE.file1/
+
+	file1: file = <<-EOsL
+		#!/bin/sh
+		echo line 1
+		echo line 2
+	EOsL
+
+	$(file1)
+
+	------ STDOUT: exit code 0 - no error
+	line 1
+	line 2
+EOL
+
+------ STDOUT: exit code 0 - no error
+title: subtest
+
+# get rid of the pid and custom part of the tmpfile name.
+eachline: s/tmtest-.*\.file1/tmtest-GARBAGE.file1/
+
+file1: file = <<-EOsL
+	#!/bin/sh
+	echo line 1
+	echo line 2
+EOsL
+
+$(file1)
+
+------ STDERR:
+/bin/sh: /tmp/tmtest-GARBAGE.file1: Permission denied
+------ STDOUT: exit code 126 - abort!

@@ -5,35 +5,35 @@
 # This ensures that we can run a series of tests named on the command line.
 # This is like test 30, except that the middle one bails.
 
-/tmp/32-temporary-1.test = <<-EOL
+eachline: s/tmtest-.*\.tt(.)\.test/tmtest-TMPFILE.tt\$1.test/
+
+tt1.test: file = <<-EOL
 	# Temporary test
 	echo "hi from 1"
 	------ STDOUT: exit code 0 - no error
 	hi from 1
 EOL
 
-/tmp/32-temporary-2.test = <<-EOL
+tt2.test: file = <<-EOL
 	# Temporary test
 	sh -c exit 12
 	------ STDOUT: exit code 0 - no error
 	hi from 2
 EOL
 
-/tmp/32-temporary-3.test = <<-EOL
+tt3.test: file = <<-EOL
 	# Temporary test
 	echo "hi from 3"
 	------ STDOUT: exit code 0 - no error
 	hi from 3
 EOL
 
-tmtest /tmp/32-temporary-1.test \
-	/tmp/32-temporary-2.test \
-	/tmp/32-temporary-3.test
+tmtest $(tt1.test) $(tt2.test) $(tt3.test)
 
 
 # ... and this should be the result of running the above tests.
 
 ------ STDOUT: exit code 0 - no error
-ok   32-temporary-1.test
-FAIL 32-temporary-2.test
-ok   32-temporary-3.test
+ok   tmtest-TMPFILE.tt1.test
+FAIL tmtest-TMPFILE.tt2.test
+ok   tmtest-TMPFILE.tt3.test

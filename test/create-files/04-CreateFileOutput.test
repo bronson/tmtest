@@ -11,7 +11,7 @@ tmtest -o - <<-EOL
 
 	# ensure that tmtest can read test descriptions that contain files.
 
-	tmpfile = <<-EOsL
+	file1: file = <<-EOsL
 		line 1
 		line 2
 	EOsL
@@ -33,7 +33,7 @@ date:   29 Mar 2004
 
 # ensure that tmtest can read test descriptions that contain files.
 
-tmpfile = <<-EOsL
+file1: file = <<-EOsL
 	line 1
 	line 2
 EOsL

@@ -1,11 +1,17 @@
 # Stdout and Stderr From Executable File
 # author: Scott Bronson
-# date:   3 Dec 2001
-#
+
 # We should be able to redirect both stdout and stderr from an executed file.
 # This example comes from the testfile documentation.
 
-42-tmpfile = +x <<-EOF
+
+# Ensure that the variable on tmtest's stdin gets interpolated.
+interpolate: stdin
+# The temporary filename is dynamic, so erase it.
+eachline: s/tmtest-.*\.tt\.cmd/tmtest-BLAH.tt.cmd/
+
+
+tt.cmd: execfile = <<-EOF
 	#!/bin/sh
 	perl -e 'print STDOUT "this goes to out\n"'
 	perl -e 'print STDERR "this goes to err\n"'
@@ -14,13 +20,13 @@ EOF
 
 tmtest -o - <<-EOF
 
-	./42-tmpfile > /dev/null 2>&1 
+	$(tt.cmd) > /dev/null 2>&1 
 
 	------ STDOUT: exit code 0 - no error
 EOF
 
 ------ STDOUT: exit code 0 - no error
 
-./42-tmpfile > /dev/null 2>&1 
+/tmp/tmtest-BLAH.tt.cmd > /dev/null 2>&1 
 
 ------ STDOUT: exit code 0 - no error

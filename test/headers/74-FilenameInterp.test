@@ -3,7 +3,7 @@ author:	Scott Bronson
 date:	22 July 2004
 
 desc:	Ensure that the file header is automatically set.
-doc:	Unfortunately, I don't know of any good way to test $(PATH).
+doc:	Unfortunately, I don't know of any good way to test PATH.
 
 echo "$(CURFILE) ghi"
 ------ STDOUT: exit code 0 - no error

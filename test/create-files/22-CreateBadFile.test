@@ -1,0 +1,36 @@
+# Create After Command
+# author: Scott Bronson
+# date:   21 Nov 2004
+
+# Ensures that we can still make crfiles even after we've run a
+# command.  Technically we should fire the whole battery of
+# tests at this...
+
+tmtest -o - <<-EOL
+	title: subtest
+
+	echo "First command"
+
+	file1/: file = <<-EOsL
+		line 1
+		line 2
+	EOsL
+
+	echo "Second command"
+
+	cat $file1
+
+	------ STDOUT: exit code 0 - no error
+	First command
+	line 1
+	line 2
+	line 3
+	line 4
+	line 5
+	line 6
+	Second command
+EOL
+
+------ STDERR:
+Illegal file name "file1/"
+------ STDOUT: exit code 255 - abort!

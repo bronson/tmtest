@@ -1,0 +1,30 @@
+# Create After Command
+# author: Scott Bronson
+# date:   21 Nov 2004
+
+# Ensures that we can still make crfiles even after we've run a
+# command.  Technically we should fire the whole battery of
+# tests at this...
+
+tmtest -o - <<-EOL
+	title: subtest
+	interpa: shot
+
+	echo "First $(interp)"
+
+	------ STDOUT: exit code 0 - no error
+	First shot
+EOL
+
+------ STDERR:
+WARNING: Tried to interpolate "$(interp)" but it doesn't exist!
+  Use "\$interp" to escape it and use it in the command.
+  Use "${interp}" to make it optional.
+------ STDOUT: exit code 0 - no error
+title: subtest
+interpa: shot
+
+echo "First $(interp)"
+
+------ STDOUT: exit code 0 - no error
+First 

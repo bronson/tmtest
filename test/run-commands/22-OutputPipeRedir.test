@@ -8,17 +8,19 @@ tmtest -o - <<-EOL
 	# Output Pipe Redirect
 	# author: Scott Bronson
 	# date:   30 Mar 2004
-	#
-	# This ensures we can redirect the output of a pipe
 
-	22-postscr = +x <<-EOL
+	interpolate: postscr
+
+	# create an empty tempfile
+	tmpfile: file
+
+	postscr: execfile = <<-EOL
 		echo "file:"
-		cat 22-tmpfile
-		rm 22-tmpfile
+		cat $(tmpfile)
 	EOL
 
-	echo "abbcbba" | tr b d | cat > 22-tmpfile
-	./22-postscr
+	echo "abbcbba" | tr b d | cat > $(tmpfile)
+	exec $(postscr)
 
 	------ STDOUT: exit code 0 - no error
 	file:
@@ -29,17 +31,19 @@ EOL
 # Output Pipe Redirect
 # author: Scott Bronson
 # date:   30 Mar 2004
-#
-# This ensures we can redirect the output of a pipe
 
-22-postscr = +x <<-EOL
+interpolate: postscr
+
+# create an empty tempfile
+tmpfile: file
+
+postscr: execfile = <<-EOL
 	echo "file:"
-	cat 22-tmpfile
-	rm 22-tmpfile
+	cat $(tmpfile)
 EOL
 
-echo "abbcbba" | tr b d | cat > 22-tmpfile
-./22-postscr
+echo "abbcbba" | tr b d | cat > $(tmpfile)
+exec $(postscr)
 
 ------ STDOUT: exit code 0 - no error
 file:

@@ -1,0 +1,169 @@
+title:	Header Here
+author:	Scott Bronson
+date:	2 Nov 2004
+
+# This test ensures we can properly explode headers/80-Interp.test
+
+eachline: s/pid=\d+/pid=(PID)/
+
+# Suppress "files moved" warning by blowing away the dir wholesale.
+rm -rf /tmp/tmtest
+
+tmtest -e - <<-EOL
+	title: tit
+	author: sb
+
+	# headers (interp'd by default)
+
+	arg1: <<-EOsL
+		#1 The author is $(author), bare $author, who makes \$\$ .  ne=(${ne}).
+	EOsL
+
+	arg2:
+		#2 The author is $(author), bare $author, who makes \$\$\.  ne=(${ne}).
+		
+	arg3: #3 The author is $(author), bare $author, who makes \$\$.  ne=($ne).
+	
+
+	# commands (interp'd by default)
+
+	echo
+	echo "commands:"
+
+	echo 'author=$(author)' pid=\$\$
+	echo 'bare=$author' pid=$$
+	echo '$(arg1)'
+	echo '$(arg2)'
+	echo '$(arg3)'
+	echo "doesn't exist: " 'reg=($(ne))' 'bare=($ne)'
+
+
+	# files
+
+	echo
+	echo "files:"
+
+	ff: file = <<-EOsL
+		author: $(author) ne=(${ne})
+		bare: $author
+		arg1: $(arg1)
+		arg2: $(arg2)
+		arg3: $(arg3)
+	EOsL
+
+	cat $(ff)
+
+
+	# execfiles
+
+	echo
+	echo "execfiles:"
+
+	ef: execfile = <<-EOsL
+		#!/bin/bash
+		echo 'author=$(author)' pid=\$\$
+		echo 'bare=$author' pid=$$
+		echo '$(arg1)' '${ne}'
+	EOsL
+
+	exec $(ef)
+
+
+	# stdin
+
+	echo
+	echo "stdin:"
+
+	cat <<-EOsL
+		author: $(author) ne=(${ne})
+		bare: $author
+		arg1: $(arg1)
+		arg2: $(arg2)
+		arg3: $(arg3)
+	EOsL
+
+	------ STDOUT: exit code 0 - no error
+	REPLACE
+EOL
+
+echo
+find /tmp/tmtest | sort
+echo
+/tmp/tmtest/RUN
+
+------ STDERR:
+WARNING: Tried to interpolate "$(ne)" but it doesn't exist!
+  Use "\$ne" to escape it and use it in the command.
+  Use "${ne}" to make it optional.
+------ STDOUT: exit code 0 - no error
+Exploding 19 cmds from STDIN...
+Wrote /tmp/tmtest/cmd-01
+Wrote /tmp/tmtest/cmd-02
+Wrote /tmp/tmtest/cmd-03
+Wrote /tmp/tmtest/cmd-04
+Wrote /tmp/tmtest/cmd-05
+Wrote /tmp/tmtest/cmd-06
+Wrote /tmp/tmtest/cmd-07
+Wrote /tmp/tmtest/cmd-08
+Wrote /tmp/tmtest/cmd-09
+Wrote /tmp/tmtest/cmd-10
+  created /tmp/tmtest/here-11
+Wrote /tmp/tmtest/cmd-12
+Wrote /tmp/tmtest/cmd-13
+Wrote /tmp/tmtest/cmd-14
+  created /tmp/tmtest/here-15
+Wrote /tmp/tmtest/cmd-16
+Wrote /tmp/tmtest/cmd-17
+Wrote /tmp/tmtest/cmd-18
+Wrote /tmp/tmtest/cmd-19 and /tmp/tmtest/here-19
+
+/tmp/tmtest
+/tmp/tmtest/RUN
+/tmp/tmtest/cmd-01
+/tmp/tmtest/cmd-02
+/tmp/tmtest/cmd-03
+/tmp/tmtest/cmd-04
+/tmp/tmtest/cmd-05
+/tmp/tmtest/cmd-06
+/tmp/tmtest/cmd-07
+/tmp/tmtest/cmd-08
+/tmp/tmtest/cmd-09
+/tmp/tmtest/cmd-10
+/tmp/tmtest/cmd-12
+/tmp/tmtest/cmd-13
+/tmp/tmtest/cmd-14
+/tmp/tmtest/cmd-16
+/tmp/tmtest/cmd-17
+/tmp/tmtest/cmd-18
+/tmp/tmtest/cmd-19
+/tmp/tmtest/here-11
+/tmp/tmtest/here-15
+/tmp/tmtest/here-19
+
+
+commands:
+author=sb pid=(PID)
+bare=$author pid=(PID)
+#1 The author is sb, bare $author, who makes $$ .  ne=().
+#2 The author is sb, bare $author, who makes $$\.  ne=().
+#3 The author is sb, bare $author, who makes $$.  ne=($ne).
+doesn't exist:  reg=() bare=($ne)
+
+files:
+author: $(author) ne=(${ne})
+bare: $author
+arg1: $(arg1)
+arg2: $(arg2)
+arg3: $(arg3)
+
+execfiles:
+author=$(author) pid=$$
+bare=$author pid=(PID)
+$(arg1) ${ne}
+
+stdin:
+author: $(author) ne=(${ne})
+bare: $author
+arg1: $(arg1)
+arg2: $(arg2)
+arg3: $(arg3)

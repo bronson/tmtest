@@ -13,13 +13,13 @@ tmtest -o - <<-EOL
 	# this test the code path where we can't create the file.
 	# directories a/b/c/d should not exist.
 
-	12-tmpfile = +x <<-EOsL
+	file1: execfile = <<-EOsL
 		#!/bin/sh
 		echo line1
 		echo line2
 	EOsL
 
-	./12-tmpfile
+	$(file1)
 
 	------ STDOUT: exit code 0 - no error
 	line1
@@ -34,13 +34,13 @@ EOL
 # this test the code path where we can't create the file.
 # directories a/b/c/d should not exist.
 
-12-tmpfile = +x <<-EOsL
+file1: execfile = <<-EOsL
 	#!/bin/sh
 	echo line1
 	echo line2
 EOsL
 
-./12-tmpfile
+$(file1)
 
 ------ STDOUT: exit code 0 - no error
 line1
