@@ -1,0 +1,23 @@
+# Here Doc Not Terminated
+# author: Scott Bronson
+# date:   29 Mar 2004
+#
+# This tests what happens when the user forgets to terminate a here do.
+
+tmtest -o - <<-EOL
+	# Here Doc Output
+	# author: Scott Bronson
+	# date:   3 Dec 2001
+	#
+	# Ensure that we output here docs exactly as we found them.
+
+	cat <<-EOsL
+
+		#    ... and it's never terminated
+
+		------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDERR:
+file STDIN line 11: did you forget to terminate the here doc?
+------ STDOUT: exit code 255 - abort!

@@ -1,0 +1,26 @@
+# Garbage In Create File
+# author: Scott Bronson
+# date:   31 Mar 2004
+
+# Ensures that we handle garbage in the filename when creating a file.
+# All the variants on this involving here documents can be found in the
+# here doc tests.
+
+tmtest -o - <<-EOL
+	# Garbage In Create File
+	# author: Scott Bronson
+	# date:   31 Mar 2004
+
+	10-tmpfile1 = Garbage Garbage +x <<-EOsL
+		line 1
+		line 2
+	EOsL
+
+	echo "This is the test"
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDERR:
+STDIN line 8: garbage in file declaration: 'Garbage Garbage +x '
+------ STDOUT: exit code 255 - abort!

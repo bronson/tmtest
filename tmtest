@@ -12,7 +12,6 @@
 #		otherwise, specify the tests to run on the command line
 #		if you specify a directory, it will recursively run all
 #		tests in the directory.
-# 	-v              : verbose, print each command line as it executes
 #   -o              : output test, print test to stdout rather than running
 #   -d              : output diff between the expected and actual test output.
 #   -c              : simply syntax check the test file
@@ -22,23 +21,22 @@
 use strict; 
 use Getopt::Std;
 use File::Basename;
-use FindBin qw($RealBin);
+use FindBin qw($Bin);
 use Cwd 'abs_path';
 
 use vars qw( $VERSION );
-$VERSION = "0.3";
+$VERSION = "0.4";
 
 use vars qw( $tmtestpath $config $exit_value_hack );	# supplied to config
 use vars qw( $output $error $output_re $error_re $exit_code_re );
 use vars qw( $generate_exit_msg $clean_results );
 use vars qw( $executable $executablepath );
 
-
 # prepare defaults for all customization values
 # the only one that tmtest-config MUST set is $executable
 $executable = undef;
-$tmtestpath = $RealBin;
-$config = "$RealBin/tmtest-config";
+$tmtestpath = $Bin;
+$config = "$Bin/tmtest-config";
 $exit_value_hack = 0;
 $output = "STDOUT";
 $output_re = $output;
@@ -57,24 +55,25 @@ $executablepath = undef;
 do $config;
 
 die "Config file must set \$executable!\n" unless defined $executable;
-$executablepath ||= "$RealBin/$executable";
+$executablepath ||= "$Bin/$executable";
 -x $executablepath || die "$executablepath does not exist or is not executable.\n";
 
 $| = 1;		# don't buffer stdout
 
+	
+
 my %opts;
-unless( getopts( "odcv", \%opts ) ) {
+unless( getopts( "odcvP", \%opts ) ) {
 	die "usage: tmtest [-v] [-o] [test files or dirs...]\n" .
 		"       -o: dump the results (rather than just go/nogo)\n" .
 		"       -d: diff results against expected results\n" .
-		"       -c: syntax check\n" .
-		"       -v: verbose\n"
+		"       -c: syntax check\n";
 }
 
 my $dump_results = $opts{"o"};
 my $diff_results = $opts{"d"};
 my $syntax_check = $opts{"c"};
-my $verbose = $opts{"v"};
+my $debug = $opts{"P"};	# parse debug
 
 my $test_runs = 0;
 my $test_successes = 0;
@@ -206,8 +205,6 @@ sub process_test
 	if( $syntax_check ) {
 		print_test( $test );
 	} else {
-		print $test->{cmd} . "\n" if $verbose;
-
 		# increment number of tests run counter
 		$test_runs += 1;
 
@@ -243,9 +240,6 @@ sub read_test_file
 
 	# for(@$file) { print "file: $_"; }
 
-	# turn this on to get an idea of how the parse is going
-	my $debug = 0;
-	
 	# now scan the string and store the parts in %test
 	my $test = {};
 	my $line = 0;
@@ -253,11 +247,11 @@ sub read_test_file
 	$test->{"author"} = '';
 	$test->{"date"} = '';
 	$test->{"desc"} = [];
-	$test->{"command"} = [];
+	$test->{"cmds"} = [];
 	$test->{"rdesc"} = [];
 	$test->{"result"} = [];
 	$test->{"logfile"} = [];
-	$test->{"files"} = {};
+	$test->{"files"} = [];
 
 
 	$test->{"file"} = $filename;
@@ -279,71 +273,67 @@ sub read_test_file
 		} elsif(lc $key eq 'date') {
 			$test->{"date"} = $data;
 		} else {
-			die "$filename line 3: Unknown header '$key'\n";
+			die "$filename line $line\: Unknown header '$key'\n";
 		}
 	}
 
-	while($line < @$file && !@{$test->{"command"}}) {
-		# collect all lines that are either blank or begin with a hash into desc
-		# It's very strange that this doesn't work: /^(\#.*)|\s*$/
-		while( $line < @$file && $file->[$line] =~ /^\s*(?:\#.*)?$/x ) {
-			push @{$test->{"desc"}}, $file->[$line];
-			chomp $test->{"desc"}->[-1];
+	# Now we read any number of commands and files until we hit the
+	# output clause.
+	my @desc;
+	while($line < @$file) {
+		$debug && print "begin block...\n";
+		@desc = ();
+
+		# desc is all blank lines or lines beginning with a hash.
+		while( $line < @$file && $file->[$line] =~ /^\s*(?:\#.*)?$/ ) {
+			$debug && print "desc: $file->[$line]";
+			push @desc, $file->[$line];
+			chomp $desc[-1];
 			$line++;
 		}
 
-		# now collect all lines that end with a continuation char
-		do {
-			last unless $line < @$file;
+		last unless $line < @$file;
+		
+		# if this line begins with a dash, we know it's the start
+		# of the output clause.
+		last if $file->[$line] =~ /^-/;
+
+		# collect all lines that end with a continuation char
+		my @command = ();
+		while($line < @$file) {
 			$debug && print "command: $file->[$line]";
-			push @{$test->{"command"}}, $file->[$line];
-			chomp $test->{"command"}->[-1];
-		} while($file->[$line++] =~ /\\\s*$/);
+			push @command, $file->[$line];
+			chomp $command[-1];
+			last unless $file->[$line++] =~ /\\\s*$/;
+		}
 
 		# convert the command into a single line
-		$test->{cmd} = '';
-		for my $l (@{$test->{"command"}}) {
+		my $cmd = '';
+		for my $l (@command) {
 			$_ = $l;
 			s/^\s+//;
 			s/\s*\\\s*$//;
-			$test->{cmd} .= ' ' if length $test->{cmd};
-			$test->{cmd} .= $_;
+			$cmd .= ' ' if length $cmd;
+			$cmd .= $_;
 		}
-		$debug && print "cmd: " . $test->{cmd} . "\n";
+		$debug && print "cmd: $cmd\n";
 
-		# did the previous line end with a here document?
-		# if so, collect it.
-		if($test->{cmd} =~ /^(.*)\<\<(\-?)(\w+)\s*$/) {
-			my ($start, $strip_tabs, $here_word) = ($1, $2, $3);
-			my $filename = undef;
-			my $hereref = [];	# the tab-squashed version
-			my $origref = [];	# the original version
-
-			if($start =~ /^(.*)\=/) {
-				# we're actually grabbing a file, not the command
-				$filename = $1;
-				$filename =~ s/^\s+|\s+$//g;
-				$test->{"files"}->{$filename} = {};
-				$test->{"files"}->{$filename}->{"content"} = $hereref;
-				$test->{"files"}->{$filename}->{"orig"} = $origref;
-				$test->{"files"}->{$filename}->{"pre"} = $test->{command};
-				$test->{"files"}->{$filename}->{"cmd"} = $test->{cmd};
-				$test->{"command"} = [];
-				chomp $test->{"files"}->{$filename}->{"pre"};
-				# the desc we slurped actually belongs to this file,
-				# not to the test itself.  So we readjust things.
-				$test->{"files"}->{$filename}->{"desc"} = $test->{"desc"};
-				$test->{"desc"} = [];
-			} else {
-				# stuff the command into "here"
-				$test->{"here"} = $hereref;
-				$test->{"orighere"} = $origref;
-			}
+		# did the previous line end with a here document?  if so, collect it.
+		my @orig = ();	# orignal here document, w/o tab stripping
+		my @here = ();	# tab-stripped here document
+		my $post;		# the heredoc terminator
+		
+		my $cmdbeg = $cmd;
+		if($cmd =~ /^(.*)\<\<(\-?)(\w+)\s*(?:\s(\S.*))?$/) {
+			my(undef, $strip_tabs, $here_word, $illegal) = ($1, $2, $3, $4);
+			$cmdbeg = $1;
+			die "$filename line $line\: garbage after here doc: '$illegal'\n"
+				if $illegal && length($illegal);
 			my $stripper = undef;
-			for( ; $line < @$file && $file->[$line] ne "$here_word\n" ; $line++ ) {
+			while($line < @$file && $file->[$line] ne "$here_word\n") {
 				my $ll = $file->[$line];
 				chomp $ll;
-				push @$origref, $ll;
+				push @orig, $ll;
 				if($strip_tabs) {
 					if(!defined $stripper) {
 						# define the whitespace that needs to be stripped
@@ -356,53 +346,87 @@ sub read_test_file
 					}
 				}
 				$debug && print "heredoc: $ll\n";
-				push @$hereref, $ll;
+				push @here, $ll;
+				$line += 1;
 			}
-			last unless $line < @$file;
-			$debug && print "heredoc done.\n";
-			if(defined $filename) {
-				$test->{"files"}->{$filename}->{"post"} = $file->[$line];
-				chomp $test->{"files"}->{$filename}->{"post"};
-			} else {
-				$test->{herepost} = $file->[$line];
-				chomp $test->{herepost};
-			}
-			$line++;
+
+			$line >= @$file and die "file $filename line $line\: did you forget to terminate the here doc?\n";
+			$debug && print "hereend: $file->[$line]";
+			$post = $file->[$line];
+			chomp $post;
+			$line += 1;
 		}
+
+		# the previous block must have either been a command or a file.
+		# store it in the appropriate place.
+		if($cmdbeg =~ /^\s*((?:\S|\\\s)+)\s*\=\s*(\S.*)?$/) {
+			my ($name, $args) = ($1, $2);
+			my $exec = 0;
+			if(defined $args && length $args) {
+				if($args =~ /^\s*\+x\s*$/) {
+					$exec = 1;
+				} else {
+					die "$filename line $line\: garbage in file declaration: '$args'\n"
+						if $args && length $args;
+				}
+			}
+
+			push @{$test->{"files"}}, {
+				desc => [@desc], pre => [@command], cmd => $cmd,
+				content => [@here], orig => [@orig], post => $post,
+				executable => $exec, name => $name,
+			};
+			$debug && print "  ...stored in file '$name'\n";
+		} else {
+			push @{$test->{cmds}}, {
+				desc => [@desc], command => [@command], cmd => $cmd,
+				here => [@here], orighere => [@orig], herepost => $post,
+			};
+			$debug && print "  ...stored as command " . @{$test->{cmds}} . "\n";
+		}
+
+		@desc = ();
 	}
 
-	# collect all lines that are either blank or begin with a hash into rdesc
-	# It's very strange that this doesn't work: /^(\#.*)|\s*$/
-	while( $line < @$file && $file->[$line] =~ /^\s*(?:\#.*)?$/ ) {
-		push @{$test->{"rdesc"}}, $file->[$line];
-		chomp $test->{"rdesc"}->[-1];
-		$line++;
+	# if the last item from the above loop is a desc, then it must
+	# be the results descriptor.
+	if(@desc) {
+		$debug && print "  ...stored in rdesc\n";
+		$test->{"rdesc"} = \@desc;
 	}
 
 	$line >= @$file and die "file $filename line $line\: unexpected end of input.\n";
 	$file->[$line] =~ /^[^-]/o and
 		die "file $filename line $line\: expecting the exit clause. did you forget a continuation character?\n" .
-		"    " . $file->[$line] . "\n";
+		"    '" . $file->[$line] . "'\n";
 
-
+	# Error always comes before output if it exists.
 	if( $file->[$line] =~ /^\-\-\-\-+\s*$error_re:/o ) {
 		$line += 1;
 		until( $line >= @$file || $file->[$line] =~ /^\-\-\-\-/ ) {
-			push @{$test->{"logfile"}}, substr $file->[$line++], 0, -1;
+			$debug && print "error: " . $file->[$line];
+			push @{$test->{"logfile"}}, $file->[$line];
+			chomp $test->{"logfile"}->[-1];
+			$line += 1;
 		}
 		$line >= @$file && die "file $filename line $line: Could not find output clause.\n";
 	}
 
+	# output clause
+	my $cltmp = $file->[$line];
+	chomp $cltmp;	# i hate that chomp modifies its var instead of returning it
 	$file->[$line] =~ /^\-\-\-\-+\s*$output_re\:\s*$exit_code_re/o or die
-		"Could not parse $filename line $line: malformed Output clause\n" .
-		"    " . $file->[$line] . "\n";
-	$line++;
-
+		"Could not parse $filename line $line: malformed Output clause:\n" .
+		"    '$cltmp'\n";
+	$line += 1;
+	$debug && print "exitval: " . ($1 || 0) . "\n";
 	$test->{"exitvalue"} = $1 || 0;
 
 	while($line < @$file) {
-		push @{$test->{"result"}}, substr $file->[$line], 0, -1;
-		$line++
+		$debug && print "output: " . $file->[$line];
+		push @{$test->{"result"}}, $file->[$line];
+		chomp $test->{"result"}->[-1];
+		$line += 1;
 	}
 
 	$debug && print "done parsing.\n";
@@ -421,21 +445,25 @@ sub print_test
 	print "date:$test->{date}\n";
 	print "from: $test->{file}\n";
 
-	print "description:\n";
-	for(@{$test->{desc}}) { print "  $_\n"; }
-
-	for my $name (sort keys %{$test->{files}}) {
-		print "file: $name\n";
+	for my $file (@{$test->{files}}) {
+		print "file: " . $file->{name} .
+			($file->{executable} ? "   (executable)" : "") .  "\n";
 		print "file-descr:\n";
-		for(@{$test->{files}->{$name}->{desc}}) { print "  $_\n"; }
+		for(@{$file->{desc}}) { print "  $_\n"; }
 		print "file-contents:\n";
-		for(@{$test->{files}->{$name}->{content}}) { print "  $_\n"; }
+		for(@{$file->{content}}) { print "  $_\n"; }
 	}
 
-	print "command:\n";
-	for(@{$test->{command}}) { print "  $_\n"; }
-	for(@{$test->{here}}) { print "  $_\n"; }
-	print "  ".$test->{herepost}."\n" if @{$test->{here}};
+	my $i = 1;
+	for my $cs (@{$test->{cmds}}) {
+		print "command $i\:\n";
+		for(@{$cs->{command}}) { print "  $_\n"; }
+		for(@{$cs->{here}}) { print "  $_\n"; }
+		print "  ".$cs->{herepost}."\n" if @{$cs->{here}};
+		print "command-descr:\n";
+		for(@{$cs->{desc}}) { print "  $_\n"; }
+		$i += 1;
+	}
 
 	print "result descr:\n";
 	for(@{$test->{rdesc}}) { print "  $_\n"; }
@@ -466,17 +494,19 @@ sub print_results
 	print "#$test->{name}\n";
 	print "# author:$test->{author}\n" if length $test->{author};
 	print "# date:$test->{date}\n" if length $test->{date};
-	for my $name (sort keys %{$test->{files}}) {
-		for(@{$test->{files}->{$name}->{desc}}) { print "$_\n"; }
-		for(@{$test->{files}->{$name}->{pre}}) { print "$_\n"; }
-		print join("\n", @{$test->{files}->{$name}->{orig}});
-		print "\n" if @{$test->{files}->{$name}->{orig}};
-		print $test->{files}->{$name}->{post}, "\n";
+	for my $file (@{$test->{files}}) {
+		for(@{$file->{desc}}) { print "$_\n"; }
+		for(@{$file->{pre}}) { print "$_\n"; }
+		print join("\n", @{$file->{orig}});
+		print "\n" if @{$file->{orig}};
+		print $file->{post}."\n" if defined $file->{post} && length $file->{post};
 	}
-	for(@{$test->{desc}}) { print "$_\n"; }
-	for(@{$test->{command}}) { print "$_\n"; }
-	for(@{$test->{orighere}}) { print "$_\n"; }
-	print $test->{herepost}."\n" if exists $test->{here};
+	for my $cs (@{$test->{cmds}}) {
+		for(@{$cs->{desc}}) { print "$_\n"; }
+		for(@{$cs->{command}}) { print "$_\n"; }
+		for(@{$cs->{orighere}}) { print "$_\n"; }
+		print $cs->{herepost}."\n" if exists $cs->{here} && @{$cs->{here}};
+	}
 	for(@{$test->{rdesc}}) { print "$_\n"; }
 	if(@{$results->{"logfile"}}) {
 		print "------ $error:\n";
@@ -563,67 +593,125 @@ sub run_test
 {
 	my $test = shift;
 
-	# get the command without the attached here doc
-	my $cmd = $test->{cmd};
-	$cmd =~ s/\s*<<\s*\S+\s*$//;
-	my $here = '';
-	$here = join("\n", @{$test->{here}})."\n" if exists $test->{here};
-
-	# print "here: <<<\n$here>>>\n";
-
-	my $stdout = "/tmp/tmtest.$$.stdout";
-	my $stderr = "/tmp/tmtest.$$.stderr";
-
-	# Replace program name in test with full path to executable
-	$cmd =~ s/$executable\s/$executablepath /;
-	$cmd .= " 1>$stdout 2>$stderr";
-
+	# first, create any requested files
 	my %unlink = ();
-	for my $name (sort keys %{$test->{files}}) {
+	for my $file (@{$test->{files}}) {
+		my $name = $file->{name};
 		$unlink{$name}++;
+		$debug && print "Creating file: '$name'\n";
 		open(FH, ">$name") or die "Could not create $name\: $!\n";
-		print FH join("\n", @{$test->{files}->{$name}->{content}}), "\n";
+		print FH join("\n", @{$file->{content}}), "\n";
 		close FH;
-	}
-
-	# print "Running <<<$cmd>>>\n";
-
-	$SIG{PIPE} = 'IGNORE';
-	open(FH, "|$cmd") or die "Could not fork '$cmd': $!\n";
-	print FH $here or die "Could not write: $!\n";
-	close FH;
-
-	# don't delete the transient files if the test exited with an error.
-	# the user might want to look at them.
-	unlink(keys %unlink) if keys %unlink && $? == 0;
-
-	my $exit_value  = $? >> 8;
-	my $signal_num  = $? & 127;
-	my $dumped_core = $? & 128;
-
-	# If our child got a signal, raise the very same signal on
-	# ourselves.  This is so we interrupt cleanly if the
-	# user hits interrupt while a test is running.
-	$signal_num && kill $signal_num => $$;
-
-	if( $exit_value_hack ) {
-		# This is a gross, awful, kludgy hack.  @-n needs to return
-		# nonzero so that if it's accidentally set when fetchmail
-		# runs, fetchmail bails immediately without losing any mail.
-		# So, it returns 121 if trestlemail WOULD have succeeded if
-		# it wasn't for @-n.   This is Trestlemail ONLY!
-		$exit_value = 0 if $exit_value == 125;
+		if($file->{executable}) {
+			$debug && print "   ... and marking it executable.\n";
+			# leave permissions as-is except mark all executable.
+			chmod( ((stat($name))[2])|0777, $name );
+		}
 	}
 
 	my $result = {
-			"result" =>  (-f $stdout ? read_file($stdout) : []),
-			"logfile" => (-f $stderr ? read_file($stderr) : []),
-			"exitvalue" => $exit_value
+			# organized by command:
+			"cmdout" => [],
+			"cmderr" => [],
+			"cmdexit" => [],
+			# aggregated:
+			"result" => [],
+			"logfile" => [],
+			"exitvalue" => 0,
 		};
+
+	for my $cs (@{$test->{cmds}}) {
+		my $cmd = $cs->{cmd};
+		$cmd =~ s/\s*<<\s*\S+\s*$//;
+		my $here = undef;
+		$here = join("\n", @{$cs->{here}})."\n"
+			if exists $cs->{here} && @{$cs->{here}};
+
+		my $stdout = "/tmp/tmtest.$$.".(1+@{$result->{result}}).".stdout";
+		my $stderr = "/tmp/tmtest.$$.".(1+@{$result->{result}}).".stderr";
+
+		# Replace program name in test with full path to executable
+		$cmd =~ s/$executable\s/$executablepath /;
+
+		$debug && print "Running command: $cmd\n";
+		$debug && defined($here) && print "Feeding on stdin: <<<$here>>>\n";
+
+		# can't use Perl open or system calls because we need to
+		# redirect stdout and stderr before execing.
+
+		$SIG{PIPE} = 'IGNORE';
+		pipe RH,WH;
+		my $pid = fork();
+		if($pid == 0) {
+			# child
+			open(STDIN, "<&RH") or die "Chid coudln't open stdin: $!\n";
+			close WH;
+			close RH;
+			open(STDOUT, ">$stdout") or die "Child couldn't open $stdout\: $!\n";
+			open(STDERR, ">$stderr") or die "Child couldn't open $stderr\: $!\n";
+			exec('/bin/sh', '-c', $cmd);
+			die "Could not exec /bin/sh -c (cmd): $!\n";
+		}
+
+		# parent
+		close RH;
+		if(defined $here) {
+			print WH $here or die "Could not write: $!\n";
+		}
+		#  don't check for error -- it should appear in test results.
+		close WH;  # or die "Could not close pipe: $!\n";
+		waitpid($pid,0);
+
+		die "Exit value is -1: couldn't run command: $!\n" if $? == -1;
+
+		my $exit_value  = $? >> 8;
+		my $signal_num  = $? & 127;
+		my $dumped_core = $? & 128;
+
+
+		# If our child got a signal, raise the very same signal on
+		# ourselves.  This is so we interrupt cleanly if the
+		# user hits interrupt while a test is running.
+		$signal_num && kill $signal_num => $$;
+
+		if( $exit_value_hack ) {
+			# This is a gross, awful, kludgy hack.  @-n needs to return
+			# nonzero so that if it's accidentally set when fetchmail
+			# runs, fetchmail bails immediately without losing any mail.
+			# So, it returns 121 if trestlemail WOULD have succeeded if
+			# it wasn't for @-n.   This is Trestlemail ONLY!
+			$exit_value = 0 if $exit_value == 125;
+		}
+		
+		my $cmdout = -f $stdout ? read_file($stdout) : [];
+		my $cmderr = -f $stderr ? read_file($stderr) : [];
+		# store results individually
+		push @{$result->{cmdout}}, $cmdout;
+		push @{$result->{cmderr}}, $cmderr;
+		push @{$result->{cmdexit}}, $exit_value;
+		# store results in aggregate
+		push @{$result->{result}}, @$cmdout;
+		push @{$result->{logfile}}, @$cmderr;
+		$result->{exitvalue} = $exit_value;
+
+		last if $exit_value;
 	
-	-f $stdout && (unlink $stdout or die "Couldn't unlink $stdout: $!\n");
-	-f $stderr && (unlink $stderr or die "Couldn't unlink $stderr: $!\n");
-	
+		-f $stdout && (unlink $stdout or die "Couldn't unlink $stdout: $!\n");
+		-f $stderr && (unlink $stderr or die "Couldn't unlink $stderr: $!\n");
+	}
+
+	# don't delete the transient files if the test exited with an error.
+	# the user might want to look at them.
+	if(keys %unlink) {
+		if($? == 0) {
+			my $num = unlink(keys %unlink);
+			$debug && print "Removed $num files: (" . join(", ", keys %unlink) . ")\n";
+			$debug && $num != (keys %unlink) && print "   Error was: $!\n";
+		} else {
+			$debug && print "Test resulted in an error -- not removing files.\n";
+		}
+	}
+
 	return $result;
 }
 

@@ -27,8 +27,6 @@ name: Create File
 author: Scott Bronson
 date:   29 Mar 2004
 from: STDIN
-description:
-  
 file: tmpfile
 file-descr:
   
@@ -37,8 +35,10 @@ file-descr:
 file-contents:
   line 1
   line 2
-command:
+command 1:
   echo "nada"
+command-descr:
+  
 result descr:
   
 logfile:

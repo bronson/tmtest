@@ -1,11 +1,16 @@
 todo:
 - change to Getopt::Long, add --version and --help
+- add an alarm that will time out stalled child processes
 
 0.4:   30 Mar 2004
 - Added ability to redirect command output somewhere else
 - Added ability to set up command pipelines
-- Create files can now be marked executable (file = +x <<HERE)
+- Created files can now be marked executable (file = +x <<HERE)
 - Can now run multiple commands in a single script
+- Added the -P option (display debugging info).
+- Removed -v (verbose) since it really wasn't used anymore
+- Files now remain in the order they were declared (turned hash into array)
+- Parser recognizes the difference between a file and a command better
 
 0.3:    29 Mar 2004
 - Made multi-line commands require continuations
@@ -15,7 +20,7 @@ todo:
 - Fixed tab stripping in here documents (appeared to work but didn't really)
 - Made tmtest-config file simpler, added defaults for almost everything.
 
-0.2:
+0.2:	early Dec, 2001
 - Make -o and -d print the correct number of successes and failures
 - tmtest now reads the test from stdin if you specify "-" on cmdline
 - Added a tmtest test harness.  Now tmtest tests itself.
@@ -23,6 +28,6 @@ todo:
 - Made here documents support <<- to strip leading tab chars (like bash)
 - No longer strip whitespace from test file
 
-0.1:
+0.1:	2000
 - initial release
 

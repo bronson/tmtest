@@ -1,0 +1,33 @@
+# Test With No Commands
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# This verifies what happens when you try to run a test that
+# doesn't actually contain any commands.
+#
+
+tmtest -o - <<-EOL
+	# Test With No Commands
+	# author: Scott Bronson
+	# date:   30 Mar 2004
+	#
+	# This verifies what happens when you try to run a test that
+	# doesn't actually contain any commands.
+	#
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+# Notice how there's no space before the "echo" below.
+# Earlier versions of tmtest would erroneously put a space there.
+
+------ STDOUT: exit code 0 - no error
+# Test With No Commands
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# This verifies what happens when you try to run a test that
+# doesn't actually contain any commands.
+#
+
+------ STDOUT: exit code 0 - no error

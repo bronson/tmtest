@@ -1,0 +1,54 @@
+# MultiCmd Terminate
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# When running multiple commands, we need to be sure that
+# we return the error code from the first command that fails
+# and stop processing right there.
+
+tmtest -o - <<-EOL
+	# MultiCmd Terminate
+	# author: Scott Bronson
+	# date:   30 Mar 2004
+	#
+	# When running multiple commands, we need to be sure that
+	# we return the error code from the first command that fails
+	# and stop processing right there.
+
+	echo "one"
+	echo "two"
+
+	# this should generate an exit value of 12 on all platforms
+	# and stop processing of this script.
+	sh -c "exit 12"
+
+	echo "three"
+	echo "four"
+
+	------ STDOUT: exit code 0 - no error
+	one
+	two
+EOL
+
+------ STDOUT: exit code 0 - no error
+# MultiCmd Terminate
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# When running multiple commands, we need to be sure that
+# we return the error code from the first command that fails
+# and stop processing right there.
+
+echo "one"
+echo "two"
+
+# this should generate an exit value of 12 on all platforms
+# and stop processing of this script.
+sh -c "exit 12"
+
+echo "three"
+echo "four"
+
+------ STDOUT: exit code 12 - abort!
+one
+two

@@ -1,6 +1,6 @@
 # Here Doc Output
 # author: Scott Bronson
-# date:   3 Dec 2001
+# date:   29 Mar 2004
 #
 # Ensure that we output here docs exactly as we found them.
 # Earlier versions of tmtest passed a string to system() to let the

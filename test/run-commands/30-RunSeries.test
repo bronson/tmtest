@@ -1,0 +1,38 @@
+# Run Series
+# author: Scott Bronson
+# date:   31 Mar 2004
+#
+# This ensures that we can run a series of tests named on the command line.
+
+/tmp/30-temporary-1.test = <<-EOL
+	# Temporary test
+	echo "hi from 1"
+	------ STDOUT: exit code 0 - no error
+	hi from 1
+EOL
+
+/tmp/30-temporary-2.test = <<-EOL
+	# Temporary test
+	echo "hi from 2"
+	------ STDOUT: exit code 0 - no error
+	hi from 2
+EOL
+
+/tmp/30-temporary-3.test = <<-EOL
+	# Temporary test
+	echo "hi from 3"
+	------ STDOUT: exit code 0 - no error
+	hi from 3
+EOL
+
+tmtest /tmp/30-temporary-1.test \
+	/tmp/30-temporary-2.test \
+	/tmp/30-temporary-3.test
+
+
+# ... and this should be the result of running the above tests.
+
+------ STDOUT: exit code 0 - no error
+ok   30-temporary-1.test           
+ok   30-temporary-2.test           
+ok   30-temporary-3.test           

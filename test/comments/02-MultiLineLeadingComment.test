@@ -35,7 +35,9 @@ name: Multi Line Leading Comment
 author: Scott Bronson
 date: 3 Dec 2001
 from: STDIN
-description:
+command 1:
+  echo "I"
+command-descr:
   #
   # Now tmtest supports blank lines in the leading comment
   
@@ -46,8 +48,6 @@ description:
   
   # line three
   
-command:
-  echo "I"
 result descr:
 logfile:
 exit status: 0

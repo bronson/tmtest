@@ -1,0 +1,55 @@
+# Create Pre/Post Exec
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# Here we show how to execute an arbitrary script before entering
+# the test, and another one after exiting.
+
+tmtest -o - <<-EOL
+	# Create Pre/Post Exec
+	# author: Scott Bronson
+	# date:   30 Mar 2004
+
+	12-tmpfile-pre = +x <<-EOsL
+		#!/bin/sh
+		echo Entering the pre
+	EOsL
+
+	12-tmpfile-post = +x <<-EOsL
+		#!/bin/sh
+		echo Exiting the post
+	EOsL
+
+	./12-tmpfile-pre
+	echo Running the test
+	./12-tmpfile-post
+
+	------ STDOUT: exit code 0 - no error
+	Entering the pre
+	Running the test
+	Exiting the post
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Create Pre/Post Exec
+# author: Scott Bronson
+# date:   30 Mar 2004
+
+12-tmpfile-pre = +x <<-EOsL
+	#!/bin/sh
+	echo Entering the pre
+EOsL
+
+12-tmpfile-post = +x <<-EOsL
+	#!/bin/sh
+	echo Exiting the post
+EOsL
+
+./12-tmpfile-pre
+echo Running the test
+./12-tmpfile-post
+
+------ STDOUT: exit code 0 - no error
+Entering the pre
+Running the test
+Exiting the post

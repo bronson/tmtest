@@ -1,0 +1,47 @@
+# Create Executable File
+# author: Scott Bronson
+# date:   29 Mar 2004
+
+# This demonstrates the ability to create an executable file and
+# then call it from your script.
+
+tmtest -o - <<-EOL
+	# Create File
+	# author: Scott Bronson
+	# date:   29 Mar 2004
+
+	# this test the code path where we can't create the file.
+	# directories a/b/c/d should not exist.
+
+	12-tmpfile = +x <<-EOsL
+		#!/bin/sh
+		echo line1
+		echo line2
+	EOsL
+
+	./12-tmpfile
+
+	------ STDOUT: exit code 0 - no error
+	line1
+	line2
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Create File
+# author: Scott Bronson
+# date:   29 Mar 2004
+
+# this test the code path where we can't create the file.
+# directories a/b/c/d should not exist.
+
+12-tmpfile = +x <<-EOsL
+	#!/bin/sh
+	echo line1
+	echo line2
+EOsL
+
+./12-tmpfile
+
+------ STDOUT: exit code 0 - no error
+line1
+line2

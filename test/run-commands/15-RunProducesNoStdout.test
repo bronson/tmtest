@@ -1,0 +1,29 @@
+# Run Produces No Stdout
+# author: Scott Bronson
+# date:   31 Mar 2003
+#
+# What happens if we successfully run a test and it produces no output?
+#
+
+tmtest -o - <<-EOL
+	# Run Produces No Stdout
+	# author: Scott Bronson
+	# date:   31 Mar 2003
+	#
+	# What happens if we successfully run a test and it produces no output?
+	# (the shell command "true" is designed to do exactly this).
+
+	true
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Run Produces No Stdout
+# author: Scott Bronson
+# date:   31 Mar 2003
+#
+# What happens if we successfully run a test and it produces no output?
+# (the shell command "true" is designed to do exactly this).
+
+true
+------ STDOUT: exit code 0 - no error

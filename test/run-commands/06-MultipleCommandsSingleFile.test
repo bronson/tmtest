@@ -1,0 +1,49 @@
+# Run Multiple Commands
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# Demonstrates running multiple commands when we also specify a
+# single file
+
+tmtest -o - <<-EOL
+	# Run Multiple Commands
+	# author: Scott Bronson
+	# date:   30 Mar 2004
+	#
+	# Demonstrates running multiple commands when we also specify a
+	# single file
+
+	06-tmpfile = <<-EOL
+		ho!
+	EOL
+	
+	echo "hi!"
+	cat 06-tmpfile
+	echo "the derry-o"
+	
+	------ STDOUT: exit code 0 - no error
+	hi!
+	ho!
+	the derry-o
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Run Multiple Commands
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# Demonstrates running multiple commands when we also specify a
+# single file
+
+06-tmpfile = <<-EOL
+	ho!
+EOL
+
+echo "hi!"
+cat 06-tmpfile
+echo "the derry-o"
+
+------ STDOUT: exit code 0 - no error
+hi!
+ho!
+the derry-o

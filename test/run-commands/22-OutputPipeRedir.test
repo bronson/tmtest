@@ -1,0 +1,46 @@
+# Output Pipe Redirect
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# This ensures we can redirect the output of a pipe
+
+tmtest -o - <<-EOL
+	# Output Pipe Redirect
+	# author: Scott Bronson
+	# date:   30 Mar 2004
+	#
+	# This ensures we can redirect the output of a pipe
+
+	22-postscr = +x <<-EOL
+		echo "file:"
+		cat 22-tmpfile
+		rm 22-tmpfile
+	EOL
+
+	echo "abbcbba" | tr b d | cat > 22-tmpfile
+	./22-postscr
+
+	------ STDOUT: exit code 0 - no error
+	file:
+	addcdda
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Output Pipe Redirect
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# This ensures we can redirect the output of a pipe
+
+22-postscr = +x <<-EOL
+	echo "file:"
+	cat 22-tmpfile
+	rm 22-tmpfile
+EOL
+
+echo "abbcbba" | tr b d | cat > 22-tmpfile
+./22-postscr
+
+------ STDOUT: exit code 0 - no error
+file:
+addcdda

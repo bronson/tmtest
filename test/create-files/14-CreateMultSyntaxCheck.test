@@ -1,0 +1,64 @@
+# Create Multiple Files Syntax Check
+# author: Scott Bronson
+# date:   30 Mar 2004
+
+# Ensures that the syntax check output works properly with multiple files.
+
+tmtest -c - <<-EOL
+	# Create File
+	# author: Scott Bronson
+	# date:   30 Mar 2004
+
+	# Ensures that the syntax check output works properly with multiple files.
+
+	10-tmpfile1 = <<-EOsL
+		line 1
+		line 2
+	EOsL
+
+	10-tmpfile2 = <<-EOsL
+		line 3
+		line 4
+	EOsL
+
+	echo "This is the test"
+
+	------ STDOUT: exit code 0 - no error
+	line 1
+	line 2
+	line 3
+	line 4
+EOL
+
+------ STDOUT: exit code 0 - no error
+name: Create File
+author: Scott Bronson
+date:   30 Mar 2004
+from: STDIN
+file: 10-tmpfile1
+file-descr:
+  
+  # Ensures that the syntax check output works properly with multiple files.
+  
+file-contents:
+  line 1
+  line 2
+file: 10-tmpfile2
+file-descr:
+  
+file-contents:
+  line 3
+  line 4
+command 1:
+  echo "This is the test"
+command-descr:
+  
+result descr:
+  
+logfile:
+exit status: 0
+result:
+  line 1
+  line 2
+  line 3
+  line 4

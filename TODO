@@ -27,3 +27,28 @@ Then, to test files, you simply include them in the expected output!
   a small change that breaks a ton of tests, you can output a bunch
   of new test files, run a recursive diff to make sure all the changes
   are expected, then check in the new tests.
+
+- Make tests somewhat self-aware.  I.e.
+  "I'm like B, but more complex -- more specific"
+  "I'm like B, but simpler, and should work more often"
+  That way, if all tests go red, it's easy to get tmtest to tell
+  you where you should start digging in.  Theoretically, getting
+  the more broad tests working might fix the more specific ones too.
+
+  This requires the header changes.
+
+- should use config files to make the parent exit clause and child
+  exit clause visually distinct.  (only in tmtest tesdts)
+
+- should allow specifying regexps or other executable code to determine
+  if the test succeeds or fails.  This exact match might not be useful
+  everywhere.
+
+- Should give the internal tests distinct comments from the external
+  tests.
+ 
+- Make header totally free-form.  Remove the need to explicitly declare
+  a title for the test.
+
+- It's awful hard syntactically to tell files from commands.  Is there
+  any way to make them distinct?

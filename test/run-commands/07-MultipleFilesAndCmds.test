@@ -1,0 +1,59 @@
+# Run Multiple Commands
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# We test that we can create multiple files and then run multiple
+# commands.
+
+tmtest -o - <<-EOL
+	# Run Multiple Commands
+	# author: Scott Bronson
+	# date:   30 Mar 2004
+	#
+	# We test that we can create multiple files and then run multiple
+	# commands.
+
+	07-tmpfile1 = <<-EOL
+		ho!
+	EOL
+
+	07-tmpfile2 = +x <<-EOL
+		#!/bin/sh
+		echo "the derry-o"
+	EOL
+
+	echo "hi!"
+	cat 07-tmpfile1
+	./07-tmpfile2
+	
+	------ STDOUT: exit code 0 - no error
+	hi!
+	ho!
+	the derry-o
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Run Multiple Commands
+# author: Scott Bronson
+# date:   30 Mar 2004
+#
+# We test that we can create multiple files and then run multiple
+# commands.
+
+07-tmpfile1 = <<-EOL
+	ho!
+EOL
+
+07-tmpfile2 = +x <<-EOL
+	#!/bin/sh
+	echo "the derry-o"
+EOL
+
+echo "hi!"
+cat 07-tmpfile1
+./07-tmpfile2
+
+------ STDOUT: exit code 0 - no error
+hi!
+ho!
+the derry-o

@@ -35,7 +35,9 @@ name: Multi Line Leading Comment
 author: Scott Bronson
 date:   3 Dec 2001
 from: STDIN
-description:
+command 1:
+  echo "have"
+command-descr:
   
   
   
@@ -45,8 +47,6 @@ description:
   
   
   
-command:
-  echo "have"
 result descr:
 logfile:
 exit status: 0

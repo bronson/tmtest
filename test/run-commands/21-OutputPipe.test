@@ -1,0 +1,30 @@
+# Output Pipe
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This ensures that command continuations ('\') work.
+
+tmtest -o - <<EOL
+# Output Pipe
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This ensures that command continuations ('\') work.
+
+echo 'cababac' | tr b l
+
+------ STDOUT: exit code 0 - no error
+calalac
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Output Pipe
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This ensures that command continuations ('\') work.
+
+echo 'cababac' | tr b l
+
+------ STDOUT: exit code 0 - no error
+calalac

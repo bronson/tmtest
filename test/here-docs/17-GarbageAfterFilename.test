@@ -1,0 +1,23 @@
+# Garbage After Filename
+# author: Scott Bronson
+# date:   30 Mar 2004
+
+# Ensures we properly handle illegal garbage after the here document
+# when creating a file.
+
+tmtest -c - <<-EOL
+	# Create File
+
+	10-tmpfile2 = <<-EOsL illegal text $ ya ya 1#$!%
+		line 3
+		line 4
+	EOsL
+
+	echo "This is the test"
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDERR:
+STDIN line 3: garbage after here doc: 'illegal text $ ya ya 1#$!%'
+------ STDOUT: exit code 255 - abort!

@@ -1,9 +1,8 @@
 # Here Doc Nesting
 # author: Scott Bronson
-# date:   3 Dec 2001
+# date:   29 Mar 2004
 #
-# Here docs don't nest unless you use indenting.
-# This ensures that nesting fails when we're not using indenting.
+# Here docs can't nest unless you're stripping tabs.
 
 tmtest -o - <<EOL
 # Here Doc Nesting
@@ -13,9 +12,9 @@ tmtest -o - <<EOL
 # Here docs should nest, even if they have the same name.
 
 cat <<EOL
-Yo!
+	Yo!
 EOL
 
 ------ STDERR:
-file STDIN line 8: unexpected end of input.
+file STDIN line 8: did you forget to terminate the here doc?
 ------ STDOUT: exit code 255 - abort!

@@ -2,7 +2,7 @@
 # author:Scott Bronson
 # date:3 Dec 2001
 #
-# Ensures the Syntax Check function of Trestlemail works
+# Ensures the Syntax Check function of tmtest works
 
 # line one
 
@@ -36,7 +36,9 @@ name: Syntax Check
 author:Scott Bronson
 date:3 Dec 2001
 from: STDIN
-description:
+command 1:
+  echo "a"
+command-descr:
   #
   # Ensures the Syntax Check function of Trestlemail works
   
@@ -47,8 +49,6 @@ description:
   
   # line three
   
-command:
-  echo "a"
 result descr:
 logfile:
 exit status: 0

@@ -1,0 +1,21 @@
+# Garbage After Here Doc
+# author: Scott Bronson
+# date:   30 Mar 2004
+
+# Ensures that we properly handle garbage after the here doc
+# (which needs to be the last item on the line)
+
+tmtest -c - <<-EOL
+	# Create File
+
+	cat <<-EOsL illegal text
+		and p doesn't matter
+		and q doesn't matter
+	EOsL
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDERR:
+STDIN line 3: garbage after here doc: 'illegal text'
+------ STDOUT: exit code 255 - abort!

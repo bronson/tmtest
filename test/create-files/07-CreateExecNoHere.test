@@ -1,0 +1,36 @@
+# Create File
+# author: Scott Bronson
+# date:   31 Mar 2004
+
+# what happens when you create an executable file but don't specify a here
+# document?
+
+tmtest -o - <<-EOL
+	# Create File
+	# author: Scott Bronson
+	# date:   31 Mar 2004
+
+	# what happens when you create a file but don't specify a here
+	# document?
+
+	07-tmpfile = +x
+
+	cat 07-tmpfile
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Create File
+# author: Scott Bronson
+# date:   31 Mar 2004
+
+# what happens when you create a file but don't specify a here
+# document?
+
+07-tmpfile = +x
+
+cat 07-tmpfile
+
+------ STDOUT: exit code 0 - no error
+
