@@ -1,34 +1,33 @@
-# Diff
 # author: Scott Bronson
 # date:   14 Nov 2004
 
 # tests tmtest -d | patch
+# Updated for tmtest 2.0 on 29 Jan 2005
 
-DISABLED
-
-eachline: s/^patching .*/patching ((FILE))/
+. "$MYDIR/indent.sh"
 
 
-tt.test: file = <<-EOL
-    echo "right output"
-    STDOUT:
-    wrong output
+MKFILE tt <<-EOL
+	echo "right output"
+	STDOUT:
+	wrong output
 EOL
 
 
 # This is a little exotic...  Patch needs the CWD to be the directory
 # containing the file to patch.  "dirname $(tt.test)" gives that dir.
 
-tmtest -d $(tt.test) | (cd `dirname $(tt.test)` && patch)
-cat $(tt.test)
+tmtest --all-files -d "$tt" | (cd `dirname "$tt"` && patch)
+echo "And the patched file:"
+echo
+INDENT < "$tt"
 
------- STDOUT: exit code 0 - no error
-patching ((FILE))
-# title:   Ensure the Echo Command Works
-# author:  Sam the Tester
-# date:    31 Mar 2004
+MODIFY: s/^patching .*/patching FILE/
 
-echo "right output"
+STDOUT:
+patching FILE
+And the patched file:
 
------- STDOUT: exit code 0 - no error
-right output
+	echo "right output"
+	STDOUT:
+	right output

@@ -1,55 +1,56 @@
-# Diff
 # author: Scott Bronson
 # date:   14 Nov 2004
 
-DISABLED
+# tests tmtest -d | patch
+# Updated for tmtest 2.0 on 29 Jan 2005
 
-eachline: s/^patching .*/patching ((FILE))/
+. "$MYDIR/indent.sh"
 
 
-# tests tmtest -d test1 test2 | patch
+MKFILE tt1 <<-EOL
+	echo "right output1"
+	STDOUT:
+	wrong output
+EOL
 
-1.test: file = <<-EOF
-    # title:   Ensure the Echo Command Works
-    # author:  Sam the Tester
-    # date:    31 Mar 2004
+MKFILE tt2 <<-EOL
+	echo "right output2"
+	STDOUT:
+	wrong output
+EOL
 
-    echo "test 1 right output"
+MKFILE tt3 <<-EOL
+	echo "right output3"
+	STDOUT:
+	wrong output
+EOL
 
-    ------ STDOUT: exit code 0 - no error
-    test 1 wrong output
-EOF
 
-2.test: file = <<-EOF
-    # title:   Ensure the Echo Command Works
-    # author:  Sam the Tester
-    # date:    31 Mar 2004
+# All tt* files must be in the same directory.
 
-    echo "test 2 right output"
+tmtest --all-files -d "$tt1" "$tt2" "$tt3" | (cd `dirname "$tt1"` && patch)
+echo
+INDENT < "$tt1"
+echo
+INDENT < "$tt2"
+echo
+INDENT < "$tt3"
 
-    ------ STDOUT: exit code 0 - no error
-    test 2 wrong output
-EOF
+MODIFY: s/^patching .*/patching FILE/
 
-tmtest -d $(1.test) $(2.test) | (cd `dirname $(1.test)` && patch)
-cat $(1.test) $(2.test)
+STDOUT:
+patching FILE
+patching FILE
+patching FILE
 
------- STDOUT: exit code 0 - no error
-patching ((FILE))
-patching ((FILE))
-# title:   Ensure the Echo Command Works
-# author:  Sam the Tester
-# date:    31 Mar 2004
+	echo "right output1"
+	STDOUT:
+	right output1
 
-echo "test 1 right output"
+	echo "right output2"
+	STDOUT:
+	right output2
 
------- STDOUT: exit code 0 - no error
-test 1 right output
-# title:   Ensure the Echo Command Works
-# author:  Sam the Tester
-# date:    31 Mar 2004
-
-echo "test 2 right output"
-
------- STDOUT: exit code 0 - no error
-test 2 right output
+	echo "right output3"
+	STDOUT:
+	right output3
