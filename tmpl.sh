@@ -1,18 +1,17 @@
 echo START >&%(STATUSFD)
 
-# set -e
-# PS4='TEST: '
-# set -x
+ABORT ()  { echo "ABORTED: $*" >&%(STATUSFD); exit 0; }
+ABORT: () { ABORT $*; }
 
 ADD_CWD_TO_PATH () { PATH="$(dirname ${BASH_SOURCE[1]}):$PATH"; }
+
+ATEXIT ()  { echo "ATEXIT: $*" >&%(STATUSFD); }
+ATEXIT: () { ATEXIT $*; }
 
 DISABLED  () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
 DISABLED: () { DISABLED $*; }
 DISABLE   () { DISABLED $*; }
 DISABLE:  () { DISABLED $*; }
-
-ABORT ()  { echo "ABORTED: $*" >&%(STATUSFD); exit 0; }
-ABORT: () { ABORT $*; }
 
 TESTFILE='%(TESTFILE)'
 TITLE='%(TITLE)'

@@ -1,0 +1,14 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-27'
+
+tmtest - <<-EOL
+	ATEXIT echo one
+	ATEXIT echo two
+	STDOUT:
+	two
+	one
+EOL
+STDOUT: 
+ok   (STDIN)
+
+1 test run, 1 success, 0 failures.

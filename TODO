@@ -28,6 +28,7 @@ Test that both raw and modified work when stdout doesn't have a newline.
 - Shouldn't run every test if the DISABLED directive is in a config file.
   Should discover what dir the DISABLED directive came from and refuse
   to run anything above that.
+- How can we integrate with bash's assert function?
 
 2.2:
 - Add the ability to run multiple tests from one testfile
@@ -43,9 +44,13 @@ Test that both raw and modified work when stdout doesn't have a newline.
 - Provide some sort of XML output.
 - it's stupid to dup the str just to null-terminate it so it can be passed to pcrs.
   modify pcrs to compile buffers too.
+
+????:
 - There should be a way to repeatedly run a single test with only tiny
   differences.  i.e. test all permeutations of DISABLE DISABLE:
   DISABLED DISABLED:  Hopefully that will clean up 05-08-Disable/Abort.test
+- There should be a way of discovering that you copied a file and changed
+  its functionality.  that way, tmtest will update its author and date.
 
 
 - Wow, the pcrs error messages suck.  Is there any way to improve them?

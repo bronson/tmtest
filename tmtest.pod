@@ -1,6 +1,6 @@
 =head1 NAME
 
-tmtest - run a battery of compliance tests
+tmtest - Performs functional tests on command-line utilities.
 
 =head1 SYNOPSIS
 
@@ -37,15 +37,20 @@ being changed, right down to the whitespace.
 
 =head1 CONFIGURATION
 
-tmtest frst reads its configuration from F</etc/tmtest.conf> and
-F<~/.tmtest.conf>.
+tmtest reads its configuration first from F</etc/tmtest.conf> and
+F<~/.tmtest.conf>.  Then it starts at the root directory and works
+its way up to the current directory looking for files named "tmtest.conf"
+It executes the config files each time it runs a test.  If you're
+running 40 tests, your config file will get executed 40 times.
 
 =over 8
 
 =item ABORT
 
-Causes the test to abort immediately.  See the example in
-L</MKDIR>.
+Causes the test to abort immediately.  You can optionally specify
+a message.  See the example in L</MKDIR>.
+
+    ABORT: too bad this test won't live
 
 =item ADD_CWD_TO_PATH
 
@@ -53,6 +58,25 @@ This adds the directory containing the currently-running script to the
 front of the $PATH variable.  Executables in this directory will be
 run in preference to identically-named executables installed elsewhere
 on the system.
+
+=item ATEXIT
+
+Specifies a command to be run after the test has finished, whether or
+not it completed successfully.  This often makes cleaning up a lot
+easier, especially if the test aborts.
+
+	ATEXIT xset +dpms
+
+You may specify any number of ATEXIT handlers.  They are executed in
+reverse order of registration.  So, for example,
+
+	ATEXIT echo one
+	ATEXIT echo two
+
+would output
+
+	two
+	one
 
 =item DISABLE
 =item DISABLED
@@ -64,28 +88,38 @@ You can supply a reason string too
 
    DISABLED: this test is just too lame.
 
-=item MKDIR
+=item DOOM
 
-Creates the named directory.
-This directory will be deleted when the script ends.
-If it still contains files, a warning is printed and the
-directory is not deleted.  Files and directories are deleted in
-the opposite order that they are created
+Dooms the given file or directory to deletion when the test is finished.
+Files and directories are deleted in the opposite order as they were registered.
+Directories will only be deleted if they are empty.  Otherwise a warning is printed.
 
-Note that you should never use static names in /tmp because it
-opens you up to symlink attacks.  Use the mktemp command to
-generate a unique name for your directory:
+Note that you should never create files in /tmp with predictable file
+names.  This opens you up to the symlink attack.  Instead, use mktemp(1).
+(You may think now, "ah, but I'm the only user on my system.  I'm safe."
+But what about the guy running your test two years from now on a
+shared system?  Never use static filenames in /tmp.)  Also consider
+the tempfile(1) utility if mktemp doesn't offer what you need.
 
-	dir=`mktemp -t 02-XXXXXX` || ABORT can't mktemp.
-	MKDIR $dir
+	dir=`mktemp -d -t 02-XXXXXX` || ABORT can't mktemp.
+	DOOM $dir
 	cd $dir
 	etc...
 
-=item MKFILE
+Or, more concisely:
 
-Creates the named file.  The file will be deleted when the test
-ends.  See the description for L</MKDIR> on why static file names
-should be avoided.  Here's an
+	cd `DOOM mktemp -d -t 02-XXXXX` || ABORT can't make temporary directory.
+	cd `DOOM mktemp -d` || ABORT can't make temporary directory.
+
+Because you can't nest backticks (who's the genius responsible for that?),
+DOOM checks to see if its first argument is 'mktemp'.  If it is, then it
+runs all its arguments as a mktemp command.  Otherwise, it interprets
+each argument as a filename that should be doomed.
+
+TODO: "DOOM" is a weird name.  It's better than "DAMN" though.
+Hopefully someone can think of something better.
+
+"DOOM file" is essentially the same as "ATEXIT rm file".
 
 =back
 
@@ -94,6 +128,20 @@ should be avoided.  Here's an
 tmtest returns a nonzero error code only if one or more tests
 could not be run for some reason.  If all tests are successfully run,
 even if they all fail, tmtest returns 0.
+
+=head1 SUGGESTIONS
+
+Look in the "examples" directory that came with this distribution.
+You may find some helpful utilities.
+
+If you want to be more pedantic, you might want to "set -e" in your
+test file or configuration file.  This will make it so the test will
+stop at the very first command that returns a nonzero exit status.
+
+If you can't figure out what your test is doing, you might want
+to add "set -v" or "set -x" to the top of the testfile.  This will
+show you line-by-line what is happening.  You can also put them in
+a config file if you're having configuration issues.
 
 =head1 TUTORIAL
 
