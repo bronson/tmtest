@@ -25,6 +25,8 @@
 #include "r2read-fd.h"
 #include "tfscan.h"
 
+#define DIFF "/usr/bin/diff"
+#define SH   "/bin/bash"
 
 // debugging flags:
 #define DUMP_EXEC 0
@@ -151,7 +153,7 @@ void reset_fd(int fd, const char *fname)
 }
 
 
-int wait_for_child(int child)
+int wait_for_child(int child, const char *name)
 {
     int pid;
     int signal;
@@ -160,7 +162,8 @@ int wait_for_child(int child)
     // wait patiently for child to finish.
     pid = waitpid(child, &status, 0);
     if(pid < 0) {
-        perror("waiting for test to finish");
+        fprintf(stderr, "Error waiting for %s to finish: %s\n",
+                strerror(errno), name);
         exit(runtime_error);
     }
 
@@ -177,7 +180,7 @@ int wait_for_child(int child)
     }
 
     if(!WIFEXITED(status)) {
-        fprintf(stderr, "Unknown status returned by child: %d\n", status);
+        fprintf(stderr, "Unknown status returned by %s: %d\n", name, status);
         exit(runtime_error);
     }
 
@@ -190,14 +193,42 @@ int wait_for_child(int child)
 
 int start_diff(struct test *test)
 {
+    int pipes[2];
+    int child;
+
     assert(test->testfilename);
     if(is_dash(test->testfilename)) {
         fputs("Can't diff tests supplied on stdin.\n", stderr);
         exit(argument_error);
     }
 
-    assert(!"TODO");
-    return 0;
+    if(pipe(pipes) < 0) {
+        perror("creating diff pipe");
+        exit(runtime_error);
+    }
+
+    // fork child process
+    child = fork();
+    if(child < 0) {
+        perror("forking diff");
+        exit(runtime_error);
+    }
+    if(child == 0) {
+        if(dup2(pipes[0], 0) < 0) {
+            perror("dup2ing test output to child's stdin");
+            exit(runtime_error);
+        }
+        close(pipes[0]);
+        close(pipes[1]);
+        execl(DIFF, DIFF, "-u", test->testfilename, "-", (char*)NULL);
+        perror("executing " DIFF " for test");
+        exit(runtime_error);
+    }
+
+    close(pipes[0]);
+    test->rewritefd = pipes[1];
+
+    return child;
 }
 
 
@@ -206,7 +237,14 @@ int start_diff(struct test *test)
 
 void finish_diff(struct test *test, int diffpid)
 {
-    assert(!"TODO");
+    close(test->rewritefd);
+
+    int status = wait_for_child(diffpid, "diff");
+
+    if(status != 0 && status != 1) {
+        fprintf(stderr, "diff returned %d!\n", status);
+        exit(runtime_error);
+    }
 }
 
 
@@ -277,9 +315,8 @@ void run_test(const char *name, int warn_suffix)
     // ignore sigpipes since we don't want a signal raised if child
     // quits early (which almost always happens since it exits before
     // it reads its expected stdout/stderr).
-    signal(SIGPIPE, SIG_IGN);
     if(pipe(pipes) < 0) {
-        perror("creating pipe");
+        perror("creating test pipe");
         exit(runtime_error);
     }
 
@@ -291,13 +328,13 @@ void run_test(const char *name, int warn_suffix)
     }
     if(child == 0) {
         if(dup2(pipes[0], 0) < 0) {
-            perror("dup2ing input to child's stdin");
+            perror("dup2ing input to test's stdin");
             exit(runtime_error);
         }
         close(pipes[0]);
         close(pipes[1]);
-        execl("/bin/sh", "/bin/sh", "-s", NULL);
-        perror("executing /bin/sh for test");
+        execl(SH, SH, "-s", (char*)NULL);
+        perror("executing " SH " for test");
         exit(runtime_error);
     }
 
@@ -336,7 +373,7 @@ void run_test(const char *name, int warn_suffix)
     fclose(tochild);
 
     // wait for the test to finish
-    test.exitno = wait_for_child(child);
+    test.exitno = wait_for_child(child, "test");
 
     // process the test results
     switch(outmode) {
@@ -489,6 +526,8 @@ int open_file(const char *fn, int flags)
 
 void start_tests()
 {
+    signal(SIGPIPE, SIG_IGN);
+
     g_outfd = open_file("/tmp/tmtest-outfile", 0);
     g_errfd = open_file("/tmp/tmtest-errfile", 0);
     g_statusfd = open_file("/tmp/tmtest-status", O_APPEND);

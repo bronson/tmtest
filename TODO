@@ -1,3 +1,8 @@
+- Make diff work in subdirs (need to cd back to superdir before
+  forking, and use the proper partial path for the file)
+- Ensure that it works when running multiple tests in multiple dirs.
+
+
 # TODO: write a function that allows you to disable the test.
 # TODO: write a function to make it easy to create crfiles.
 
