@@ -54,47 +54,47 @@ cat > two/one/t.test <<-EOL
 EOL
 
 
-tmtest --all-files -d | patch -p0
-echo
-INDENT < t.test
-echo
-INDENT < one/t.test
-echo
-INDENT < two/t1.test
-echo
-INDENT < two/t2.test
-echo
-INDENT < two/one/t.test
+tmtest --all-files -d
 
 rm -rf t.test one two
 
 
-MODIFY: s/^patching .*/patching FILE/
+MODIFY:   s/^\-\-\- .*/--- TESTFILE DATE TIME TZ/,
+          s/^\+\+\+.*/+++ - DATE TIME TZ/
 
 STDOUT:
-patching FILE
-patching FILE
-patching FILE
-patching FILE
-patching FILE
-
-	echo "right output1"
-	STDOUT:
-	right output1
-
-	echo "right output2"
-	STDOUT:
-	right output2
-
-	echo "right output3"
-	STDOUT:
-	right output3
-
-	echo "right output4"
-	STDOUT:
-	right output4
-
-	echo "right output5"
-	STDOUT:
-	right output5
-
+--- TESTFILE DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,3 +1,3 @@
+ echo "right output1"
+ STDOUT:
+-wrong output
++right output1
+--- TESTFILE DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,3 +1,3 @@
+ echo "right output2"
+ STDOUT:
+-wrong output
++right output2
+--- TESTFILE DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,3 +1,3 @@
+ echo "right output3"
+ STDOUT:
+-wrong output
++right output3
+--- TESTFILE DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,3 +1,3 @@
+ echo "right output4"
+ STDOUT:
+-wrong output
++right output4
+--- TESTFILE DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,3 +1,3 @@
+ echo "right output5"
+ STDOUT:
+-wrong output
++right output5

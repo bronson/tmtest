@@ -1,0 +1,99 @@
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+# tests tmtest -d | patch -p0 in a hierarchy
+# Updated for tmtest 2.0 on 29 Jan 2005
+
+# tt/t.test
+# tt/one/t.test
+# tt/two/t1.test
+# tt/two/t2.test
+# tt/two/one/t.test
+
+
+. "$MYDIR/indent.sh"
+
+
+MKDIR tt
+cd "$tt" || ABORT "Could not cd to $tt"
+
+cat > t.test <<-EOL
+	echo "right output1"
+	STDOUT:
+	wrong output
+EOL
+
+
+mkdir one
+cat > one/t.test <<-EOL
+	echo "right output2"
+	STDOUT:
+	wrong output
+EOL
+
+
+mkdir two
+cat > two/t1.test <<-EOL
+	echo "right output3"
+	STDOUT:
+	wrong output
+EOL
+
+cat > two/t2.test <<-EOL
+	echo "right output4"
+	STDOUT:
+	wrong output
+EOL
+
+
+mkdir two/one
+cat > two/one/t.test <<-EOL
+	echo "right output5"
+	STDOUT:
+	wrong output
+EOL
+
+
+tmtest --all-files -d | patch -p0
+echo
+INDENT < t.test
+echo
+INDENT < one/t.test
+echo
+INDENT < two/t1.test
+echo
+INDENT < two/t2.test
+echo
+INDENT < two/one/t.test
+
+rm -rf t.test one two
+
+
+MODIFY: s/^patching .*/patching FILE/
+
+STDOUT:
+patching FILE
+patching FILE
+patching FILE
+patching FILE
+patching FILE
+
+	echo "right output1"
+	STDOUT:
+	right output1
+
+	echo "right output2"
+	STDOUT:
+	right output2
+
+	echo "right output3"
+	STDOUT:
+	right output3
+
+	echo "right output4"
+	STDOUT:
+	right output4
+
+	echo "right output5"
+	STDOUT:
+	right output5

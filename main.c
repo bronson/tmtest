@@ -203,7 +203,6 @@ int open_file(char *fn, const char *name, int flags)
 	strcat(fn, name);
 
     int fd = open(fn, flags|O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
-
     if(fd < 0) {
         fprintf(stderr, "couldn't open %s: %s\n", fn, strerror(errno));
         exit(runtime_error);	// TODO
@@ -228,6 +227,7 @@ int write_stdin_to_tmpfile(struct test *test)
 	fd = open_file(buf, DIFFNAME, 0);
 	assert(strlen(buf) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
 	write_raw_file(fd, 0);
+	close(fd);
 
 	return fd;
 }
@@ -240,9 +240,11 @@ int start_diff(struct test *test)
 {
     int pipes[2];
     int child;
-	const char *filename = test->testfilename;
+	const char *filename = NULL;
 
     assert(test->testfilename);
+	// if the test is coming from stdin, we need to copy it to a
+	// real file before we can diff against it.
     if(is_dash(test->testfilename)) {
 		// first, write all of our stdin to a tmpfile.
 		write_stdin_to_tmpfile(test);
@@ -256,7 +258,6 @@ int start_diff(struct test *test)
         exit(runtime_error);
     }
 
-    // fork child process
     child = fork();
     if(child < 0) {
         perror("forking diff");
@@ -269,11 +270,29 @@ int start_diff(struct test *test)
         }
         close(pipes[0]);
         close(pipes[1]);
-		curreset();
-		if(0 != chdir(curabsolute())) {
-            fprintf(stderr, "Could not chdir 1 to %s: %s\n", curabsolute(), strerror(errno));
-            exit(runtime_error);
+
+		if(!filename) {
+			// figure out the filename that diff will use
+			if(test->testfilename[0] == '/') {
+				filename = test->testfilename;
+			} else {
+				// since we don't have an absolute path, we need to
+				// cd to the original wd and run the diff with
+				// a relative path.  it takes a bit of computation...
+				curpush(test->testfilename);
+				filename = strdup(currelative());
+				if(!filename) {
+					perror("strdup in start_diff");
+					exit(runtime_error);
+				}
+				curreset();
+				if(0 != chdir(curabsolute())) {
+					fprintf(stderr, "Could not chdir 1 to %s: %s\n", curabsolute(), strerror(errno));
+					exit(runtime_error);
+				}
+			}
 		}
+
         execl(DIFFPROG, DIFFPROG, "-u", filename, "-", (char*)NULL);
         perror("executing " DIFFPROG " for test");
         exit(runtime_error);

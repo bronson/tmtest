@@ -1,0 +1,66 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-29'
+
+# Ensures that we can run tests specified:
+#    - as a filename in the current dir on the command line
+#    - as a filename in a child dir on the command line
+#    - as a filename in a parent dir on the command line
+#    - recursively on the command line
+
+# ./sup.test
+# ./mid/mid.test
+# ./mid/sub/sub.test
+
+
+MKDIR dir
+mkdir -p "$dir/mid/sub"
+cd "$dir/mid"
+
+cat > ../sup.test <<-EOL
+	echo superdir
+	STDOUT:
+	superdir
+EOL
+
+cat > mid.test <<-EOL
+	echo middir
+	STDOUT:
+	middir
+EOL
+
+cat > sub/sub.test <<-EOL
+	echo middir
+	STDOUT:
+	middir
+EOL
+
+tmtest mid.test sub/sub.test ../sup.test sub . ..
+
+# clean up after ourselves
+rm -rf ../sup.test ../mid
+
+
+STDOUT:
+ok   mid.test 
+ok   sub/sub.test 
+ok   ../sup.test 
+
+Processing ./sub
+ok   sub.test 
+
+Processing ./.
+ok   mid.test 
+
+Processing ././sub
+ok   sub.test 
+
+Processing ./..
+ok   sup.test 
+
+Processing ./../mid
+ok   mid.test 
+
+Processing ./../mid/sub
+ok   sub.test 
+
+9 tests run, 9 successes, 0 failures.
