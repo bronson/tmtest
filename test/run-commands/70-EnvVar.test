@@ -2,6 +2,8 @@ title:	EnvVar
 author:	Scott Bronson
 date:	22 July 2004
 
+disabled: yes, until we support envvars again.
+
 doc:	Ensures that setting an envvar works for the immediate command.
 
 tmtest -o - <<-EOL

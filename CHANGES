@@ -2,6 +2,7 @@ Changes that potentially break backward compatibility
 are marked with a '*'.
 
 TODO:
+- make envvars work again
 - make patching work when you supply multiple files
 - allow headers or options to tell where to explode the file
 - make it read a global configuration from /etc
@@ -10,9 +11,6 @@ TODO:
 - add an alarm that will time out a stalled child processes
 - maybe allow crfiles to work backwards too: "execfile: postscr = <<EOF".  Seems more natural, though technically wrong.
 - work with spaces in the filenames.
-- maybe make headers use = as well as :, might appear cleaner for some headers.
-  - we can do this now that we're not using = to specify a crfile.
-  - this would also allow us to add += to replace "hdr = $(hdr) blah"
 - rename the eachline header, mabye fixstdout, fixstderr, and fixoutput?
 - make debugging output much more presentable.
   - Split into parsing debug and running debug.
@@ -31,6 +29,9 @@ TODO:
 - maybe write a gui front-end
 
 0.89:
+- maybe make headers use = as well as :, appears cleaner for some headers.
+- also made += be equivalent to "hdr = $(hdr) blah"
+- Unfortunately, this breaks envvar syntax.  For now envvars aren't supported.
 - Added -D: define headers using -Dheader=value or --define-header=header=value
 - Now runs executable interpolation anywhere in command line, not just on first position.
 - now output the byte-for-byte stdout and stderr when --verbose is on.

@@ -660,6 +660,7 @@ sub has_here_doc
 	my $cmd = shift;
 	my $filename = shift;
 	my $line = shift;
+	my $startline = shift;
 
 	# need to collect the command line into tokens like the shell would
 	my @words = subtle_shellwords($cmd);
@@ -685,7 +686,7 @@ sub has_here_doc
 			 $here_word = $2;
 			 defined($here_word) or parse_die($filename, $line,
 				"You must specify a word for the here doc.\n");
-			 $3 and parse_die($filename, $line, "Garbage after here word: $3\n");
+			 $3 and parse_die($filename, $startline, "Garbage after here word: \"$3\"\n");
 		 } else {
 			 $cmdbeg .= ' ' if $cmdbeg && length($cmdbeg);
 			 $cmdbeg .= $_;
@@ -693,7 +694,7 @@ sub has_here_doc
 	}
 
 	if($isfile && $cmdtrail) {
-		 parse_die($filename, $line, "garbage after here doc: '$cmdtrail'\n");
+		 parse_die($filename, $startline, "Garbage after here word: \"$cmdtrail\"\n");
 	}
 
 	# $debug and print "CmdWithoutHereWord: $cmdbeg\n";
@@ -914,11 +915,13 @@ sub read_test
 		my $header;
 		my ($here, $orig, $post);
 		my $herepre;
+        my $startline = $line;
 
 		# "hash" refers to the "#" character, not the hash data structure.
-		if($file->[$line] =~ /^(\#)?(\s*\S+\s*)\:(.*)$/) {
+		if($file->[$line] =~ /^(\#)?(\s*\S+\s*)(\:|\+?\=)(.*)$/) {
 			# this line definitely looks like a header
-			$header = {hash => ($1||''), key => $2, pkey => 1, value => $3};
+			$header = {hash => ($1||''), key => $2, pkey => 1,
+                value => $4, sep => $3 };
 		} elsif($line == 0 && $file->[$line] =~ /^\#(.*)$/) {
 			# grandfathered feature: if the first line is a comment
 			# but doesn't look like a header then it is assumed to be
@@ -1001,6 +1004,9 @@ sub read_test
 		my($hdrline, $hdrrest) = ($1, $2);
 
 		if($hdrline =~ /^\s*(exec)?file(?:$|\s*=)/i) {
+            if($hdrline =~ /\<\<\-?\S+\s+(\S.*)/) {
+                parse_die($filename, $startline, "Garbage after here word: \"$1\"\n");
+            }
 			if($hdrrest =~ /\S/) {
 				parse_die($filename, $line,
 					"We don't support multi-line file declarations.\n");
@@ -1058,6 +1064,12 @@ sub read_test
 			}
 		}
 
+        # append new value to old value if header was defined with '+='.
+        if($header->{sep} && substr($header->{sep},0,1) eq '+') {
+            $header->{value} = $test->{header}->{lc $header->{key}}->{value} .
+                ' ' . $header->{value};
+        }
+
 		$debug && print "  ... stored header \"" . $header->{key} . "\".\n";
 		push @{$test->{headers}}, $header;
 
@@ -1081,6 +1093,7 @@ sub read_test
 	# output clause.
 	while($line < @$file) {
 		$debug && print((@desc ? "... continuing desc in" : "begin") . " block...\n");
+        my $startline = $line;
 
 		# desc is all blank lines or lines beginning with a hash.
 		while( $line < @$file && $file->[$line] =~ /^\s*(?:\#.*)?$/ ) {
@@ -1099,7 +1112,7 @@ sub read_test
 		my @command = ();
 		# header hack -- different continuation if it's a header vs. a command.
 		# luckily we don't allow continued file headers.  Needs a rewrite.
-		if($file->[$line] =~ /^\s*\S+\s*\:\s*(?:exec)?file(.*)$/ &&
+		if($file->[$line] =~ /^\s*\S+\s*(?:\:|\+?\=)\s*(?:exec)?file(.*)$/ &&
 			defined($1) && $1 !~ /\<\<\S/)
 		{
 			# File declaration without a heredoc.  Need to check for continuation.
@@ -1136,7 +1149,7 @@ sub read_test
 		my $here = undef;	# tab-stripped here document
 		my $post;		# the heredoc terminator
 		
-		my ($cmdbeg, $strip_tabs, $here_word) = has_here_doc($cmd, $filename, $line);
+		my ($cmdbeg, $strip_tabs, $here_word) = has_here_doc($cmd, $filename, $line, $startline);
 		if($here_word) {
 			($here, $orig) = read_heredoc(\$line, $file, $filename, $here_word, $strip_tabs);
 			$post = $file->[$line];
@@ -1313,7 +1326,7 @@ sub print_results
 			for(@{$header->{desc}}) { print "$_\n"; }
 		}
 		print(($header->{hash} || '') .
-			($header->{pkey} ? $header->{origkey}.':' : '') .
+			($header->{pkey} ? $header->{origkey}.$header->{sep} : '') .
 			$header->{herepre} . $header->{origvalue} .
 			$header->{herepost} . "\n");
 	}

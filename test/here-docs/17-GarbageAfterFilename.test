@@ -8,7 +8,7 @@
 tmtest -Z - <<-EOL
 	# Create File
 
-	10-tmpfile2 = <<-EOsL illegal text $ ya ya 1#$!%
+	10-tmpfile2: file = <<-EOsL illegal text $ ya ya 1#$!%
 		line 3
 		line 4
 	EOsL
@@ -19,5 +19,5 @@ tmtest -Z - <<-EOL
 EOL
 
 ------ STDERR:
-STDIN line 4: garbage after here doc: 'illegal text $ ya ya 1#$!%'
+STDIN line 3: Garbage after here word: "illegal text $ ya ya 1#$!%"
 ------ STDOUT: exit code 255 - abort!

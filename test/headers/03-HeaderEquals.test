@@ -1,0 +1,33 @@
+# Header Equals
+# author:Scott Bronson
+# date: 13 Nov 2004
+
+# Testing headers defined with = instead of :
+
+tmtest -o - <<EOL
+title= Testing Headers with Continuations
+author=Scott
+    Bronson
+author = is tired.
+date=
+	3
+  Dec
+ 2001
+
+echo $(author)
+------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+title= Testing Headers with Continuations
+author=Scott
+    Bronson
+author = is tired.
+date=
+	3
+  Dec
+ 2001
+
+echo $(author)
+------ STDOUT: exit code 0 - no error
+is tired.

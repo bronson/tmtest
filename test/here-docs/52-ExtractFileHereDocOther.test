@@ -4,12 +4,16 @@
 #
 # Ensures that a simple here doc extraction works for files as well as commands.
 
+# like 52-ExtractFileHereDoc except that it uses the old heredoc syntax.
+# just need to make sure we don't barf.
+
+
 tmtest -o --heredoc=1 - <<-EOL
 	# Extract File Here Doc
 	# author: Scott Bronson
 	# date:   4 July 2004
 
-	/tmp/52-check: file = <<-EOsL
+	/tmp/52-check = <<-EOsL
 		This is heredoc 1 from a file.
 		It will be extracted
 	EOsL
@@ -21,6 +25,6 @@ tmtest -o --heredoc=1 - <<-EOL
 	------ STDOUT: exit code 0 - no error
 EOL
 
------- STDOUT: exit code 0 - no error
-This is heredoc 1 from a file.
-It will be extracted
+------ STDERR:
+Command 1 does not have a here doc!
+------ STDOUT: exit code 255 - abort!

@@ -2,6 +2,8 @@
 # author: Scott Bronson
 # date:   21 Nov 2004
 
+disabled: yes, until we support envvars again.
+
 # Ensures that we can still make crfiles even after we've run a
 # command.  Technically we should fire the whole battery of
 # tests at this...
