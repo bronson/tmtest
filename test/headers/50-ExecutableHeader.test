@@ -17,7 +17,7 @@ EOL
 # then create the config file based on the command file
 
 exec.conf: file = <<EOL
-executable: echo=$(exec.echo)
+executable += echo=$(exec.echo)
 EOL
 
 

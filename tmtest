@@ -43,7 +43,7 @@ my $test_runs = 0;
 my $test_successes = 0;
 my $test_failures = 0;
 my $test_dumpstats = 0;
-my $explicit_config = undef;	# the test file if -f is specified
+my @explicit_configs;	    # the parsed test files specified in custom_dir
 
 my %configs;    # keeps track of which config files we've looked at
 my %defines;    # contains all definitions given by -D on the cmdline.
@@ -68,7 +68,11 @@ my $diff_results = 0;
 my $syntax_check = 0;		# deprecated?
 my $extract_here = undef;	# deprecated?
 my $extract_cmd = undef;	# deprecated?
-my $custom_file = undef;
+my @default_files = ("/etc/tmtest.conf",    # config files we should load
+    ($ENV{HOME}||$ENV{LOGDIR}||(getpwuid($>))[7]) . "/.tmtest.conf");
+my @custom_files;    # config files user asked us to load
+my @custom_dirs;     # config dirs we should process
+my @base_configs;    # contains all non-test-specific configs
 my $debug = 0;
 my $editor = 0;
 my $test_is_from_stdin = 0; # 1 if "-" on cmdline so test is read from stdin.
@@ -87,7 +91,8 @@ exit(1) unless Getopt::Long::GetOptions(
 	"syntax|Z"		=> \$syntax_check,	# deprecated?
 	"heredoc=s"		=> \$extract_here,	# deprecated?
 	"cmd=s"			=> \$extract_cmd,	# deprecated?
-	"configfile|f=s" => \$custom_file,
+    "config-dir=s"  => \@custom_dirs,
+	"config-file|f=s" => \@custom_files,
 	"verbose+"		=> \$debug,			# needs to change
 	"edit|v"		=> \$editor,
 	"help|h|?"		=> sub { print "$usage\n"; exit(0); },
@@ -107,10 +112,18 @@ if(defined($extract_cmd) and $extract_cmd !~ /^\d+$/) {
 	die "-c requires a positive integer, not '$extract_cmd'!\n";
 }
 
-if(defined $custom_file) {
-	# read the explicit configuration file
-	my($file, $dir) = File::Basename::fileparse($custom_file);
-	$explicit_config = read_test_file($custom_file, File::Spec->rel2abs($dir), 0);
+for(@default_files) {
+    next unless -f $_;
+	my($file, $dir) = File::Basename::fileparse($_);
+	push @base_configs, read_test_file($_, File::Spec->rel2abs($dir), 0);
+}
+for(@custom_files) {
+	my($file, $dir) = File::Basename::fileparse($_);
+	push @base_configs, read_test_file($_, File::Spec->rel2abs($dir), 0);
+}
+for(@custom_dirs) {
+    die "$_ is not a directory!\n" unless -d $_;
+	push @base_configs, get_configs(File::Spec->rel2abs($_));
 }
 
 if($editor) {
@@ -314,7 +327,6 @@ sub get_configs
 		}
 	}
 
-	defined $explicit_config and push @configs, $explicit_config;
 	return @configs;
 }
 
@@ -893,11 +905,15 @@ sub read_test
 
 	$test->{header} = {};		# hash of all headers (both in this test and inherited)
 
-	# prepopulate the headers from relevant config files
+	# populate the headers from the config files in the test directory
 	if($isterminal) {
-		for my $conf (get_configs($path)) {
+		for my $conf (@base_configs, get_configs($path)) {
 			for(keys %{$conf->{header}}) {
-				$test->{header}->{$_} = $conf->{header}->{$_};
+                if($conf->{header}->{$_}->{append} && exists $test->{header}->{$_}) {
+                    $test->{header}->{$_}->{value} .= ' ' . $conf->{header}->{$_}->{value};
+                } else {
+                    $test->{header}->{$_} = $conf->{header}->{$_};
+                }
 			}
 		}
 	}
@@ -1075,9 +1091,11 @@ sub read_test
             $oldval = $test->{header}->{lc $header->{key}}->{value}
                 if exists $test->{header}->{lc $header->{key}};
             $header->{value} = ($oldval ? $oldval.' ' : '') . $header->{value};
+            $header->{append} = 1;
         }
 
-		$debug && print "  ... stored header \"" . $header->{key} . "\".\n";
+		$debug && print "  ... stored header \"" . $header->{key} . "\": <<<" .
+            $header->{value} . ">>>\n";
 		push @{$test->{headers}}, $header;
 
 		my $key = lc $header->{key};

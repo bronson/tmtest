@@ -1,0 +1,38 @@
+title: 	Use Config File
+author: Scott Bronson
+date:   21 July 2004
+
+desc: 	Ensures that -f works to import multiple config files.
+		(the config file ensures the test won't run due to version mismatch)
+
+
+# create the config file
+
+tt1.conf: file = <<-EOL
+	tt1: oneee
+EOL
+
+tt2.conf: file = <<-EOL
+	tt2: twooo
+EOL
+
+tt3.conf: file = <<-EOL
+	tt3: threeeeeeeee...
+EOL
+
+# run the test
+
+tmtest -o -f $(tt1.conf) -f $(tt2.conf) --config-file=$(tt3.conf) - <<-EOL
+	echo $(tt1) $(tt2) $(tt3)
+	------ STDOUT: exit code 0 - no error
+	supposed output
+EOL
+
+
+# If the test is skipped, then we know that the configuration
+# file was properly read.
+
+------ STDOUT: exit code 0 - no error
+echo $(tt1) $(tt2) $(tt3)
+------ STDOUT: exit code 0 - no error
+oneee twooo threeeeeeeee...

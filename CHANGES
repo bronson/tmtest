@@ -5,7 +5,6 @@ TODO:
 - make envvars work again.  maybe add an export header?
 - allow headers or options to tell where to explode the file
 - show results when running sub-tests.
-- make it read a global configuration from /etc and ~/.tmtest.conf as well.
 - get rid of exit_value_hack (maybe add a header to do this?)
 - make tmtest work with test files starting with a shebang
 - add an alarm that will time out a stalled child processes
@@ -41,7 +40,11 @@ post-rewrite:
 - maybe write a gui front-end
 
 0.89:
-- maybe make headers use = as well as :, appears cleaner for some headers.
+- added subtests (header and functionality)
+- now accepts multiple config files and dirs on the cmdline
+- added the --config-dir option.
+- now reads configuration out of /etc/tmtest.conf and ~/tmtest.conf too.
+- make headers use = as well as :, appears cleaner for some headers.
 - also made += be equivalent to "hdr = $(hdr) blah"
 * Unfortunately, this breaks envvar syntax.  For now envvars aren't supported.
 - Added -D: define headers using -Dheader=value or --define-header=header=value

@@ -91,11 +91,20 @@ in the test file.  There is also a file "RUN" which will run each
 command file in turn.  Excecuting the "RUN" file should produce
 exactly the same results as running tmtest.
 
-=item B<-f> B<--configfile> F<file>
+=item B<-f> B<--config-file> F<file>
 
 Specifies a configuration file that tmtest should use.
-Configurations in this file override automatically-included
-ones.  See L<CONFIGURATION> for more.
+Configurations in this file override all settings except
+for the ones in the config files in the test dir and the
+ones inside the test file itself.  See L<CONFIGURATION> for more.
+
+=item B<--config-dir> F<dir>
+
+Specifies a directory that tmtest should parse for config files.
+These configurations are overridden by --config-file and declarations
+within the test file itself.  They override the default settings
+and F</etc/tmtest.conf> and F<~/.tmtest.conf>.
+See L<CONFIGURATION> for more.
 
 =item B<-h> I<NUM>
 
@@ -164,14 +173,25 @@ Print the version of the executable and exit.
 
 =head1 CONFIGURATION
 
-tmtest reads configuration out of a file named "tmtest.conf" in the
-directory containing the current testfile, and out of all its parent
-directories.  This way, you can have tests in subdirectories inherit
-settings from parent directories.
+tmtest frst reads its configuration from F</etc/tmtest.conf> and
+F<~/.tmtest.conf>.
 
-In addition to all the tmtest.conf files, you can specify a configuration
-file using the L<-f> command-line switch.  Configurations in this file
-override any automatically-included configurations.
+In addition to all the tmtest.conf files, you can specify configuration
+files using the L<-f> command-line switch.  Configurations in these files
+override any automatically-included configurations.  Files named later
+on the command line override files named earlier on the command line.
+
+You may also specify directories to search for F<tmtest.conf> files
+using the L</--config-dir> command-line option.  Directories named
+later on the command line override those named earlier.  tmtest.conf
+files in child directories override those in parent directroies.
+
+Finally, tmtest searches the directory tree containing the current
+testfile for F<tmtest.conf> files.  Configurations in
+subdirectories inherit and override the configurations in their
+parent directories.  Note that the test can include config files
+using the L<include> header as well.  Configurations included like
+this override all others.
 
 Configuration files are simply L<testfile>s, but without commands or
 exit clauses.  Their headers are added to the currently running testfile.
@@ -180,6 +200,15 @@ For example, if a "timeout: 20" header appears in a file named
 F<tmtest.conf> in the current tests's directory, it is exactly as if
 the current test had a "timeout: 20" header itself.
 
+Here is a diagram.  It says, for instance, that configuration settings
+specified using --config-dir override those set by --config-file.
+
+  /etc/tmtest.conf ->
+    ~/.tmtest.conf ->
+      --config-file=FILE ->
+        --config-dir=DIR ->
+          current test dir ->
+            testfile & files it includes
 
 =head1 BUZZWORDS
 
