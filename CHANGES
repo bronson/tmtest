@@ -1,0 +1,2 @@
+- Tests now start with /tmp as the cwd, not the testdir
+  (people are lazy.  Use $TESTDIR to discover the test directory)

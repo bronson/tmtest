@@ -1,0 +1,14 @@
+AUTHOR='Scott Bronson'
+DATE='2004-12-31'
+
+DISABLED: need the STDOUT -n feature
+
+tmtest - <<-EOL
+	echo -n Howdy
+	STDOUT: -n
+	Howdy
+EOL
+STDOUT : 
+ok   (STDIN)
+
+1 test run, 1 success, 0 failures.

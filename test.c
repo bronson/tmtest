@@ -615,7 +615,7 @@ static void print_reason(struct test *test, const char *name)
 		printf("by %s", test->last_file_processed);
 	}
 	if(test->status_reason) {
-		printf(": %s", test->status_reason);
+		printf("%s", test->status_reason);
 	}
 	printf("\n");
 }
@@ -675,7 +675,7 @@ void test_results(struct test *test)
 
     if(!stdo && !stde && !exno) {
         test_successes++;
-        printf("ok   %s\n", get_testfile_name(test));
+        printf("ok   %s \n", get_testfile_name(test));
     } else {
         test_failures++;
         printf("FAIL %-25s ", get_testfile_name(test));
@@ -877,7 +877,7 @@ static void dump_reason(struct test *test, const char *name)
 		fprintf(stderr, " by %s", convert_testfile_name(test->last_file_processed));
 	}
 	if(test->status_reason) {
-		fprintf(stderr, ": %s", test->status_reason);
+		fprintf(stderr, " %s", test->status_reason);
 	}
 	fprintf(stderr, "\n");
 }

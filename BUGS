@@ -30,3 +30,7 @@ lines.  If a line doesn't begin with exactly that sequence, then
 it is unchanged.  This would be much safer and more useful than just
 blowing away all tabs wholesale!
 
+
+Why does &> redirect both stdout and stderr to a file, but &| doesn't
+redirect stdout and stderr to a pipe?
+Why is the unset command totally unrelated to the set command?
