@@ -1,0 +1,29 @@
+- make tmtest support -f config-file
+
+- Write a manpage for tmtest.  First should be a quick reference,
+  then should come a nice tutorialy ssection
+
+- Document the format of tests run by tmtest
+
+- should add a pre-test script and a post-test script to the test
+  file.  That way the tester could rearrange stuff to test just
+  about anything.
+
+- Should add output file support.  You name the file in the script,
+  tmtest will delete/empty the file at the start of the test, then
+  check file contents at the end.
+
+It's easy to integrate both.  In the startup script, you do either:
+   >out.file   # empty the file
+   rm out.file # delete the file
+Then, to test files, you simply include them in the expected output!
+
+- Make tmtest use mime separators to report expected test output.
+  That way, I don't have to worry about escaping test output in test output.
+
+- Have an "output to directory" option, where all the tests you run
+  are NOT checked against the expected results.  They just store
+  the actual results in a separate directory.  This way, if you made
+  a small change that breaks a ton of tests, you can output a bunch
+  of new test files, run a recursive diff to make sure all the changes
+  are expected, then check in the new tests.

@@ -1,0 +1,43 @@
+# Here Doc Strip
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# Ensure that we output here docs exactly as we found them when stripping
+# tabs.  This is like HereDocOutput
+
+tmtest -o - <<-EOL
+	# Here Doc Output
+	# author: Scott Bronson
+	# date:   3 Dec 2001
+	#
+	# Ensure that we output here docs exactly as we found them.
+
+	cat <<EOsL
+	1
+	 2
+		3
+		 4
+	EOsL
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Here Doc Output
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# Ensure that we output here docs exactly as we found them.
+
+cat <<EOsL
+1
+ 2
+	3
+	 4
+EOsL
+
+------ STDOUT: exit code 0 - no error
+1
+ 2
+	3
+	 4

@@ -1,0 +1,22 @@
+# MultiLine Commands
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This ensures that command continuations ('\') work.
+
+tmtest -o - < 14-CommandInputRedir.file
+
+------ STDOUT: exit code 0 - no error
+# MultiLine Commands dummy file
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This is the internal test for 14.  It gets fed to tmtest through
+# redirection.  For good measure, it uses redirection itself.
+#
+
+cat < 14-CommandInputRedir.dummy
+
+------ STDOUT: exit code 0 - no error
+This is a tiny file
+to ensure that command redirection works.

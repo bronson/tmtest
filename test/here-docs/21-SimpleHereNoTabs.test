@@ -1,0 +1,33 @@
+# Simple Here
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# Hopefully the easiest version of a here document.
+# The -o causes tmtest to just reproduce the here document
+# on its output where we can verify that it is unchanged.
+#
+
+tmtest -o - <<-EOL
+	# Simple Here
+	# author: Scott Bronson
+	# date:   3 Dec 2001
+	#
+	# Hopefully the easiest version of a here document.
+	#
+
+	echo "may"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Simple Here
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# Hopefully the easiest version of a here document.
+#
+
+echo "may"
+------ STDOUT: exit code 0 - no error
+may

@@ -1,0 +1,39 @@
+# Simple Here
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This uses combinations of spaces and tabs to try to confuse tmtest.
+#
+
+tmtest -o - <<-EOL
+	# Simple Here
+	# author: Scott Bronson
+	# date:   3 Dec 2001
+	#
+	# This uses combinations of spaces and tabs to try to confuse it.
+# no tab -- should be unchanged
+		# 2 tabs -- should result in 1 tab.
+ # a space, should be unchanged
+	 # tab and a space -- tab should be removed
+ 	 # space tab space -- should remain unchanged.
+
+	echo "may"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Simple Here
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This uses combinations of spaces and tabs to try to confuse it.
+# no tab -- should be unchanged
+	# 2 tabs -- should result in 1 tab.
+ # a space, should be unchanged
+ # tab and a space -- tab should be removed
+ 	 # space tab space -- should remain unchanged.
+
+echo "may"
+------ STDOUT: exit code 0 - no error
+may

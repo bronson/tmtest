@@ -1,0 +1,27 @@
+# Create File
+# author: Scott Bronson
+# date:   29 Mar 2004
+
+# we create a file and read it back to ensure everything works
+
+tmtest - <<-EOL
+	# Create File
+	# author: Scott Bronson
+	# date:   29 Mar 2004
+
+	# ensure that tmtest can read test descriptions that contain files.
+
+	08-tmpfile = <<-EOsL
+		line 1
+		line 2
+	EOsL
+
+	cat 08-tmpfile
+
+	------ STDOUT: exit code 0 - no error
+	line 1
+	line 2
+EOL
+
+------ STDOUT: exit code 0 - no error
+ok   STDIN                         

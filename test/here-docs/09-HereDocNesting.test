@@ -1,0 +1,21 @@
+# Here Doc Nesting
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# Here docs don't nest unless you use indenting.
+# This ensures that nesting fails when we're not using indenting.
+
+tmtest -o - <<EOL
+# Here Doc Nesting
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# Here docs should nest, even if they have the same name.
+
+cat <<EOL
+Yo!
+EOL
+
+------ STDERR:
+file STDIN line 8: unexpected end of input.
+------ STDOUT: exit code 255 - abort!

@@ -1,0 +1,16 @@
+Why have a copy of tmtest in the test directory?
+
+We can't expect tmtest to test itself (unless we know tmtest has no
+known bugs (in which case why are we running tmtest (...)))
+
+So...
+
+	test/tmtest   a known working and stable version
+	tmtest        the program under development that's being tested
+
+
+This recursion also leads to some very strange looking tests.
+If you're creating tests for your program, I suggest you use the
+tests from the example directory or another project.  Most of
+the tests in this directory are fairly deranged.
+

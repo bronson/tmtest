@@ -1,0 +1,664 @@
+#!/usr/bin/perl -w
+
+# tmtest
+# Scott Bronson
+# 14 Sept 2000
+
+#
+# How to use this tool:
+#
+# test              : - no arguments runs all tests
+#                   : - a single filename of "-" takes test from stdin
+#		otherwise, specify the tests to run on the command line
+#		if you specify a directory, it will recursively run all
+#		tests in the directory.
+# 	-v              : verbose, print each command line as it executes
+#   -o              : output test, print test to stdout rather than running
+#   -d              : output diff between the expected and actual test output.
+#   -c              : simply syntax check the test file
+# 
+
+
+use strict; 
+use Getopt::Std;
+use File::Basename;
+use FindBin qw($RealBin);
+use Cwd 'abs_path';
+
+use vars qw( $VERSION );
+$VERSION = "0.3";
+
+use vars qw( $tmtestpath $config $exit_value_hack );	# supplied to config
+use vars qw( $output $error $output_re $error_re $exit_code_re );
+use vars qw( $generate_exit_msg $clean_results );
+use vars qw( $executable $executablepath );
+
+
+# prepare defaults for all customization values
+# the only one that tmtest-config MUST set is $executable
+$executable = undef;
+$tmtestpath = $RealBin;
+$config = "$RealBin/tmtest-config";
+$exit_value_hack = 0;
+$output = "STDOUT";
+$output_re = $output;
+$error = "STDERR";
+$error_re = $error;
+$exit_code_re = "(?:exit code: (\\d+))?";
+$generate_exit_msg = sub {
+	my $code = shift;
+	return ($code ? "exit code: $code" : "");
+};
+$clean_results = sub { };
+$executablepath = undef;
+
+# Read customization file
+-r $config || die "$config can't be read.\n";
+do $config;
+
+die "Config file must set \$executable!\n" unless defined $executable;
+$executablepath ||= "$RealBin/$executable";
+-x $executablepath || die "$executablepath does not exist or is not executable.\n";
+
+$| = 1;		# don't buffer stdout
+
+my %opts;
+unless( getopts( "odcv", \%opts ) ) {
+	die "usage: tmtest [-v] [-o] [test files or dirs...]\n" .
+		"       -o: dump the results (rather than just go/nogo)\n" .
+		"       -d: diff results against expected results\n" .
+		"       -c: syntax check\n" .
+		"       -v: verbose\n"
+}
+
+my $dump_results = $opts{"o"};
+my $diff_results = $opts{"d"};
+my $syntax_check = $opts{"c"};
+my $verbose = $opts{"v"};
+
+my $test_runs = 0;
+my $test_successes = 0;
+my $test_dumpstats = 0;
+
+if( @ARGV == 1 && $ARGV[0] eq "-" ) {
+	# One last argument is a dash?  Read from stdin.
+	my @file = <STDIN>;
+	my $test = read_test_file( \@file, "STDIN" );
+	process_test( $test );
+} elsif(@ARGV) {
+	for(@ARGV) {
+		if( -f $_ ) {
+			# process a single test file
+			my($file, $dir) = fileparse($_);
+			my $cwd = Cwd::cwd();
+			chdir $dir;
+			process_test_file($file);
+			chdir $cwd;
+		} elsif(-d $_) {
+			# search this dir and all subdirs for tests
+			search_test_dirs($_);
+		} else {
+			print STDERR "File $_ not found.\n";
+		}
+	}
+} else {
+	# If user didn't supply any tests to run,
+	# run everything in current dir.
+	search_test_dirs(".");
+}
+
+if( $test_dumpstats ) {
+	my $test_failures = $test_runs - $test_successes;
+	print "\n$test_runs test" .
+		($test_runs != 1 ? "s" : "") . " run, $test_successes success" .
+		($test_successes != 1 ? "es" : "") . ", $test_failures failure" .
+		($test_failures != 1 ? "s" : "") . "\n";
+}
+
+exit 0;
+
+
+
+
+# Adds the required number of spaces to bring the length of the
+# supplied string up to the desired length.
+# In small doses, this is easier than using format strings.
+
+sub pad
+{
+	$_ = shift;
+	my $len = shift;
+
+	$_ .= " " x ($len - length) if(length() < $len);
+	return $_;
+}
+
+
+# Recursively searches through directories for tests and runs them.
+# tmtest used to use File::Find to perform the recursive directory
+# search.  However, I now want it to print subdirs as they're 
+# entered, and to go in alphabetical order, processing first
+# files, then directories.  Therfore, my own dirsearch is needed.
+
+sub search_test_dirs
+{
+	my $path = shift;
+	my $base = shift || $path;
+
+	print "\nProcessing $base/\n";
+
+	# Since we're doing something recursive,
+	# we'll print the final count at the end.
+	$test_dumpstats = 1;
+
+	if( chdir $path ) {
+		opendir( DIR, '.' ) or die "Can't open $path: $!\n";
+		my @names = sort readdir( DIR );
+		closedir( DIR );
+
+		# first, process files
+		for( @names ) {
+			next if $_ eq '.' || $_ eq '..';
+			-f && process_test_file( $_ );
+		}
+
+		# then, process directories
+		for( @names ) {
+			next unless $_;
+			next if $_ eq '.' || $_ eq '..';
+			next if $_ eq 'CVS';
+			-d && search_test_dirs( $_, "$base/$_" );
+		}
+
+		chdir '..';
+	} else {
+		die "Can't cd to $_: $!\n";
+	}
+}
+
+
+# Reads the test from the provided filename and performs the test.
+# Assumes cwd is set up so we can immediately start testing.
+
+sub process_test_file
+{
+	my $filename = shift;
+
+	# Skip directories, test files must end in ".test"
+	if( !-d && /\.test$/ ) {
+		# read the test file into the $file string
+		open( TEST, "<$filename" ) or die "Could not open $filename: $!\n";
+		my @file = <TEST>;
+		close TEST;
+
+		my $test = read_test_file( \@file, $filename );
+		process_test( $test );
+	}
+}
+
+
+# Given the test structure, performs the test.
+
+sub process_test
+{
+	my $test = shift;
+
+	if( $syntax_check ) {
+		print_test( $test );
+	} else {
+		print $test->{cmd} . "\n" if $verbose;
+
+		# increment number of tests run counter
+		$test_runs += 1;
+
+		# Results are stored in an array with all newlines removed
+		my $results = run_test( $test );
+		&$clean_results( $results );
+
+		my $success = check_results($test, $results);
+		$test_successes += 1 if $success;
+
+		if( $dump_results ) {
+			print_results( $test, $results );
+		} elsif( $diff_results ) {
+			diff_results( $test, $results );
+		} else {
+			my $file = pad( $test->{file}, 30 );
+			print( ($success ? "ok  " : "FAIL") . " $file\n" );
+		}
+	}
+}
+
+
+# This awful function takes an array of lines representing a test file
+# and parses it into a test data structure.  It was never, ever supposed
+# to grow this big.  It needs to be totally eradicated.
+
+sub read_test_file
+{
+	my $file = shift;
+	my $filename = shift;
+
+	local $/ = "\n";
+
+	# for(@$file) { print "file: $_"; }
+
+	# turn this on to get an idea of how the parse is going
+	my $debug = 0;
+	
+	# now scan the string and store the parts in %test
+	my $test = {};
+	my $line = 0;
+
+	$test->{"author"} = '';
+	$test->{"date"} = '';
+	$test->{"desc"} = [];
+	$test->{"command"} = [];
+	$test->{"rdesc"} = [];
+	$test->{"result"} = [];
+	$test->{"logfile"} = [];
+	$test->{"files"} = {};
+
+
+	$test->{"file"} = $filename;
+
+	$file->[$line] =~ /^\#(.*)$/
+		or die "$filename line 1: needs to be \"#\" then the test name. No whitespace!\n" .
+			"    " . $file->[$line];
+	$line += 1;
+	$test->{"name"} = $1;
+
+	for( ; $line < @$file ; $line++) {
+		# first non-header line causes header parsing to stop
+		last if $file->[$line] =~ /^\s*\#?\s*$/;
+		# does this line look like "key : value"?
+		last unless $file->[$line] =~ /^ \#\s*(\S+)\s*\:(.*)$/x;
+		my ($key, $data) = ($1, $2);
+		if(lc $key eq 'author') {
+			$test->{"author"} = $data;
+		} elsif(lc $key eq 'date') {
+			$test->{"date"} = $data;
+		} else {
+			die "$filename line 3: Unknown header '$key'\n";
+		}
+	}
+
+	while($line < @$file && !@{$test->{"command"}}) {
+		# collect all lines that are either blank or begin with a hash into desc
+		# It's very strange that this doesn't work: /^(\#.*)|\s*$/
+		while( $line < @$file && $file->[$line] =~ /^\s*(?:\#.*)?$/x ) {
+			push @{$test->{"desc"}}, $file->[$line];
+			chomp $test->{"desc"}->[-1];
+			$line++;
+		}
+
+		# now collect all lines that end with a continuation char
+		do {
+			last unless $line < @$file;
+			$debug && print "command: $file->[$line]";
+			push @{$test->{"command"}}, $file->[$line];
+			chomp $test->{"command"}->[-1];
+		} while($file->[$line++] =~ /\\\s*$/);
+
+		# convert the command into a single line
+		$test->{cmd} = '';
+		for my $l (@{$test->{"command"}}) {
+			$_ = $l;
+			s/^\s+//;
+			s/\s*\\\s*$//;
+			$test->{cmd} .= ' ' if length $test->{cmd};
+			$test->{cmd} .= $_;
+		}
+		$debug && print "cmd: " . $test->{cmd} . "\n";
+
+		# did the previous line end with a here document?
+		# if so, collect it.
+		if($test->{cmd} =~ /^(.*)\<\<(\-?)(\w+)\s*$/) {
+			my ($start, $strip_tabs, $here_word) = ($1, $2, $3);
+			my $filename = undef;
+			my $hereref = [];	# the tab-squashed version
+			my $origref = [];	# the original version
+
+			if($start =~ /^(.*)\=/) {
+				# we're actually grabbing a file, not the command
+				$filename = $1;
+				$filename =~ s/^\s+|\s+$//g;
+				$test->{"files"}->{$filename} = {};
+				$test->{"files"}->{$filename}->{"content"} = $hereref;
+				$test->{"files"}->{$filename}->{"orig"} = $origref;
+				$test->{"files"}->{$filename}->{"pre"} = $test->{command};
+				$test->{"files"}->{$filename}->{"cmd"} = $test->{cmd};
+				$test->{"command"} = [];
+				chomp $test->{"files"}->{$filename}->{"pre"};
+				# the desc we slurped actually belongs to this file,
+				# not to the test itself.  So we readjust things.
+				$test->{"files"}->{$filename}->{"desc"} = $test->{"desc"};
+				$test->{"desc"} = [];
+			} else {
+				# stuff the command into "here"
+				$test->{"here"} = $hereref;
+				$test->{"orighere"} = $origref;
+			}
+			my $stripper = undef;
+			for( ; $line < @$file && $file->[$line] ne "$here_word\n" ; $line++ ) {
+				my $ll = $file->[$line];
+				chomp $ll;
+				push @$origref, $ll;
+				if($strip_tabs) {
+					if(!defined $stripper) {
+						# define the whitespace that needs to be stripped
+						$ll =~ /^(\s+)/;
+						$stripper = $1;
+					}
+					# strip out the whitespace if it's identical
+					if(substr($ll,0,length $stripper) eq $stripper) {
+						substr($ll, 0, length $stripper, '');
+					}
+				}
+				$debug && print "heredoc: $ll\n";
+				push @$hereref, $ll;
+			}
+			last unless $line < @$file;
+			$debug && print "heredoc done.\n";
+			if(defined $filename) {
+				$test->{"files"}->{$filename}->{"post"} = $file->[$line];
+				chomp $test->{"files"}->{$filename}->{"post"};
+			} else {
+				$test->{herepost} = $file->[$line];
+				chomp $test->{herepost};
+			}
+			$line++;
+		}
+	}
+
+	# collect all lines that are either blank or begin with a hash into rdesc
+	# It's very strange that this doesn't work: /^(\#.*)|\s*$/
+	while( $line < @$file && $file->[$line] =~ /^\s*(?:\#.*)?$/ ) {
+		push @{$test->{"rdesc"}}, $file->[$line];
+		chomp $test->{"rdesc"}->[-1];
+		$line++;
+	}
+
+	$line >= @$file and die "file $filename line $line\: unexpected end of input.\n";
+	$file->[$line] =~ /^[^-]/o and
+		die "file $filename line $line\: expecting the exit clause. did you forget a continuation character?\n" .
+		"    " . $file->[$line] . "\n";
+
+
+	if( $file->[$line] =~ /^\-\-\-\-+\s*$error_re:/o ) {
+		$line += 1;
+		until( $line >= @$file || $file->[$line] =~ /^\-\-\-\-/ ) {
+			push @{$test->{"logfile"}}, substr $file->[$line++], 0, -1;
+		}
+		$line >= @$file && die "file $filename line $line: Could not find output clause.\n";
+	}
+
+	$file->[$line] =~ /^\-\-\-\-+\s*$output_re\:\s*$exit_code_re/o or die
+		"Could not parse $filename line $line: malformed Output clause\n" .
+		"    " . $file->[$line] . "\n";
+	$line++;
+
+	$test->{"exitvalue"} = $1 || 0;
+
+	while($line < @$file) {
+		push @{$test->{"result"}}, substr $file->[$line], 0, -1;
+		$line++
+	}
+
+	$debug && print "done parsing.\n";
+	return $test;
+}
+
+
+# Prints all the internal data structures for the test.
+
+sub print_test
+{
+	my $test = shift;
+
+	print "name:$test->{name}\n";
+	print "author:$test->{author}\n";
+	print "date:$test->{date}\n";
+	print "from: $test->{file}\n";
+
+	print "description:\n";
+	for(@{$test->{desc}}) { print "  $_\n"; }
+
+	for my $name (sort keys %{$test->{files}}) {
+		print "file: $name\n";
+		print "file-descr:\n";
+		for(@{$test->{files}->{$name}->{desc}}) { print "  $_\n"; }
+		print "file-contents:\n";
+		for(@{$test->{files}->{$name}->{content}}) { print "  $_\n"; }
+	}
+
+	print "command:\n";
+	for(@{$test->{command}}) { print "  $_\n"; }
+	for(@{$test->{here}}) { print "  $_\n"; }
+	print "  ".$test->{herepost}."\n" if @{$test->{here}};
+
+	print "result descr:\n";
+	for(@{$test->{rdesc}}) { print "  $_\n"; }
+
+	print "logfile:\n";
+	for(@{$test->{logfile}}) { print "  $_\n"; }
+
+	print "exit status: $test->{exitvalue}\n";
+
+	print "result:\n";
+	for(@{$test->{result}}) { print "  $_\n"; }
+}
+
+
+# This prints a test file to stdout, replacing the old results
+# with the newly generated results.  If new results are identical
+# to old, this should result in effectively no difference between the
+# old test file and new, including whitespace.
+# NOTE: the files will be re-ordered into alphabetical order.  It's a feature. :)
+
+sub print_results
+{
+	my $test = shift;
+	my $results = shift;
+
+	my $exitval = &$generate_exit_msg( $results->{"exitvalue"} );
+
+	print "#$test->{name}\n";
+	print "# author:$test->{author}\n" if length $test->{author};
+	print "# date:$test->{date}\n" if length $test->{date};
+	for my $name (sort keys %{$test->{files}}) {
+		for(@{$test->{files}->{$name}->{desc}}) { print "$_\n"; }
+		for(@{$test->{files}->{$name}->{pre}}) { print "$_\n"; }
+		print join("\n", @{$test->{files}->{$name}->{orig}});
+		print "\n" if @{$test->{files}->{$name}->{orig}};
+		print $test->{files}->{$name}->{post}, "\n";
+	}
+	for(@{$test->{desc}}) { print "$_\n"; }
+	for(@{$test->{command}}) { print "$_\n"; }
+	for(@{$test->{orighere}}) { print "$_\n"; }
+	print $test->{herepost}."\n" if exists $test->{here};
+	for(@{$test->{rdesc}}) { print "$_\n"; }
+	if(@{$results->{"logfile"}}) {
+		print "------ $error:\n";
+		for(@{$results->{"logfile"}}) { print "$_\n"; };
+	}
+	print "------ $output: $exitval\n";
+	for(@{$results->{"result"}}) { print "$_\n"; }
+}
+
+
+# Passed references to two arrays of lines, dumps the arrays out
+# to temporary files and runs diff on them.  We just allow diff
+# to print to our stdout.
+
+sub diff_arrays
+{
+	my $old = shift;
+	my $new = shift;
+
+	my $oldname = "/tmp/tmtest-$$-expects";
+	my $newname = "/tmp/tmtest-$$-results";
+
+	open OLD, ">$oldname" or die "Could not open $oldname: $!\n";
+	for(@$old) { print OLD "$_\n"; }
+	close OLD;
+
+	open NEW, ">$newname" or die "Could not open $newname: $!\n";
+	for(@$new) { print NEW "$_\n"; }
+	close NEW;
+
+	system( "diff", "-u", $oldname, $newname)
+		or die "Could not execute diff: $!\n";
+
+	unlink $oldname or die "Could not unlink $oldname: $!\n";
+	unlink $newname or die "Could not unlink $newname: $!\n";
+}
+
+
+sub diff_results
+{
+	# returns 0 if they differ, 1 if the same
+	my $test = shift;
+	my $results = shift;
+	my $same = 1;
+
+	if( !compare_arrays($test->{"logfile"}, $results->{"logfile"}) ) {
+		$same = 0;
+		print "------ $error:\n";
+		diff_arrays( $test->{"logfile"}, $results->{"logfile"} );
+	}
+
+	if( !compare_arrays($test->{"result"}, $results->{"result"}) ) {
+		$same = 0;
+		print "------ Output:\n";
+		diff_arrays( $test->{"result"}, $results->{"result"} );
+	}
+
+	if( $test->{"exitvalue"} != $results->{"exitvalue"} ) {
+		$same = 0;
+		print "Exit values differ: old=" . $test->{"exitvalue"} .
+			" new=" . $results->{"exitvalue"} . "\n";
+	}
+
+	return $same;
+}
+
+
+# Reads a file, line-by-line, into an anonymous array.
+sub read_file
+{
+	my $name = shift;
+
+	my $arr = [];
+
+	open(FH, "<$name") or die "Could not open file $name: $!\n";
+	while(<FH>) { chomp; push @$arr, $_ ; }
+	close FH;
+
+	return $arr;
+}
+
+
+sub run_test
+{
+	my $test = shift;
+
+	# get the command without the attached here doc
+	my $cmd = $test->{cmd};
+	$cmd =~ s/\s*<<\s*\S+\s*$//;
+	my $here = '';
+	$here = join("\n", @{$test->{here}})."\n" if exists $test->{here};
+
+	# print "here: <<<\n$here>>>\n";
+
+	my $stdout = "/tmp/tmtest.$$.stdout";
+	my $stderr = "/tmp/tmtest.$$.stderr";
+
+	# Replace program name in test with full path to executable
+	$cmd =~ s/$executable\s/$executablepath /;
+	$cmd .= " 1>$stdout 2>$stderr";
+
+	my %unlink = ();
+	for my $name (sort keys %{$test->{files}}) {
+		$unlink{$name}++;
+		open(FH, ">$name") or die "Could not create $name\: $!\n";
+		print FH join("\n", @{$test->{files}->{$name}->{content}}), "\n";
+		close FH;
+	}
+
+	# print "Running <<<$cmd>>>\n";
+
+	$SIG{PIPE} = 'IGNORE';
+	open(FH, "|$cmd") or die "Could not fork '$cmd': $!\n";
+	print FH $here or die "Could not write: $!\n";
+	close FH;
+
+	# don't delete the transient files if the test exited with an error.
+	# the user might want to look at them.
+	unlink(keys %unlink) if keys %unlink && $? == 0;
+
+	my $exit_value  = $? >> 8;
+	my $signal_num  = $? & 127;
+	my $dumped_core = $? & 128;
+
+	# If our child got a signal, raise the very same signal on
+	# ourselves.  This is so we interrupt cleanly if the
+	# user hits interrupt while a test is running.
+	$signal_num && kill $signal_num => $$;
+
+	if( $exit_value_hack ) {
+		# This is a gross, awful, kludgy hack.  @-n needs to return
+		# nonzero so that if it's accidentally set when fetchmail
+		# runs, fetchmail bails immediately without losing any mail.
+		# So, it returns 121 if trestlemail WOULD have succeeded if
+		# it wasn't for @-n.   This is Trestlemail ONLY!
+		$exit_value = 0 if $exit_value == 125;
+	}
+
+	my $result = {
+			"result" =>  (-f $stdout ? read_file($stdout) : []),
+			"logfile" => (-f $stderr ? read_file($stderr) : []),
+			"exitvalue" => $exit_value
+		};
+	
+	-f $stdout && (unlink $stdout or die "Couldn't unlink $stdout: $!\n");
+	-f $stderr && (unlink $stderr or die "Couldn't unlink $stderr: $!\n");
+	
+	return $result;
+}
+
+
+sub compare_arrays 
+{
+	# returns 0 if they differ, 1 if the same
+	my ($first, $second) = @_;
+
+	return 0 unless @$first == @$second;
+
+	for( my $i = 0; $i < @$first; $i++ )
+	{
+		return 0 if
+			not defined $first->[$i] or
+			not defined $second->[$i] or
+			$first->[$i] ne $second->[$i];
+	}
+
+	return 1;
+}
+
+
+
+sub check_results
+{
+	my $test = shift;
+	my $results = shift;
+
+	# return 0 if they differ, 1 if the same
+	return 0 if
+		!compare_arrays($test->{"logfile"}, $results->{"logfile"}) ||
+		!compare_arrays($test->{"result"}, $results->{"result"}) ||
+		$test->{"exitvalue"} != $results->{"exitvalue"};
+
+	return 1;
+}
+

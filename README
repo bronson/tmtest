@@ -1,0 +1,28 @@
+This is where the latest version of tmtest can always be found.
+
+Projects using tmtest:
+	trestlemail (what tmtest was created for)
+	tagstack
+	xmldialog
+
+
+
+It is very hard to write tests before the functionality in the
+product works pretty well.  This is because it's normally so tedious
+to hand-generate output.
+
+So, typically you'd get a feature up and working.  The first moment
+it works, you write a test for it.  Any time you find a bug, write
+a test, correct the test output, and then fix the program until the
+test passes.
+
+At first this seems pointless.  I mean, what good is 6 lousy tests
+going to do anybody?  But, give it time.  Once you have 50
+tests, you can start to feel pretty confident that a lot of code
+paths in your program are being exercised.  If you have a hundred
+or more, they will probably help you find mistakes you've made.
+
+
+DIFFICULTY: if you have 40 tests all testing a feature, and you
+make a silly syntax change to that feature, you will have to hand-
+update all 40 files.

@@ -1,0 +1,47 @@
+# Create File Syntax
+# author: Scott Bronson
+# date:   29 Mar 2004
+
+# ensure that tmtest can read test descriptions that contain files.
+
+tmtest -c - <<-EOL
+	# Create File
+	# author: Scott Bronson
+	# date:   29 Mar 2004
+
+	# ensure that tmtest can read test descriptions that contain files.
+
+	tmpfile = <<-EOsL
+		line 1
+		line 2
+	EOsL
+
+	echo "nada"
+
+	------ STDOUT: exit code 0 - no error
+	nada
+EOL
+
+------ STDOUT: exit code 0 - no error
+name: Create File
+author: Scott Bronson
+date:   29 Mar 2004
+from: STDIN
+description:
+  
+file: tmpfile
+file-descr:
+  
+  # ensure that tmtest can read test descriptions that contain files.
+  
+file-contents:
+  line 1
+  line 2
+command:
+  echo "nada"
+result descr:
+  
+logfile:
+exit status: 0
+result:
+  nada

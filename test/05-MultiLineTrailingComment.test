@@ -1,0 +1,63 @@
+# Multi Line Trailing Comment
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# Now tmtest supports blank lines in the trailing comment
+
+tmtest -c - <<-EOL
+	# Multi Line Trailing Comment
+	# author: Scott Bronson
+	# date:   3 Dec 2001
+	#
+	# Now tmtest supports blank lines in the trailing comment
+
+	echo "slice"
+
+	# This is a line in the TC
+
+	# and another
+	#
+	# and
+
+
+	# more
+
+	------ STDOUT: exit code 0 - no error
+	slice
+EOL
+
+# This is a line in the TC
+
+# and another
+#
+# and
+
+
+# more
+
+------ STDOUT: exit code 0 - no error
+name: Multi Line Trailing Comment
+author: Scott Bronson
+date:   3 Dec 2001
+from: STDIN
+description:
+  #
+  # Now tmtest supports blank lines in the trailing comment
+  
+command:
+  echo "slice"
+result descr:
+  
+  # This is a line in the TC
+  
+  # and another
+  #
+  # and
+  
+  
+  # more
+  
+logfile:
+exit status: 0
+result:
+  slice

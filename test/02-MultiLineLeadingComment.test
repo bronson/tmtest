@@ -1,0 +1,55 @@
+# Multi Line Leading Comment
+# author: Scott Bronson
+# date  : 3 Dec 2001
+#
+# Now tmtest supports blank lines in the leading comment
+
+# line one
+
+# line two
+# line two point five
+
+# line three
+
+tmtest -c - <<-EOL
+	# Multi Line Leading Comment
+	# author: Scott Bronson
+	# date  : 3 Dec 2001
+	#
+	# Now tmtest supports blank lines in the leading comment
+	
+	# line one
+	
+	# line two
+	# line two point five
+	
+	# line three
+
+	echo "I"
+	------ STDOUT: exit code 0 - no error
+	I
+EOL
+
+------ STDOUT: exit code 0 - no error
+name: Multi Line Leading Comment
+author: Scott Bronson
+date: 3 Dec 2001
+from: STDIN
+description:
+  #
+  # Now tmtest supports blank lines in the leading comment
+  
+  # line one
+  
+  # line two
+  # line two point five
+  
+  # line three
+  
+command:
+  echo "I"
+result descr:
+logfile:
+exit status: 0
+result:
+  I

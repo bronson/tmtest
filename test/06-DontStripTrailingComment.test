@@ -1,0 +1,57 @@
+# Dont Strip Trailing Comment
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# tmtest should not strip blank lines before and after the trailing
+# comment anymore.
+
+tmtest -o - <<-EOL
+	# Dont Strip Trailing Comment
+	# author: Scott Bronson
+	# date:   3 Dec 2001
+	#
+	# tmtest should not strip blank lines before and after the trailing
+	# comment anymore.
+
+	echo "of"
+
+
+
+	# This is a line in the TC
+	# more
+
+
+
+
+	------ STDOUT: exit code 0 - no error
+	of
+EOL
+
+
+
+# This is a line in the TC
+# more
+
+
+
+
+------ STDOUT: exit code 0 - no error
+# Dont Strip Trailing Comment
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# tmtest should not strip blank lines before and after the trailing
+# comment anymore.
+
+echo "of"
+
+
+
+# This is a line in the TC
+# more
+
+
+
+
+------ STDOUT: exit code 0 - no error
+of

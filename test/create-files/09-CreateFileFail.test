@@ -1,0 +1,30 @@
+# Create File
+# author: Scott Bronson
+# date:   29 Mar 2004
+
+# this test the code path where we can't create the file.
+# directories a/b/c/d should not exist.
+
+tmtest - <<-EOL
+	# Create File
+	# author: Scott Bronson
+	# date:   29 Mar 2004
+
+	# this test the code path where we can't create the file.
+	# directories a/b/c/d should not exist.
+
+	a/b/c/d/tmpfile = <<-EOsL
+		line 1
+		line 2
+	EOsL
+
+	cat tmpfile
+
+	------ STDOUT: exit code 0 - no error
+	line 1
+	line 2
+EOL
+
+------ STDERR:
+Could not create a/b/c/d/tmpfile: No such file or directory
+------ STDOUT: exit code 2 - abort!

@@ -1,0 +1,34 @@
+# Create Conflicting Files
+# author: Scott Bronson
+# date:   29 Mar 2004
+
+# What happens if the user supplies 2 files with the same name?
+# The second one will silently overwrite the first one.
+
+tmtest - <<-EOL
+	# Create File
+	# author: Scott Bronson
+	# date:   29 Mar 2004
+
+	# this test the code path where we can't create the file.
+	# directories a/b/c/d should not exist.
+
+	11-tmpfile = <<-EOsL
+		line 1
+		line 2
+	EOsL
+
+	11-tmpfile = <<-EOsL
+		line 3
+		line 4
+	EOsL
+
+	cat 11-tmpfile
+
+	------ STDOUT: exit code 0 - no error
+	line 3
+	line 4
+EOL
+
+------ STDOUT: exit code 0 - no error
+ok   STDIN                         
