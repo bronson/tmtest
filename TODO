@@ -8,11 +8,9 @@ Naming a file that doesn't end in ".test" on the command line.
 Tests that fail before they're run (bad config files)
 Tests that fail to run (syntax error)
 Try running a testfile whose name contains a single quote.
+Disabling an entire directory using a config file.
 
 2.0:
-- the status file is too goddamn difficult to parse.
-    think of a real format instead of a stupid logfile format.
-- use status to implement a disabled funcion.
 - write a function to make it easy to create crfiles.
 - Make diff work in subdirs (need to cd back to superdir before
   forking, and use the proper partial path for the file)
@@ -24,11 +22,15 @@ Try running a testfile whose name contains a single quote.
   should get rid of a whole bunch in main.c as well.
   this should prevent us from dropping turds in /tmp all the time.
 - Rewrite the test date and author if they aren't supplied.
+- should probably indent stdout and stderr clauses two spaces.  otherwise
+  we might misinterpret STDOUT: and STDERR: in a stdout or stderr clause.
 
 2.2:
 - Add the ability to run multiple tests from one testfile
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
   Convert to using the async io library.  Don't use temporary files.
+  This would allow us to recognize that the test is disabled before
+     producing a partial diff, thus saving the user from blowing away his files.
 - Unify the line modifier in compare.c and test.c.
 - allow multiple s/// expressions on a single line.  will probably require modifications to pcrs_compile_command, so make it support buf/len at the same time.
 - add the ability to run valgrind over each test and print success/failure of that.

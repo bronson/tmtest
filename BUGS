@@ -1,3 +1,10 @@
+If you run tmtest -d on a disabled test, it produces a tiny diff with the
+word "Disabled" in its stderr.  If you blindly pipe this diff to patch,
+it will destroy the output section of your test file.  This is easy enough
+to fix -- just re-enable the test and diff/patch again.  This will be
+fixed in tmtest 2.2 when we parse the status file asynchronously.
+
+
 Bash Bugs:
 
 Bash3 has removed the ability to set LINENO, so you may see the

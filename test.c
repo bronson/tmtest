@@ -15,6 +15,9 @@
 #include <unistd.h>
 #include <errno.h>
 
+// to get PATH_MAX:
+#include <dirent.h>
+
 #include "re2c/read-fd.h"
 
 #include "test.h"
@@ -36,13 +39,19 @@ static int test_failures = 0;
 
 
 
-const char* get_testfile_name(struct test *test)
+const char *convert_testfile_name(const char *fn)
 {
-    if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
+    if(fn[0] == '-' && fn[1] == '\0') {
         return "(STDIN)";
     }
 
-    return test->testfilename;
+	return fn;
+}
+
+
+const char* get_testfile_name(struct test *test)
+{
+    return convert_testfile_name(test->testfilename);
 }
 
 
@@ -65,23 +74,76 @@ int fd_has_data(int fd)
 }
 
 
-/** Returns true if the test was started or false if it bailed during
- * configuration.
+/** Tries to find the argument in the status line given.
  *
- * If false is returned, it also returns a litte message as to why.
- *
- * If an error in a configuration file causes the test shell to exit,
- * we want to stop here.  There's no point in processing the results.
- *
- * HOW IT WORKS:
- * It examines the status file for a line, "^running: ".
- * If found, then it returns true.  If not found, then it
- * generates a message describing what the last config file
- * to run was, or where else in the test process we bailed.
+ * @return  nonzero if the argument could be found, zero if not.
+ * If the argument was found, then incp and ince are updated to
+ * point to its beginning and end.
+ */
+
+static int locate_status_arg(const char **incp, const char **ince)
+{
+	const char *cp = *incp;
+	const char *ce = *ince;
+
+	// trim the newline from the end
+	if(ce[-1] == '\n') ce--;
+
+	// skip to colon separating name from arg
+	while(*cp != ':' && *cp != '\n' && cp < ce) cp++;
+	if(*cp == ':') {
+		cp++;					// skip the colon
+		if(*cp == ' ') cp++;	// skip the optional space after it
+		if(cp < ce) {
+			*incp = cp;
+			*ince = ce;
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+
+static char* dup_status_arg(const char *cp, const char *ce)
+{
+	char *ret = NULL;
+
+	if(locate_status_arg(&cp, &ce)) {
+		ret = malloc(ce - cp + 1);
+		if(ret) {
+			memcpy(ret, cp, ce-cp);
+			// replace the NL on the end with the null terminator.
+			ret[ce-cp] = '\0';
+		}
+	}
+
+	return ret;
+}
+
+
+static int copy_status_arg(const char *cp, const char *ce, char *buf, int size)
+{
+	if(locate_status_arg(&cp, &ce)) {
+		int len = ce - cp;
+		if(size-1 < len) len = size-1;
+		memcpy(buf, cp, len);
+		buf[len] = '\0';
+		return 1;
+	}
+
+	return 0;
+}
+
+
+/** Looks through the status file and stores the items of interest
+ * in the test structure.
  */
 
 void scan_status_file(struct test *test)
 {
+	char lastfile[PATH_MAX];
+	int lastfile_good = 0;
     char buf[BUFSIZ];
     scanstate ss;
     int tok;
@@ -119,10 +181,40 @@ void scan_status_file(struct test *test)
 			state = tok;
 		}
 
-        if(tok == stRUNNING) {
-			test->test_was_started = 1;
-        }
+		switch(tok) {
+			case stCONFIG:
+				test->num_config_files += 1;
+				if(copy_status_arg(token_start(&ss), token_end(&ss), lastfile, sizeof(lastfile))) {
+					lastfile_good = 1;
+				} else {
+					fprintf(stderr, "CONFIG needs arg on line %d of the status file: '%.*s'\n",
+							ss.line, token_length(&ss)-1, token_start(&ss));
+				}
+				break;
+
+			case stRUNNING:
+				test->test_was_started = 1;
+				if(copy_status_arg(token_start(&ss), token_end(&ss), lastfile, sizeof(lastfile))) {
+					lastfile_good = 1;
+				} else {
+					fprintf(stderr, "RUNNING needs arg on line %d of the status file: '%.*s'\n",
+							ss.line, token_length(&ss)-1, token_start(&ss));
+				}
+				break;
+			
+			case stDISABLED:
+				test->test_was_disabled = 1;
+				test->disable_reason = dup_status_arg(token_start(&ss), token_end(&ss));
+				break;
+
+			default: ;
+			// nothing to do
+		}
     } while(!scan_finished(&ss));
+
+	if(lastfile_good) {
+		test->last_file_processed = strdup(lastfile);
+	}
 }
 
 
@@ -497,11 +589,22 @@ void test_results(struct test *test)
 	
 	scan_status_file(test);
     if(!test->test_was_started) {
-        printf("Error: %s was not started.  TODO: add more info\n",
-				get_testfile_name(test));
+        fprintf(stderr, "Error: %s was not started.  TODO: add more info\n", get_testfile_name(test));
         test_failures++;
         return;
     }
+
+	if(test->test_was_disabled) {
+		printf("dis  %-25s ", get_testfile_name(test));
+		if(0!=strcmp(test->testfilename, test->last_file_processed)) {
+			printf("by %s", test->last_file_processed);
+		}
+		if(test->disable_reason) {
+			printf(": %s", test->disable_reason);
+		}
+		printf("\n");
+		return;
+	}
 
     test->exitno_match = match_unknown;
     test->stdout_match = match_unknown;
@@ -732,6 +835,24 @@ void parse_section_output(struct test *test, int sec,
 
 void dump_results(struct test *test)
 {
+    if(!test->test_was_started) {
+        fprintf(stderr, "Error: %s was not started.  TODO: add more info\n", get_testfile_name(test));
+        test_failures++;
+        return;
+    }
+
+	if(test->test_was_disabled) {
+		fprintf(stderr, "ERROR Test is disabled");
+		if(0!=strcmp(test->testfilename, test->last_file_processed)) {
+			fprintf(stderr, " by %s", convert_testfile_name(test->last_file_processed));
+		}
+		if(test->disable_reason) {
+			fprintf(stderr, ": %s", test->disable_reason);
+		}
+		fprintf(stderr, "\n");
+		return;
+	}
+
     // The command section has already been dumped.  We just
     // need to dump the result sections.  The trick is, though,
     // that we need to dump them in the same order as they occur
@@ -799,6 +920,14 @@ void test_free(struct test *test)
 			fprintf(stderr, "Could not remove %s: %s\n", test->diffname, strerror(errno));
 		}
 		free(test->diffname);
+	}
+
+	if(test->disable_reason) {
+		free(test->disable_reason);
+	}
+
+	if(test->last_file_processed) {
+		free(test->last_file_processed);
 	}
 }
 

@@ -1,0 +1,21 @@
+# No Diff
+# author: Scott Bronson
+# date:   27 Jan 2005
+
+# Ensures that diff produces nothing when there are
+# no differences.
+
+
+tmtest -d - <<-EOL
+	echo "right output"
+	STDOUT:
+	right output
+EOL
+
+
+MODIFY:
+    s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
+    s/^\+\+\+.*/+++ - DATE TIME TZ/
+
+
+STDOUT:

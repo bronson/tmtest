@@ -20,6 +20,8 @@ enum {
 	stRUNNING,		///< says we're running the test.  the argument gives the name of the testfile we're running (a single dash if the file was supplied over stdin).  always printed.
 	stDONE,			///< and we're done.  this is the last thing we do.  always printed, no args.
 
+	stDISABLED,		///< if the test is disabled, this line will appear.  optional argument telling why.
+
 	stGARBAGE,		///< returned if we couldn't recognize the status entry.  the line should probably be ignored and we move on.
 };
 

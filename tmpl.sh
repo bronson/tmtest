@@ -5,6 +5,8 @@ set -e
 # set -x
 
 ADD_CWD_TO_PATH () { PATH="$(dirname ${BASH_SOURCE[1]}):$PATH"; }
+DISABLED () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
+DISABLED: () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
 
 TITLE='%(TESTFILE)'
 AUTHOR='%(AUTHOR)'

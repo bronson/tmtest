@@ -445,7 +445,11 @@ void run_test(const char *name, int warn_suffix)
     // wait for the test to finish
     test.exitno = wait_for_child(child, "test");
 
-    // process the test results
+	// read the status file to determine what happened
+	// and store the information in the test struct.
+	scan_status_file(&test);
+
+    // process and output the test results
     switch(outmode) {
         case outmode_test:
             test_results(&test);

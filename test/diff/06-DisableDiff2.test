@@ -1,0 +1,29 @@
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+# Verifies what happens when a diff is disabled and gives a reason.
+
+
+tmtest -d - <<-EOL
+	DISABLED: This is the reason
+	echo "right output"
+	STDOUT:
+	wrong output
+EOL
+
+
+MODIFY:
+	s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
+	s/^\+\+\+.*/+++ - DATE TIME TZ/
+
+
+STDERR:
+ERROR Test is disabled: This is the reason
+STDOUT:
+--- /tmp/STDIN-pid.unique DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,4 +1,2 @@
+ DISABLED: This is the reason
+ echo "right output"
+-STDOUT:
+-wrong output

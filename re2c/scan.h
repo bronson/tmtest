@@ -180,10 +180,19 @@ void scanstate_reset(scanstate *ss);
 #define scan_token(ss) ((*((ss)->state))(ss))
 
 
-/** Returns the first character of the most recently scanned token.
+/** Returns a pointer to the first character of the
+ *  most recently scanned token.
  */
 
 #define token_start(ss) ((ss)->token)
+
+/** Returns a pointer to one past the last character of the
+ *  most recently scanned token.
+ *
+ *  token_end(ss) - token_start(ss) == token_length(ss)
+ */
+
+#define token_end(ss) ((ss)->cursor)
 
 /** Returns the length of the most recently scanned token.
  */

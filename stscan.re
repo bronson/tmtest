@@ -35,6 +35,8 @@ HASARG  = WS* ":" ANYN* "\n";
 "RUNNING" HASARG    { return stRUNNING; }
 "DONE"    NOARG     { return stDONE; }
 
+"DISABLED" HASARG   { return stDISABLED; }
+
 ANYN* "\n"          { return stGARBAGE; }
 
 */

@@ -29,6 +29,10 @@ struct test {
 	int diff_fd;			///< if diffname is set, then this is the fd of the tempfile we're using to store stdin.
 
 	int test_was_started;	///< 0 if the test didn't run or we don't know.  1 if we have verified that configuration happened without error and the test was successfully started.  This does not imply that the test completed without errors of course.
+	int test_was_disabled;	///< 1 if the test was disabled.  The reason (if there was one) can be found in disable_reason.
+	char *disable_reason;	///< if the test was disabled, and the user gave a reason why, that reason is stored here.  must be freed.
+	int num_config_files;	///< the number of config files we started to process.  if test_was_started is true, then this is the number of config files we read.
+	char *last_file_processed; ///< if it could be discovered, this contains the name of the last file to be started.  must be freed.
 
 	int expected_exitno;	///< the test's expected exit value.  this is only valid when stderr_match != match_unknown.
 
@@ -38,11 +42,11 @@ struct test {
 };
 
 
+void scan_status_file(struct test *test);
 void test_command_copy(struct test *test, FILE *fp);
 
 void test_results(struct test *test);
 void dump_results(struct test *test);
-
 void print_test_summary();
 
 void test_init(struct test *test);
