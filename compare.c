@@ -109,24 +109,25 @@ static void compare_continue_bytes(scanstate *ss, const char *ptr, int len)
 }
 
 
-static void substitute_string(compare_state *cmp, const char *cp, const char *ce)
+char* substitute_string(pcrs_job *job, const char *cp, const char *ce, int *newsize)
 {
-	pcrs_job *job;
 	char *old, *new;
-	int newsize;
 	int nsubs;
 	int cnt;
 
-	job = cmp->jobs;
 	cnt = 0;
 	old = (char*)cp;
 
 	while(job) {
 		// Now, run the line through the substitutions.
-		nsubs = pcrs_execute(job, old, ce-cp, &new, &newsize);
+		nsubs = pcrs_execute(job, old, ce-cp, &new, newsize);
 		if(nsubs < 0) {
 			fprintf(stderr, "error while substituting expr %d: %s (%d).\n",
 					cnt, pcrs_strerror(nsubs), nsubs);
+            if(new) {
+                free(new);
+                new = NULL;
+            }
 			break;
 		}
 
@@ -139,11 +140,7 @@ static void substitute_string(compare_state *cmp, const char *cp, const char *ce
 		cnt += 1;
 	}
 
-	// now store the rewritten string as the pbuf
-	if(cmp->pbuf) free((char*)cmp->pbuf);
-	cmp->pbuf = new;
-	cmp->pcursor = 0;
-	cmp->plimit = newsize;
+    return new;
 }
 
 
@@ -157,6 +154,8 @@ static void compare_continue_lines(scanstate *ss, compare_state *cmp,
 {
 	int n;
 	const char *p;
+    char *new;
+    int newsize;
 
 	while(len > 0) {
 		n = cmp->plimit - cmp->pcursor;
@@ -204,7 +203,17 @@ static void compare_continue_lines(scanstate *ss, compare_state *cmp,
 
 		// move p past the newline so it's at the end of the current line.
 		p += 1;
-		substitute_string(cmp, ss->cursor, p);
+		new = substitute_string(cmp->jobs, ss->cursor, p, &newsize);
+        if(!new) {
+            // there must have been an error
+            compare_halt(ss, match_no);
+            return;
+        }
+
+        if(cmp->pbuf) free((char*)cmp->pbuf);
+        cmp->pbuf = new;
+        cmp->pcursor = 0;
+        cmp->plimit = newsize;
 		ss->cursor = p;
 	}
 }

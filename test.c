@@ -17,7 +17,6 @@
 
 #include "test.h"
 #include "r2read-fd.h"
-#include "r2scan-dyn.h"
 #include "status.h"
 #include "tfscan.h"
 #include "compare.h"
@@ -314,8 +313,9 @@ void parse_modify_clause(struct test *test, const char *cp, const char *ce)
 	string[ce-cp] = '\0';
 	job = pcrs_compile_command(string, &err);
 	if(job == NULL) {
-		fprintf(stderr, "%s: compile error:  %s (%d).\n",
-				string, pcrs_strerror(err), err);
+        fprintf(stderr, "%s line %d compile error: %s (%d).\n",
+                get_testfile_name(test), test->testfile.line,
+                pcrs_strerror(err), err);
 	}
 	memset(string, '1', ce-cp+1);
 	free(string);
@@ -479,8 +479,9 @@ void scan_sections(struct test *test, scanstate *scanner,
 
 void test_results(struct test *test)
 {
-    scanstate *ref;
     char buf[120];
+    scanstate scanner;
+    char scanbuf[MAX_LINE_LENGTH];
 	int stdo, stde, exno;	// true if there are differences.
 
     if(!test_ran(test, buf, sizeof(buf))) {
@@ -493,13 +494,8 @@ void test_results(struct test *test)
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
-    ref = dynscan_create(MAX_LINE_LENGTH);
-    if(!ref) {
-        perror("Could not allocate section compare scanner");
-        exit(10);
-    }
-    scan_sections(test, &test->testfile, parse_section_compare, ref);
-    dynscan_free(ref);
+    scanstate_init(&scanner, scanbuf, sizeof(scanbuf));
+    scan_sections(test, &test->testfile, parse_section_compare, &scanner);
 
     assert(test->stdout_match != match_inprogress);
     assert(test->stderr_match != match_inprogress);
@@ -555,10 +551,11 @@ static void write_exit_no(int fd, int exitno)
 }
 
 
+/*
 static void write_file(int outfd, const char *name, int infd)
 {
     char buf[BUFSIZ];
-    int cnt;
+    int rcnt, wcnt;
 
     // first rewind the input file
     if(lseek(infd, 0, SEEK_SET) < 0) {
@@ -572,12 +569,86 @@ static void write_file(int outfd, const char *name, int infd)
     // then write the file.
     do {
         do {
-            cnt = read(infd, buf, sizeof(buf));
-        } while(cnt < 0 && errno == EINTR);
-        if(cnt > 0) {
-            write(outfd, buf, cnt);
+            rcnt = read(infd, buf, sizeof(buf));
+        } while(rcnt < 0 && errno == EINTR);
+        if(rcnt > 0) {
+            do {
+                wcnt = write(outfd, buf, rcnt);
+            } while(wcnt < 0 && errno == EINTR);
+            if(wcnt < 0) {
+                // write error.  do something!
+                perror("writing in write_file");
+                break;
+            }
+        } else if (rcnt < 0) {
+            // read error.  do something!
+            perror("reading in write_file");
+            break;
         }
-    } while(cnt);
+    } while(rcnt);
+}
+*/
+
+
+static void write_modified_file(int outfd, const char *name, int infd, pcrs_job *job)
+{
+    // this routine is fairly similar to compare_continue_lines.
+    // it would be nice to unify them.  that would take some fairly
+    // major surgery though.
+
+    scanstate scanner, *ss = &scanner;
+    char scanbuf[MAX_LINE_LENGTH];
+    const char *p;
+    char *new;
+    int newsize;
+    int rcnt, wcnt;
+
+    // first rewind the input file
+    if(lseek(infd, 0, SEEK_SET) < 0) {
+        fprintf(stderr, "write_file lseek on %d: %s\n", infd, strerror(errno));
+        exit(10);   // todo: consolidate with error codes in main
+    }
+
+    // create the scanner we'll use to buffer the lines
+    scanstate_init(ss, scanbuf, sizeof(scanbuf));
+    readfd_attach(ss, infd);
+
+    // write the section header
+    write(outfd, name, strlen(name));
+
+    do {
+        p = memchr(ss->cursor, '\n', ss->limit - ss->cursor);
+        if(!p) {
+            rcnt = (*ss->read)(ss);
+            if(rcnt < 0) {
+                // read error.  do something!
+                perror("reading in write_modified_file");
+                break;
+            }
+            p = memchr(ss->cursor, '\n', ss->limit - ss->cursor);
+            if(!p) {
+                p = ss->limit - 1;
+            }
+        }
+
+        p += 1;
+        new = substitute_string(job, ss->cursor, p, &newsize);
+        if(!new) {
+            // substitution error!  message already printed.
+            break;
+        }
+
+        do {
+            wcnt = write(outfd, new, newsize);
+        } while(wcnt < 0 && errno == EINTR);
+        free(new);
+        if(wcnt < 0) {
+            // write error.  do something!
+            perror("writing in write_modified_file");
+            break;
+        }
+        ss->cursor = p;
+    } while(rcnt);
 }
 
 
@@ -596,7 +667,7 @@ void parse_section_output(struct test *test, int sec,
 
         case exSTDOUT|exNEW:
             test->stdout_match = match_yes;
-            write_file(test->rewritefd, "STDOUT : \n", test->outfd);
+            write_modified_file(test->rewritefd, "STDOUT:\n", test->outfd, test->eachline);
             break;
         case exSTDOUT:
             // ignore all data in the expected stdout.
@@ -604,7 +675,7 @@ void parse_section_output(struct test *test, int sec,
 
         case exSTDERR|exNEW:
             test->stderr_match = match_yes;
-            write_file(test->rewritefd, "STDERR : \n", test->errfd);
+            write_modified_file(test->rewritefd, "STDERR:\n", test->errfd, test->eachline);
         case exSTDERR:
             // ignore all data in the expected stderr
             break;
@@ -616,9 +687,20 @@ void parse_section_output(struct test *test, int sec,
 
         case exRESULT:
             // allow random garbage in result section to pass
+            write(test->rewritefd, datap, len);
+            break;
+
         case exMODIFY|exNEW:
+            parse_modify_clause(test, skip_section_name(datap,len), datap+len);
+            write(test->rewritefd, datap, len);
+            break;
+
         case exMODIFY:
-            // leave modify sections unchanged.
+            // parse modify sections and still print them.
+            parse_modify_clause(test, datap, datap+len);
+            write(test->rewritefd, datap, len);
+            break;
+            
         default:
             write(test->rewritefd, datap, len);
     }
@@ -640,16 +722,22 @@ void dump_results(struct test *test)
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
+    // ensure that we haven't yet parsed any modify sections.
+    assert(!test->eachline);
+
     scan_sections(test, &test->testfile, parse_section_output, NULL);
+
+    // if any sections haven't been output, but they differ from
+    // the default, then they need to be output here at the end.
 
     if(test->exitno_match == match_unknown && test->exitno != 0) {
         write_exit_no(test->rewritefd, test->exitno);
     }
     if(test->stderr_match == match_unknown && fd_has_data(test->errfd)) {
-        write_file(test->rewritefd, "STDERR : \n", test->errfd);
+        write_modified_file(test->rewritefd, "STDERR:\n", test->errfd, test->eachline);
     }
     if(test->stdout_match == match_unknown && fd_has_data(test->outfd)) {
-        write_file(test->rewritefd, "STDOUT : \n", test->outfd);
+        write_modified_file(test->rewritefd, "STDOUT:\n", test->outfd, test->eachline);
     }
 }
 

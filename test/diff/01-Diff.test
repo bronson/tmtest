@@ -2,8 +2,6 @@
 # author: Scott Bronson
 # date:   14 Nov 2004
 
-eachline:   s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/,
-            s/^\+\+\+.*/+++ - DATE TIME TZ/
 
 # tests tmtest -d
 
@@ -18,12 +16,16 @@ tmtest -d - <<-EOL
     wrong output
 EOL
 
------- STDOUT: exit code 0 - no error
+MODIFY:
+    s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
+    s/^\+\+\+.*/+++ - DATE TIME TZ/
+
+STDOUT: exit code 0 - no error
 --- /tmp/STDIN-pid.unique DATE TIME TZ
 +++ - DATE TIME TZ
 @@ -5,4 +5,4 @@
  echo "right output"
  
- ------ STDOUT: exit code 0 - no error
+ STDOUT: exit code 0 - no error
 -wrong output
 +right output
