@@ -42,6 +42,16 @@ int outmode;
 int verbose = 0;
 double timeout = 10.0;		// timeout in seconds
 
+#define TM_DIRNAME "/tmp/tmtest-XXXXXX"
+char g_dirname[sizeof(TM_DIRNAME)];
+
+#define OUTNAME "stdout"
+#define ERRNAME "stderr"
+#define STATUSNAME "status"
+char g_outname[sizeof(TM_DIRNAME)+sizeof(OUTNAME)];
+char g_errname[sizeof(TM_DIRNAME)+sizeof(ERRNAME)];
+char g_statusname[sizeof(TM_DIRNAME)+sizeof(STATUSNAME)];
+
 
 int g_outfd;
 int g_errfd;
@@ -56,6 +66,7 @@ enum {
     runtime_error,
     interrupted_error,
     internal_error,
+	initialization_error,
 };
 
 
@@ -170,9 +181,9 @@ int wait_for_child(int child, const char *name)
     if(WIFSIGNALED(status)) {
         signal = WTERMSIG(status);
         if(signal == SIGINT) {
-            // If test was interrupted with a sigint then exit.
+            // If test was interrupted with a sigint then raise it on ourselves.
             // Otherwise it can be hard to interrupt a test battery.
-            exit(interrupted_error);
+			kill(getpid(), SIGINT);
         }
         // it's probably a SIGABRT if child hit an assertion.
         // we'll just return 256.
@@ -504,8 +515,12 @@ void process_dir()
 }
 
 
-int open_file(const char *fn, int flags)
+int open_file(char *fn, const char *name, int flags)
 {
+	strcpy(fn, g_dirname);
+	strcat(fn, "/");
+	strcat(fn, name);
+
     int fd = open(fn, flags|O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
 
     if(fd < 0) {
@@ -514,6 +529,37 @@ int open_file(const char *fn, int flags)
     }
 
     return fd;
+}
+
+
+static void checkerr(int err, const char *op, const char *name)
+{
+	if(err < 0) {
+		fprintf(stderr, "There was an error %s %s: %s\n",
+				op, name, strerror(errno));
+		// not much else we can do other than complain...
+	}
+}
+
+
+void stop_tests()
+{
+	checkerr(close(g_outfd), "closing", g_outname);
+	checkerr(close(g_errfd), "closing", g_errname);
+	checkerr(close(g_statusfd), "closing", g_statusname);
+
+	checkerr(unlink(g_outname), "deleting", g_outname);
+	checkerr(unlink(g_errname), "deleting", g_errname);
+	checkerr(unlink(g_statusname), "deleting", g_statusname);
+
+	checkerr(rmdir(g_dirname), "removing directory", g_dirname);
+}
+
+
+static void sig_int(int blah)
+{
+	stop_tests();
+	exit(interrupted_error);
 }
 
 
@@ -527,18 +573,21 @@ int open_file(const char *fn, int flags)
 void start_tests()
 {
     signal(SIGPIPE, SIG_IGN);
+    signal(SIGINT, sig_int);
 
-    g_outfd = open_file("/tmp/tmtest-outfile", 0);
-    g_errfd = open_file("/tmp/tmtest-errfile", 0);
-    g_statusfd = open_file("/tmp/tmtest-status", O_APPEND);
-}
+	strcpy(g_dirname, TM_DIRNAME);
+	if(!mkdtemp(g_dirname)) {
+		fprintf(stderr, "Could not call mkdtemp() on %s: %s\n", g_dirname, strerror(errno));
+		exit(initialization_error);
+	}
 
-
-void stop_tests()
-{
-    close(g_outfd);
-    close(g_errfd);
-    close(g_statusfd);
+	// errors are handled by open_file.
+    g_outfd = open_file(g_outname, OUTNAME, 0);
+	assert(strlen(g_outname) == sizeof(g_outname)-1);
+    g_errfd = open_file(g_errname, ERRNAME, 0);
+	assert(strlen(g_errname) == sizeof(g_errname)-1);
+    g_statusfd = open_file(g_statusname, STATUSNAME, O_APPEND);
+	assert(strlen(g_statusname) == sizeof(g_statusname)-1);
 }
 
 

@@ -3,13 +3,13 @@ DATE='2004-12-31'
 
 # Ensures substitutions work on multiple lines.
 
-tmtest - <<-EOL
-	cat <<-EOL
+tmtest - <<-EOL1
+	cat <<-EOL2
 		Cat fud. Fud.  FUD.  fUd.
 		Look at me!  I'm a cowboy.
 		Howdy howdy howdy.
 		And more cat Fud.  high.
-	EOL
+	EOL2
 
 	MODIFY :
 		s/Howdy/HOWDY/i
@@ -20,7 +20,8 @@ tmtest - <<-EOL
 	Look at me!  I'm a cowboy.
 	HOWDY howdy howdy.
 	And more cat FUD.  HIgh.
-EOL
+EOL1
+
 STDOUT : 
 ok   (STDIN)
 
