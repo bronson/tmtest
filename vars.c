@@ -200,6 +200,7 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
     char *cp;
 
 	check_config_str(test, fp, "/etc", CONFIG_FILE);
+	check_config_str(test, fp, "/etc/tmtest", CONFIG_FILE);
 	check_config_str(test, fp, get_home_dir(), HOME_CONFIG_FILE);
 
 	strncpy(buf, curabsolute(), sizeof(buf));
