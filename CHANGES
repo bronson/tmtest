@@ -4,7 +4,10 @@ are marked with a '*'.
 TODO:
 - make envvars work again.  maybe add an export header?
 - show results when running sub-tests.
+- todo: make the recurse header support "recurse:dir"
 - get rid of exit_value_hack (maybe add a header to do this?)
+- get rid of the executable header -- header substitution will work just fine for this.
+- "(cd hi && tmtest)" doesn't have executable substitution performed.  "... tmtest )" works.  See headers/90-Recurse.test
 - make tmtest work with test files starting with a shebang
 - add an alarm that will time out a stalled child processes
 - maybe allow crfiles to work backwards too: "execfile: postscr = <<EOF".  Seems more natural, though technically wrong.
@@ -43,6 +46,7 @@ post-rewrite:
 - maybe write a gui front-end
 
 0.89:
+- added the recurse:no header to prevent recursion
 - created the explode-dir header to tell where to explode the file.
 - added subtests (header and functionality)
 - now accepts multiple config files and dirs on the cmdline

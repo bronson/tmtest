@@ -106,7 +106,7 @@ exit(1) unless Getopt::Long::GetOptions(
 	);
 
 
-my $base_dir = File::Spec->rel2abs(File::Spec->curdir());
+my $base_dir = Cwd::cwd();
 
 if($dump_results || $diff_results || $explode_file || $syntax_check) {
 	$quiet = 1;
@@ -142,7 +142,7 @@ if( @ARGV == 1 && $ARGV[0] eq "-" ) {
 	# One last argument is a dash?  Read from stdin.
     $test_is_from_stdin = 1;
 	my @file = <STDIN>;
-	my $test = read_test(\@file, "STDIN", File::Spec->rel2abs(File::Spec->curdir()), 1);
+	my $test = read_test(\@file, "STDIN", Cwd::cwd(), 1);
 	process_test($test, \@file);
 } elsif(@ARGV) {
 	for(@ARGV) {
@@ -150,9 +150,9 @@ if( @ARGV == 1 && $ARGV[0] eq "-" ) {
 			if(/$file_re/o) {
 				# process a single test file
 				my($file, $dir) = File::Basename::fileparse($_);
-				my $cwd = File::Spec->rel2abs(File::Spec->curdir());
+				my $cwd = Cwd::cwd();
 				chdir $dir;
-				process_test(read_test_file($file, File::Spec->rel2abs(File::Spec->curdir()), 1));
+				process_test(read_test_file($file, Cwd::cwd(), 1));
 				chdir $cwd;
 			} else {
 				print("skip $_ (filename doesn't end in .test).\n");
@@ -356,20 +356,24 @@ sub search_test_dirs
 		my @names = sort readdir( DIR );
 		closedir( DIR );
 
-		# first, process files
+		# process all files first
 		for( @names ) {
 			next if $_ =~ /^\./;
-			-f && /$file_re/o && process_test(
-				read_test_file($_, File::Spec->rel2abs(File::Spec->curdir()), 1));
+			-f && /$file_re/o && process_test(read_test_file($_, Cwd::cwd(), 1));
 		}
 
-		# then, process directories
-		for( @names ) {
-			next unless $_;
-			next if $_ =~ /^\./;
-			next if $_ eq 'CVS';
-			-d && search_test_dirs( $_, "$base/$_" );
-		}
+        # then process directories unless we're told to not recurse.
+        my $test = get_new_test(Cwd::cwd(), 1);
+        if(!exists($test->{header}->{recurse}) ||
+            !is_negative($test->{header}->{recurse}->{value}))
+        {
+            for( @names ) {
+                next unless $_;
+                next if $_ =~ /^\./;
+                next if $_ eq 'CVS';
+                -d && search_test_dirs( $_, "$base/$_" );
+            }
+        }
 
 		chdir '..';
 	} else {
@@ -646,7 +650,7 @@ sub subtle_shellwords
 	s/^\s+//;
 	while ($_ ne '') {
 		my $field = '';
-		my $pipe = 0;
+		my $pipe = undef;
 		my $here = '';
 		my $snippet = '';
 		for (;;) {
@@ -660,7 +664,7 @@ sub subtle_shellwords
 			} elsif (/^'/) {
 				die "Unmatched single quote: $_\n";
 			} elsif (s/^\s*\|\s*//) {
-				$pipe = 1;
+				$pipe = '|';
 				last;
 			} elsif (s/^(\S+)(\<\<\S+)\s//) {
 				$field .= $1;
@@ -675,7 +679,7 @@ sub subtle_shellwords
 			$field .= $snippet;
 		}
 		push(@words, $field);
-		push(@words, '|') if $pipe;
+		push(@words, $pipe) if defined $pipe;
 		push(@words, $here) if $here;
 	}
 	@words;
@@ -897,6 +901,36 @@ sub read_test_file
 }
 
 
+sub get_new_test
+{
+    my $path = shift;
+    my $isterminal = shift;
+
+    my $test = {};
+	$test->{header} = {};	# hash of all headers (both in this test and inherited)
+
+	# populate the headers from the config files in the test directory
+	if($isterminal) {
+		for my $conf (@base_configs, get_configs($path)) {
+			for(keys %{$conf->{header}}) {
+                if($conf->{header}->{$_}->{append} && exists $test->{header}->{$_}) {
+                    $test->{header}->{$_}->{value} .= ' ' . $conf->{header}->{$_}->{value};
+                } else {
+                    $test->{header}->{$_} = $conf->{header}->{$_};
+                }
+			}
+		}
+	}
+
+    # override config files using options supplied by -D on cmdline.
+    for(keys %defines) {
+        $test->{header}->{$_} = {key => $_, value => $defines{$_}};
+    }
+	
+    return $test;
+}
+
+
 # This awful function takes an array of lines representing a test file
 # and parses it into a test data structure.  It was never, ever supposed
 # to grow this big.  Arg!
@@ -919,9 +953,12 @@ sub read_test
 
 	local $/ = "\n";
 
-	# now scan the string and store the parts in %test
-	my $test = {};
 	my $line = 0;
+	my @desc;
+
+	my $test = get_new_test($path, $isterminal);
+	$test->{header}->{'curfile'} = { key => 'curfile', value => $filename };
+	$test->{header}->{'curpath'} = { key => 'curpath', value => $path };
 
 	$test->{"file"} = $filename; # filename of this test file
 	$test->{"headers"} = [];	# headers explicitly declared by this test
@@ -931,33 +968,7 @@ sub read_test
 	$test->{"stdout"} = "";
 	$test->{"stderr"} = "";
 
-	$test->{header} = {};		# hash of all headers (both in this test and inherited)
-
-	# populate the headers from the config files in the test directory
-	if($isterminal) {
-		for my $conf (@base_configs, get_configs($path)) {
-			for(keys %{$conf->{header}}) {
-                if($conf->{header}->{$_}->{append} && exists $test->{header}->{$_}) {
-                    $test->{header}->{$_}->{value} .= ' ' . $conf->{header}->{$_}->{value};
-                } else {
-                    $test->{header}->{$_} = $conf->{header}->{$_};
-                }
-			}
-		}
-	}
-
-    # override config files using options supplied by -D on cmdline.
-    for(keys %defines) {
-        $test->{header}->{$_} = {key => $_, value => $defines{$_}};
-    }
-	
-	# add the default headers
-	$test->{header}->{'curfile'} = { key => 'curfile', value => $filename };
-	$test->{header}->{'curpath'} = { key => 'curpath', value => $path };
-
 	print "\n...   Parsing $filename   ...\n\n" if $debug;
-
-	my @desc;
 
 	# read the test headers
 	while($line < @$file) {
@@ -1431,7 +1442,7 @@ sub diff_results
 
     my $unlink;
     my $file = $test->{file};
-    my $nowdir = File::Spec->rel2abs(File::Spec->curdir());
+    my $nowdir = Cwd::cwd();
 
     if($test_is_from_stdin) {
         # This is a bit of a hassle.  Since we're already using stdin

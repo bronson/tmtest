@@ -300,6 +300,14 @@ the test has been disabled: "enabled: no, because it's obsolete."
 The L</"disabled"> header does the exact same thing, but with the
 opposite sense.
 
+=item recurse
+
+Normally tmtest recurses into subdirectories.  If you set this
+to no, then tmtest will stop at this directory and not enter
+any subdirectories.
+
+    Recurse: No
+
 =item require-tmtest
 
 Some tests require features not found in earlier versions of tmtest.
