@@ -3,7 +3,6 @@ are marked with a '*'.
 
 TODO:
 - make envvars work again.  maybe add an export header?
-- allow headers or options to tell where to explode the file
 - show results when running sub-tests.
 - get rid of exit_value_hack (maybe add a header to do this?)
 - make tmtest work with test files starting with a shebang
@@ -18,6 +17,8 @@ TODO:
 - maybe implement a test-id header which is always unique.  that way tests
   can be renamed but are still able to refer to each other.
 - figure out indenting/continuation problem.  See run-commands/10-IndentedCommand.test
+- if I used env vars for all headers, I could just let the shell do the interoplation.
+  this would simplify a lot of things.
 post-rewrite:
 - make debugging output much more presentable.
   - Split into parsing debug and running debug.
@@ -34,16 +35,23 @@ post-rewrite:
     er, except for case-insensitivity.  Probably need to make everything case-sensitive.
     Yes.  Headers in all-caps are reserved, small and mixed-case are for user.
   - stdout, stderr, and exitval should be plain headers.
+- it would be nice if sub-subtests would output their results immediately.
+  this requires sending the subtest's stdout to the supertest's immediately, after adding the indentation.
 - maybe backslash is overloaded.  $$ should escape a $ when interpolating, not \$?
 - maybe implement a related-to header, where a test can name related tests.
 - maybe implement a keyword header and search?  add keywords to tests?
 - maybe write a gui front-end
 
 0.89:
+- created the explode-dir header to tell where to explode the file.
 - added subtests (header and functionality)
 - now accepts multiple config files and dirs on the cmdline
-- added the --config-dir option.
+- added the --config-dir, --quiet, and --loud options.
+- now prints results tally at the end of every test run.
+- made diff/patch work properly on tests in subdirs too.
+- when interpolate=headers is on, we interpolate the header keys too.
 - now reads configuration out of /etc/tmtest.conf and ~/tmtest.conf too.
+- added interpolate:stdout and interpolate:stderr header options.
 - make headers use = as well as :, appears cleaner for some headers.
 - also made += be equivalent to "hdr = $(hdr) blah"
 * Unfortunately, this breaks envvar syntax.  For now envvars aren't supported.

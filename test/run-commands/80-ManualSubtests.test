@@ -1,0 +1,37 @@
+# Subtest
+# Scott Bronson
+# 14 Nov 2004
+
+# Ensure that subtests work manually.
+
+eachline: s/tmtest-\d+\.\S+\./tmtest-PID.ID./
+
+rzsz.test: file = <<-EOL
+    interpolate: stdout
+    echo $(size)
+    ------ STDOUT: exit code 0 - no error
+    $(size)
+EOL
+
+tmtest --config-dir=. --quiet -D size=0 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=1 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=2 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=3 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=4 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=127 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=128 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=255 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=256 $(rzsz.test)
+tmtest --config-dir=. --quiet -D size=524289 $(rzsz.test)
+
+------ STDOUT: exit code 0 - no error
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test
+ok   tmtest-PID.ID.test

@@ -1,0 +1,92 @@
+# Subtest
+# Scott Bronson
+# 14 Nov 2004
+
+# Ensure that subtests fail when a multiple-level-deep subtest fails.
+
+tmtest -o --loud - <<-EOL
+
+    subtests: on
+
+    outer.test: file = <<-EOL
+
+        subtests: on
+
+        rzsz.test: file = <<-EOsL
+            interpolate: stdout
+            test $(size) != 1 -o $(suit) != clubs && echo $(size)
+            ------ STDOUT: exit code 0 - no error
+            $(size)
+        EOsL
+
+        tmtest -Dsuit=$(suit) -Dsize=0 $(rzsz.test)
+        tmtest -Dsuit=$(suit) -Dsize=1 $(rzsz.test)
+    EOL
+
+    tmtest -D suit=hearts $(outer.test)
+    tmtest -D suit=spades $(outer.test)
+    tmtest -D suit=clubs $(outer.test)
+    tmtest -D suit=diamonds $(outer.test)
+
+EOL
+
+------ STDOUT: exit code 0 - no error
+running subtest STDIN
+    running subtest STDIN suit=hearts
+        ok   STDIN suit=hearts size=0
+        ok   STDIN suit=hearts size=1
+    all subtests passed
+    running subtest STDIN suit=spades
+        ok   STDIN suit=spades size=0
+        ok   STDIN suit=spades size=1
+    all subtests passed
+    running subtest STDIN suit=clubs
+        ok   STDIN suit=clubs size=0
+        FAIL STDIN suit=clubs size=1
+    1 subtest failed for STDIN suit=clubs
+    running subtest STDIN suit=diamonds
+        ok   STDIN suit=diamonds size=0
+        ok   STDIN suit=diamonds size=1
+    all subtests passed
+
+subtests: on
+
+outer.test: file = <<-EOL
+
+    subtests: on
+
+    rzsz.test: file = <<-EOsL
+        interpolate: stdout
+        test $(size) != 1 -o $(suit) != clubs && echo $(size)
+        ------ STDOUT: exit code 0 - no error
+        $(size)
+    EOsL
+
+    tmtest -Dsuit=$(suit) -Dsize=0 $(rzsz.test)
+    tmtest -Dsuit=$(suit) -Dsize=1 $(rzsz.test)
+EOL
+
+tmtest -D suit=hearts $(outer.test)
+tmtest -D suit=spades $(outer.test)
+tmtest -D suit=clubs $(outer.test)
+tmtest -D suit=diamonds $(outer.test)
+
+------ STDOUT: exit code 0 - no error
+running subtest STDIN suit=hearts
+    ok   STDIN suit=hearts size=0
+    ok   STDIN suit=hearts size=1
+all subtests passed
+running subtest STDIN suit=spades
+    ok   STDIN suit=spades size=0
+    ok   STDIN suit=spades size=1
+all subtests passed
+running subtest STDIN suit=clubs
+    ok   STDIN suit=clubs size=0
+    FAIL STDIN suit=clubs size=1
+1 subtest failed for STDIN suit=clubs
+running subtest STDIN suit=diamonds
+    ok   STDIN suit=diamonds size=0
+    ok   STDIN suit=diamonds size=1
+all subtests passed
+
+8 tests run, 7 successes, 1 failure

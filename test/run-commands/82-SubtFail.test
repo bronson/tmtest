@@ -1,0 +1,61 @@
+# Subtest
+# Scott Bronson
+# 14 Nov 2004
+
+# This is like 81, but ensures that the entire subtest fails
+# when any single subtest fails.
+# We use the test command to generate a failure for only one particular size.
+
+tmtest -o --loud - <<-EOL
+
+    subtests: on
+
+    rzsz.test: file = <<-EOL
+        interpolate: stdout
+        test $(size) != 257 && echo $(size)
+        ------ STDOUT: exit code 0 - no error
+        $(size)
+    EOL
+
+    tmtest -D size=0 $(rzsz.test)
+    tmtest -D size=4 --define shape=triangle $(rzsz.test)
+    tmtest -D size=255 -D size=9 $(rzsz.test)
+    tmtest -D size=256 $(rzsz.test)
+    tmtest -D size=257 $(rzsz.test)
+    tmtest -D size=8192 $(rzsz.test)
+
+EOL
+------ STDOUT: exit code 0 - no error
+running subtest STDIN
+    ok   STDIN size=0
+    ok   STDIN size=4 shape=triangle
+    ok   STDIN size=255 size=9
+    ok   STDIN size=256
+    FAIL STDIN size=257
+    ok   STDIN size=8192
+
+subtests: on
+
+rzsz.test: file = <<-EOL
+    interpolate: stdout
+    test $(size) != 257 && echo $(size)
+    ------ STDOUT: exit code 0 - no error
+    $(size)
+EOL
+
+tmtest -D size=0 $(rzsz.test)
+tmtest -D size=4 --define shape=triangle $(rzsz.test)
+tmtest -D size=255 -D size=9 $(rzsz.test)
+tmtest -D size=256 $(rzsz.test)
+tmtest -D size=257 $(rzsz.test)
+tmtest -D size=8192 $(rzsz.test)
+
+------ STDOUT: exit code 0 - no error
+ok   STDIN size=0
+ok   STDIN size=4 shape=triangle
+ok   STDIN size=255 size=9
+ok   STDIN size=256
+FAIL STDIN size=257
+ok   STDIN size=8192
+
+6 tests run, 5 successes, 1 failure

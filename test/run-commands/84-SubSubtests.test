@@ -1,0 +1,134 @@
+# Subtest
+# Scott Bronson
+# 14 Nov 2004
+
+# Ensure that subtests work.
+
+eachline: s/\/tmp\/.*skip\.rtest/\/tmp\/((FILE)).skip.rtest/;
+
+tmtest -o --loud - <<-EOL
+
+    subtests: on
+
+    outer.test: file = <<-EOL
+
+        subtests: on
+
+        rzsz.test: file = <<-EOsL
+            interpolate: stdout
+            echo $(suit) of $(size)
+            ------ STDOUT: exit code 0 - no error
+            $(suit) of $(size)
+        EOsL
+
+        skip.rtest: file = <<-EOsL
+            # this test is named wrong so it won't run.
+            disabled: yes
+        EOsL
+
+        dis.test: file = <<-EOsL
+            # this test won't run because it's disabled.
+            disabled: yes
+        EOsL
+
+        tmtest -Dsuit=$(suit) -Dsize=king $(rzsz.test)
+        tmtest -Dsuit=$(suit) -Dsize=ace $(rzsz.test)
+        tmtest -Dsuit=$(suit) -Dsize=ace $(skip.rtest)
+        tmtest -Dsuit=$(suit) -Dsize=ace $(dis.test)
+    EOL
+
+    tmtest -Dsuit=hearts $(outer.test)
+    tmtest -Dsuit=spades $(outer.test)
+    tmtest -Dsuit=clubs $(outer.test)
+    tmtest -Dsuit=diamonds $(outer.test)
+
+EOL
+------ STDOUT: exit code 0 - no error
+running subtest STDIN
+    running subtest STDIN suit=hearts
+        ok   STDIN suit=hearts size=king
+        ok   STDIN suit=hearts size=ace
+        skip /tmp/((FILE)).skip.rtest (filename doesn't end in .test).
+        dis  STDIN suit=hearts size=ace
+    all subtests passed
+    running subtest STDIN suit=spades
+        ok   STDIN suit=spades size=king
+        ok   STDIN suit=spades size=ace
+        skip /tmp/((FILE)).skip.rtest (filename doesn't end in .test).
+        dis  STDIN suit=spades size=ace
+    all subtests passed
+    running subtest STDIN suit=clubs
+        ok   STDIN suit=clubs size=king
+        ok   STDIN suit=clubs size=ace
+        skip /tmp/((FILE)).skip.rtest (filename doesn't end in .test).
+        dis  STDIN suit=clubs size=ace
+    all subtests passed
+    running subtest STDIN suit=diamonds
+        ok   STDIN suit=diamonds size=king
+        ok   STDIN suit=diamonds size=ace
+        skip /tmp/((FILE)).skip.rtest (filename doesn't end in .test).
+        dis  STDIN suit=diamonds size=ace
+    all subtests passed
+all subtests passed
+
+subtests: on
+
+outer.test: file = <<-EOL
+
+    subtests: on
+
+    rzsz.test: file = <<-EOsL
+        interpolate: stdout
+        echo $(suit) of $(size)
+        ------ STDOUT: exit code 0 - no error
+        $(suit) of $(size)
+    EOsL
+
+    skip.rtest: file = <<-EOsL
+        # this test is named wrong so it won't run.
+        disabled: yes
+    EOsL
+
+    dis.test: file = <<-EOsL
+        # this test won't run because it's disabled.
+        disabled: yes
+    EOsL
+
+    tmtest -Dsuit=$(suit) -Dsize=king $(rzsz.test)
+    tmtest -Dsuit=$(suit) -Dsize=ace $(rzsz.test)
+    tmtest -Dsuit=$(suit) -Dsize=ace $(skip.rtest)
+    tmtest -Dsuit=$(suit) -Dsize=ace $(dis.test)
+EOL
+
+tmtest -Dsuit=hearts $(outer.test)
+tmtest -Dsuit=spades $(outer.test)
+tmtest -Dsuit=clubs $(outer.test)
+tmtest -Dsuit=diamonds $(outer.test)
+
+------ STDOUT: exit code 0 - no error
+running subtest STDIN suit=hearts
+    ok   STDIN suit=hearts size=king
+    ok   STDIN suit=hearts size=ace
+    skip /tmp/((FILE)).skip.rtest (filename doesn't end in .test).
+    dis  STDIN suit=hearts size=ace
+all subtests passed
+running subtest STDIN suit=spades
+    ok   STDIN suit=spades size=king
+    ok   STDIN suit=spades size=ace
+    skip /tmp/((FILE)).skip.rtest (filename doesn't end in .test).
+    dis  STDIN suit=spades size=ace
+all subtests passed
+running subtest STDIN suit=clubs
+    ok   STDIN suit=clubs size=king
+    ok   STDIN suit=clubs size=ace
+    skip /tmp/((FILE)).skip.rtest (filename doesn't end in .test).
+    dis  STDIN suit=clubs size=ace
+all subtests passed
+running subtest STDIN suit=diamonds
+    ok   STDIN suit=diamonds size=king
+    ok   STDIN suit=diamonds size=ace
+    skip /tmp/((FILE)).skip.rtest (filename doesn't end in .test).
+    dis  STDIN suit=diamonds size=ace
+all subtests passed
+
+16 tests run, 8 successes, 0 failures

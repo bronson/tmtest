@@ -1,9 +1,8 @@
-# Stdout and Stderr From Executable File
+# Failed Test Returns Error
 # author: Scott Bronson
 
-# We should be able to redirect both stdout and stderr from an executed file.
-# This example comes from the testfile documentation.
-
+# It doesn't matter how many tests fail, if they are all
+# successfully run, tmtest will return an exit value of 0.
 
 # Ensure that the variable on tmtest's stdin gets interpolated.
 interpolate: stdin
@@ -13,20 +12,23 @@ eachline: s/tmtest-.*\.tt\.cmd/tmtest-BLAH.tt.cmd/
 
 tt.cmd: execfile = <<-EOF
 	#!/bin/sh
-	perl -e 'print STDOUT "this goes to out\n"'
-	perl -e 'print STDERR "this goes to err\n"'
+    exit 6
 EOF
 
 
 tmtest -o - <<-EOF
-
-	$(tt.cmd) > /dev/null 2>&1 
-
-	------ STDOUT: exit code 0 - no error
+    tmtest - <<-EOF
+        $(tt.cmd) > /dev/null 2>&1 
+        ------ STDOUT: exit code 0 - no error
+    EOF
 EOF
 
 ------ STDOUT: exit code 0 - no error
-
-/tmp/tmtest-BLAH.tt.cmd > /dev/null 2>&1 
-
+tmtest - <<-EOF
+    /tmp/tmtest-BLAH.tt.cmd > /dev/null 2>&1 
+    ------ STDOUT: exit code 0 - no error
+EOF
 ------ STDOUT: exit code 0 - no error
+FAIL STDIN
+
+1 test run, 0 successes, 1 failure

@@ -36,3 +36,5 @@ tmtest $(tt1.test) $(tt2.test) $(tt3.test)
 ok   tmtest-TMPFILE.tt1.test
 ok   tmtest-TMPFILE.tt2.test
 ok   tmtest-TMPFILE.tt3.test
+
+3 tests run, 3 successes, 0 failures

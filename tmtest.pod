@@ -72,11 +72,18 @@ prefixed with a '-', and the actual results are prefixed with a '+'
 and the '-' lines are ones that the test erroneously didn't print).
 
 Note that you can pipe this output straight into the patch
-program to modify the test files.  DANGER!!!  This is the perfect way to let
-subtle bugs slip into your test deck.  You should always change your
+program to modify the test files.  This works when running tests
+in subdirectories too, but you need to call C<patch -p0> for
+patch to be able to find the input files.
+
+    tmtest -d | less        # view patch to ensure no bad changes
+    tmtest -d | patch -p0   # patch every file to match current test
+
+DANGER!!!  This is the perfect way to let
+subtle bugs slip into your test deck.  It's best to change
 testfiles by hand so that you know exactly what changed, including
-whitespace.  However, when sweeping changes are necessary, this can
-be a real time saver.
+whitespace.  When using patch, make sure you look at the patch
+before applying it.
 
 =item B<-e> B<--explode>
 
@@ -89,7 +96,9 @@ named subdir of /tmp/tmtest.
 Each command is named "cmd-N" where N is the number of the command
 in the test file.  There is also a file "RUN" which will run each
 command file in turn.  Excecuting the "RUN" file should produce
-exactly the same results as running tmtest.
+exactly the same results as running tmtest.  Note that, unlike
+running the test for real, the exploded test doesn't delete its
+L<create files/CREATE FILES> when the test finishes.
 
 =item B<-f> B<--config-file> F<file>
 
@@ -127,6 +136,10 @@ You can run this exact test from the command line like this:
 
     tmtest -h1 01-testfile.test | command
 
+=item B<-l> B<--loud>
+
+Ensures that the final tally is always printed.  See --quiet.
+
 =item B<-o> B<--output>
 
 This outputs the entire test file, but include the new results 
@@ -151,6 +164,11 @@ that you will create a test that ensures buggy behavior.
 The danger of doing this by hand is very, very slight.
 And second, in one of the few poor Unix design decisions, that command
 line won't do what you hope it will.
+
+=item B<-q> B<--quiet>
+
+Causes tmtest to be quieter in what it prints.  For instance, it suppresses
+the results tally at the end of a test.  See L</--loud>.
 
 =item B<-v> B<--verbose>
 
@@ -250,7 +268,7 @@ suffer from the same bug again.
 
 =back
 
-=head1 RETURN VALUE
+=head1 EXIT VALUE
 
 tmtest returns a nonzero error code only if one or more tests
 could not be run for some reason.  If all tests are successfully run,

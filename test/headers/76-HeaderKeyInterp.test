@@ -1,0 +1,21 @@
+title:	Header Interp
+author:	Scott Bronson
+date:	15 Nov 2004
+
+# ensures that we interpolate on header keys too.
+# "(arg1): ABC" is actually "abc: ABC"
+
+tmtest -o - <<-EOL
+	arg1: abc
+	$(arg1): ABC
+	echo $(abc)
+	------ STDOUT: exit code 0 - no error
+	ABC
+EOL
+
+------ STDOUT: exit code 0 - no error
+arg1: abc
+$(arg1): ABC
+echo $(abc)
+------ STDOUT: exit code 0 - no error
+ABC

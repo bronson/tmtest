@@ -27,3 +27,5 @@ EOL
 
 ------ STDOUT: exit code 0 - no error
 skip STDIN
+
+1 test run, 0 successes, 0 failures

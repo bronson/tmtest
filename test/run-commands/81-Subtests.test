@@ -1,0 +1,85 @@
+# Subtest
+# Scott Bronson
+# 14 Nov 2004
+
+# Ensure that subtests work.
+# This is the same as 80, but uses the subtests header to make
+# things easier.
+
+
+tmtest -o --loud - <<-EOL
+
+    subtests: on
+
+    rzsz.test: file = <<-EOL
+        interpolate: stdout
+        echo $(size)
+        ------ STDOUT: exit code 0 - no error
+        $(size)
+    EOL
+
+    tmtest -D size=0 $(rzsz.test)
+    tmtest -Dsize=1 $(rzsz.test)
+    tmtest --define size=2 $(rzsz.test)
+    tmtest --define=size=3 $(rzsz.test)
+    tmtest -D size=4 --define shape=triangle $(rzsz.test)
+    tmtest -D size=255 -D size=9 $(rzsz.test)
+    tmtest -D size=256 $(rzsz.test)
+    tmtest -D size=257 $(rzsz.test)
+    tmtest -D size=8192 $(rzsz.test)
+    tmtest -D size=524289 $(rzsz.test)
+
+EOL
+
+# The first series of test results is the running score
+# printed by tmtest while the test is running.  Everything
+# after that is printed by the -o option after the
+# test has finished.
+
+------ STDOUT: exit code 0 - no error
+running subtest STDIN
+    ok   STDIN size=0
+    ok   STDIN size=1
+    ok   STDIN size=2
+    ok   STDIN size=3
+    ok   STDIN size=4 shape=triangle
+    ok   STDIN size=255 size=9
+    ok   STDIN size=256
+    ok   STDIN size=257
+    ok   STDIN size=8192
+    ok   STDIN size=524289
+all subtests passed
+
+subtests: on
+
+rzsz.test: file = <<-EOL
+    interpolate: stdout
+    echo $(size)
+    ------ STDOUT: exit code 0 - no error
+    $(size)
+EOL
+
+tmtest -D size=0 $(rzsz.test)
+tmtest -Dsize=1 $(rzsz.test)
+tmtest --define size=2 $(rzsz.test)
+tmtest --define=size=3 $(rzsz.test)
+tmtest -D size=4 --define shape=triangle $(rzsz.test)
+tmtest -D size=255 -D size=9 $(rzsz.test)
+tmtest -D size=256 $(rzsz.test)
+tmtest -D size=257 $(rzsz.test)
+tmtest -D size=8192 $(rzsz.test)
+tmtest -D size=524289 $(rzsz.test)
+
+------ STDOUT: exit code 0 - no error
+ok   STDIN size=0
+ok   STDIN size=1
+ok   STDIN size=2
+ok   STDIN size=3
+ok   STDIN size=4 shape=triangle
+ok   STDIN size=255 size=9
+ok   STDIN size=256
+ok   STDIN size=257
+ok   STDIN size=8192
+ok   STDIN size=524289
+
+10 tests run, 10 successes, 0 failures
