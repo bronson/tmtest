@@ -130,14 +130,16 @@ typedef int (*scanproc)(struct scanstate *ss);
  */
 
 typedef struct scanstate {
-    const char *cursor;   ///< The current character being looked at by the scanner
-    const char *limit;    ///< The last valid character in the current buffer.  If the previous read was short, then this will not point to the end of the actual buffer (bufptr + bufsiz).
-    const char *marker;   ///< Used internally by re2c engine to handle backtracking.
+    const char *cursor; ///< The current character being looked at by the scanner
+    const char *limit;  ///< The last valid character in the current buffer.  If the previous read was short, then this will not point to the end of the actual buffer (bufptr + bufsiz).
+    const char *marker; ///< Used internally by re2c engine to handle backtracking.
 
     // (these do a poor job of simulating capturing parens)
-    const char *token;    ///< The start of the current token (manually updated by the scanner).
+    const char *token;  ///< The start of the current token (manually updated by the scanner).
+    int line;           ///< The scanner may or may not maintain the current line number in this field.
+    int at_eof;         ///< You almost certainly don't want to be using this (unless you're writing a readproc).  Use scan_finished() instead.  This field gets set when the readproc realizes it has hit eof.  by convention 1 means eof, 2 means yes, at_eof is true, but because of an unrecoverable read error (todo: this should be formalized).
 
-    const char *bufptr;   ///< The buffer currently in use
+    const char *bufptr; ///< The buffer currently in use
     int bufsiz;         ///< The maximum number of bytes that the buffer can hold
 
     void *readref;      ///< Data specific to the reader (i.e. for readfp_attach() it's a FILE*).
@@ -146,12 +148,8 @@ typedef struct scanstate {
     void *scanref;      ///< Data specific to the scanner
     scanproc state;     ///< some scanners are made up of multiple individual scan routines.  They store their state here.
 
-    struct {
-        int new;        ///< The scanner may or may not use this to tell the current line number.  All operations on line must go through the macros.
-        int old;
-    } line;        
-
-    int at_eof;         ///< You almost certainly don't want to be reading this.  Use scan_finished() instead.  true when the readproc realizes it has hit eof.  by convention 1 means eof, 2 means at_eof is true but because of an unrecoverable read error.  This should probably be formalized.
+    void *userref;      ///< Never touched by any r2 routines (except scanstate_init, which clears both fields).  This can be used to associate a parser with this scanner.
+    void *userproc;     ///< That's just a suggestion though.  These fields are totally under your control.
 } scanstate;
 
 
@@ -200,27 +198,41 @@ void scanstate_reset(scanstate *ss);
  * you don't want to handle this token, you can push it back and
  * it will be returned again the next time scan_token() is called.
  *
- * Note that this only works once.  You cannot push multiple tokens back.
- * Also, the scanner may have internal state of its own that does not get
- * reset.  You need to do some research before calling this routine.
+ * Note that this only works once.  You cannot push multiple tokens back
+ * into the scanner.  Also, the scanner may have internal state of its
+ * own that does not get reset.  If so, the scanner may or may not provide
+ * a routine to back its state up as well.
+ *
+ * Finally, this doesn't back the line number up.  If you're pushing
+ * a token back and you care about having the correct line nubmer,
+ * then you'll have to restore the line number to what it was before
+ * you scanned the token that you're pushing back.
+ *
+ * Yes, it takes some pretty serious research to call this function safely.
+ * However, when you need to, it can be amazingly useful.
  */
 
-#define scan_pushback(ss) \
-    ((ss)->cursor = (ss)->token, \
-     (ss)->line.new = (ss)->line.old)
+#define scan_pushback(ss) ((ss)->cursor = (ss)->token)
 
 
 /** Sets the current line number in the scanner to the given value.
  */
 
-#define set_line(ss,n) ((ss)->line.old=(ss)->line.new, ss->line.new=(n));
+#define set_line(ss,n) (ss->line=(n));
 
 
 /** Increments the current line number by 1.
  */
 
-#define inc_line(ss)   ((ss)->line.old=(ss)->line.new, ss->line.new++);
+#define inc_line(ss)   (ss->line++);
 
+
+/** This should be called by ever scanproc
+ *
+ * This prepares the scanstate to scan a new token.
+ */
+
+#define scanner_enter(ss) ((ss)->token = (ss)->cursor)
 
 #endif
 

@@ -23,7 +23,7 @@
 
 int cb_scanner_file(scanstate *ss)
 {
-    ss->token = ss->cursor;
+    scanner_enter(ss);
     inc_line(ss);
 
 /*!re2c

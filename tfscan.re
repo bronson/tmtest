@@ -21,7 +21,7 @@
 
 int tfscan_start(scanstate *ss)
 {
-    ss->token = ss->cursor;
+    scanner_enter(ss);
     inc_line(ss);
 
 /*!re2c

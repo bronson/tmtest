@@ -18,14 +18,16 @@ void scanstate_init(scanstate *ss, const char *bufptr, int bufsiz)
     ss->limit = bufptr;
     ss->marker = NULL;
     ss->token = bufptr;
+    ss->line = 0;
+    ss->at_eof = 0;
     ss->bufptr = bufptr;
     ss->bufsiz = bufsiz;
     ss->readref = NULL;
     ss->read = NULL;
     ss->scanref = NULL;
     ss->state = NULL;
-    ss->line.old = ss->line.new = 0;
-    ss->at_eof = 0;
+    ss->userref = NULL;
+    ss->userproc = NULL;
 }
 
 
@@ -48,7 +50,7 @@ void scanstate_reset(scanstate *ss)
     ss->limit = ss->bufptr;
     ss->marker = NULL;
     ss->token = ss->bufptr;
-    ss->line.old = ss->line.new = 0;
+    ss->line = 0;
     ss->at_eof = 0;
 }
 

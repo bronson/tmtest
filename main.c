@@ -384,7 +384,9 @@ void process_ents(char **ents, int warn_suffix)
             chdir(ents[i]);
             if(pathbuf[0]) strncat(pathbuf, "/", sizeof(pathbuf));
             strncat(pathbuf, ents[i], sizeof(pathbuf));
-            printf("\nProcessing %s\n", pathbuf);
+            if(outmode == outmode_test) {
+                printf("\nProcessing %s\n", pathbuf);
+            }
             process_dir();
             slash = strrchr(pathbuf, '/');
             if(slash) {
@@ -574,7 +576,9 @@ int main(int argc, char **argv)
     if(optind < argc) {
         process_ents(argv+optind, 1);
     } else {
-        printf("\nProcessing .\n");
+        if(outmode == outmode_test) {
+            printf("\nProcessing .\n");
+        }
         process_dir();
     }
     stop_tests();

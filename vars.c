@@ -20,6 +20,11 @@
  * error (i.e. bad template variable, can't get user's login, etc).
  * They should ignore write errors.  They will happpen whenever the
  * test (or a config file) exits early and should properly be ignored.
+ *
+ * NOTE: this file is the only place in this project that we use
+ * fileptrs.  Well, other than printing status information from main.c,
+ * and, by proxy, the test_command_copy() routine.
+ * Everywhere else we use Unix I/O.  Never mix them.
  */
 
 static int var_testfile(struct test *test, FILE* fp, const char *var)

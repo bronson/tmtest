@@ -16,6 +16,7 @@
 
 #include "test.h"
 #include "r2read-fd.h"
+#include "r2scan-dyn.h"
 #include "status.h"
 #include "tfscan.h"
 #include "compare.h"
@@ -113,11 +114,61 @@ int test_ran(struct test *test, char *msgbuf, int msgbufsiz)
 }
 
 
-typedef struct {
-    // keep track of token state
-    int state;
-    scanstate cmp;
-} sectionref;
+/** Copies the command section of the given text to the given fileptr.
+ *
+ * It also saves all data in a memory block.  We will probably need
+ * this data again when we want to output the test file.  Luckily
+ * the command section is usually tiny.  It's the output sections
+ * that get lengthly.
+ *
+ * This routine is a whole lot like scan_sections except that it stops
+ * at the end of the command section.  It leaves the result sections
+ * on the stream to be parsed later.
+ */
+
+void test_command_copy(struct test *test, FILE *fp)
+{
+    int oldline;
+
+    test->cmdsection = memfile_alloc(512);
+
+    do {
+        oldline = test->testfile.line;
+        int tokno = scan_token(&test->testfile);
+        if(tokno < 0) {
+            fprintf(stderr, "Error %d pulling status tokens: %s\n", 
+                    tokno, strerror(errno));
+            exit(10);
+        }
+
+        // I don't think the scanner will return a 0 token anymore.
+        // Let's check that out.  Need to know for the parser.
+        assert(tokno);
+
+        if(tokno != exCOMMAND) {
+            // this is the start of another section.  we're done.
+            memfile_freeze(test->cmdsection);
+
+            // now we attempt to push the token back on the stream...
+            scan_pushback(&test->testfile);
+            test->testfile.line = oldline;
+            // The pushback reset the stream, and I restored the line number,
+            // but the scanner is still in a different state.
+            // We need it to be in a COMMAND state, so that when it feeds
+            // the new SECTION token it marks it NEW.  Reattaching resets
+            // the state to a command state, so we can just do that.
+            tfscan_attach(&test->testfile);
+            return;
+        }
+
+        fwrite(token_start(&test->testfile), token_length(&test->testfile), 1, fp);
+        memfile_write(test->cmdsection, token_start(&test->testfile), token_length(&test->testfile));
+    } while(!scan_finished(&test->testfile));
+
+    // the scan finished without hitting another section.
+    // no problem -- that just means this test doesn't HAVE
+    // any other sections.
+}
 
 
 /** Prepares a test section for comparison against actual results.
@@ -126,10 +177,10 @@ typedef struct {
  * it up.
  */
 
-void test_section_compare_start(sectionref *ref, int fd, matchval *mv,
+void compare_section_start(scanstate *cmpscan, int fd, matchval *mv,
         const char *filename, const char *sectionname)
 {
-    assert(!compare_in_progress(&ref->cmp));
+    assert(!compare_in_progress(cmpscan));
 
     // associates the scanstate with the fd and prepares to compare.
     if(*mv != match_unknown) {
@@ -144,46 +195,66 @@ void test_section_compare_start(sectionref *ref, int fd, matchval *mv,
         exit(10);   // todo: consolidate with error codes in main
     }
 
-    scanstate_reset(&ref->cmp);
-    readfd_attach(&ref->cmp, fd);
-    compare_attach(&ref->cmp, mv);
+    scanstate_reset(cmpscan);
+    readfd_attach(cmpscan, fd);
+    compare_attach(cmpscan, mv);
 
     // we may want to check the token to see if there are any
     // special requests (like detabbing).
 }
 
 
-/** This gets fed each section from the test parser.
+/** This routine parses the tokens returned by scan_sections() and
+ * compares them against the actual test results.  It stores the
+ * results in test->match_stdout, match_stderr, and match_result.
  *
- * It checks the expected sections against the actual
- * and stores the results in test->match_stdout, etc.
+ * The refcon needs to be an allocated scanner.  It need not be
+ * attached to anything -- this routine will take care of attaching
+ * and detaching it as needed.
  */
 
-void test_section_parser(struct test *test, int sec,
-        const char *datap, int len, sectionref *ref)
+void parse_section_compare(struct test *test, int sec,
+        const char *datap, int len, void *refcon)
 {
+    #define get_cur_state(ss)    ((int)(ss)->userref)
+    #define set_cur_state(ss,x)  ((ss)->userref=(void*)(x))
+
+    scanstate *cmpscan = refcon;
     int newsec = EX_TOKEN(sec);
+
+    if(get_cur_state(cmpscan) == 0) {
+        // This is the first time this scanner has been used, so our
+        // current state has not been set yet.  Initialize it to the
+        // command state.
+        set_cur_state(cmpscan, exCOMMAND);
+    }
+
+    if(!is_section_token(newsec) && sec != 0) {
+        // We only work with result section tokens.  Ignore all
+        // other tokens (except the eof token of course).
+        return;
+    }
 
     if(EX_ISNEW(sec) || sec == 0) {
         // ensure previoius section is finished
-        switch(ref->state) {
+        switch(get_cur_state(cmpscan)) {
             case exSTDOUT:
             case exSTDERR:
-                compare_end(&ref->cmp);
+                compare_end(cmpscan);
                 break;
             default:
                 ;
         }
 
         // fire up new section
-        ref->state = newsec;
-        switch(ref->state) {
+        set_cur_state(cmpscan, newsec);
+        switch(get_cur_state(cmpscan)) {
             case exSTDOUT:
-                test_section_compare_start(ref, test->outfd,
+                compare_section_start(cmpscan, test->outfd,
                         &test->stdout_match, get_test_filename(test), "STDOUT");
                 break;
             case exSTDERR:
-                test_section_compare_start(ref, test->errfd,
+                compare_section_start(cmpscan, test->errfd,
                         &test->stderr_match, get_test_filename(test), "STDERR");
                 break;
             case exRESULT:
@@ -198,12 +269,12 @@ void test_section_parser(struct test *test, int sec,
         }
     } else {
         // we're continuing an already started section.
-        assert(ref->state == newsec);
+        assert(get_cur_state(cmpscan) == newsec);
 
-        switch(ref->state) {
+        switch(get_cur_state(cmpscan)) {
             case exSTDOUT:
             case exSTDERR:
-                compare_continue(&ref->cmp, datap, len);
+                compare_continue(cmpscan, datap, len);
                 break;
             case exRESULT:
                 // ignore any lines after the start of a RESULT section.
@@ -220,24 +291,24 @@ void test_section_parser(struct test *test, int sec,
 }
 
 
-void analyze_results(struct test *test)
+/** Scans the output sections of the test and calls the supplied parser
+ * for each token.
+ *
+ * @param scanner: used to provide the section tokens.
+ */
+void scan_sections(struct test *test, scanstate *scanner,
+        void (*parseproc)(struct test *test, int sec, const char *datap,
+                int len, void *refcon), void *refcon)
 {
-    sectionref ref;
-    char buf[BUFSIZ];
-
     // if the testfile is already at its eof, it means that
     // it didn't have any sections.  therefore, we'll assume
     // defaults for all values.  we're done.
-    if(scan_finished(&test->testfile)) {
+    if(scan_finished(scanner)) {
         return;
     }
-
-    memset(&ref, 0, sizeof(sectionref));
-    ref.state = exCOMMAND;
-    scanstate_init(&ref.cmp, buf, sizeof(buf));
     
     do {
-        int tokno = scan_token(&test->testfile);
+        int tokno = scan_token(scanner);
         if(tokno < 0) {
             fprintf(stderr, "Error %d pulling status tokens: %s\n", 
                     tokno, strerror(errno));
@@ -248,60 +319,13 @@ void analyze_results(struct test *test)
         // Let's check that out.  Need to know for the parser.
         assert(tokno);
 
-        test_section_parser(test, tokno,
-                token_start(&test->testfile),
-                token_length(&test->testfile), &ref);
+        (*parseproc)(test, tokno, token_start(scanner),
+                token_length(scanner), refcon);
 
-    } while(!scan_finished(&test->testfile));
+    } while(!scan_finished(scanner));
 
     // give the parser an eof token so it can finalize things.
-    test_section_parser(test, 0, NULL, 0, &ref);
-}
-
-
-/** Copies the command section of the given text to the given fileptr.
- *
- * It also saves all data in a memory block.  We will probably need
- * this data again when we want to output the test file.  Luckily
- * the command section is usually tiny.  It's the output sections
- * that get lengthly.
- */
-
-void test_command_copy(struct test *test, FILE *fp)
-{
-    test->cmdsection = memfile_alloc(512);
-
-    do {
-        int tokno = scan_token(&test->testfile);
-        if(tokno < 0) {
-            fprintf(stderr, "Error %d pulling status tokens: %s\n", 
-                    tokno, strerror(errno));
-            exit(10);
-        }
-
-        // I don't think the scanner will return a 0 token anymore.
-        // Let's check that out.  Need to know for the parser.
-        assert(tokno);
-
-        if(tokno != exCOMMAND) {
-            // this is the start of another section.  we're done.
-            memfile_freeze(test->cmdsection);
-            scan_pushback(&test->testfile);
-            // The pushback reset the stream, but the scanner is still in
-            // a different state.  We need to reset it back to the start
-            // state for the pushback to be complete.  Um, haaaack.
-            tfscan_attach(&test->testfile);
-            return;
-        }
-
-        fwrite(token_start(&test->testfile), token_length(&test->testfile), 1, fp);
-        memfile_write(test->cmdsection, token_start(&test->testfile), token_length(&test->testfile));
-
-    } while(!scan_finished(&test->testfile));
-
-    // the scan finished without hitting another section.
-    // no problem -- that just means this test doesn't HAVE
-    // any other sections.
+    (*parseproc)(test, 0, NULL, 0, refcon);
 }
 
 
@@ -310,6 +334,7 @@ void test_command_copy(struct test *test, FILE *fp)
 
 void test_results(struct test *test)
 {
+    scanstate *ref;
     char buf[120];
     int diffs;
 
@@ -323,7 +348,13 @@ void test_results(struct test *test)
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
-    analyze_results(test);
+    ref = dynscan_create(BUFSIZ);
+    if(!ref) {
+        perror("Could not allocate section compare scanner");
+        exit(10);
+    }
+    scan_sections(test, &test->testfile, parse_section_compare, ref);
+    dynscan_free(ref);
 
     assert(test->stdout_match != match_inprogress);
     assert(test->stderr_match != match_inprogress);
@@ -357,8 +388,53 @@ void test_results(struct test *test)
 }
 
 
+/*
+void modify_cmdsection(struct test *test, int fd)
+{
+    if(test->cmdsection) {
+        // this test's command section has already been printed
+        // (probably because the user fed the test script over stdin).
+        
+    }
+
+    // now scan the rest of the testfile.
+    cb_scanner_attach(&ss);
+
+    // now, if we see the token "CBRUNNING" in the token stream,
+    // it means that we attempted to start the test.  If not,
+    // then the test bailed early.
+    do {
+        tok = scan_token(&ss);
+        if(tok < 0) {
+            fprintf(stderr, "Error %d pulling status tokens: %s\n", 
+                    tok, strerror(errno));
+            exit(10);
+        }
+        if(tok == CBRUNNING) {
+            // it's ok to bail early since there's no memory to
+            // deallocate and no files that need closing.
+            return 1;
+        }
+    } while(!scan_finished(&ss));
+
+    // should add a short message to the user saying what happened.
+    strncpy(msgbuf, "todo: add a message here.", msgbufsiz);
+}
+*/
+
+
 void dump_results(struct test *test)
 {
+    /*
+    print_command_section();
+
+    test->exitno_match = match_unknown;
+    test->stdout_match = match_unknown;
+    test->stderr_match = match_unknown;
+
+    scan_sections(test, parse_section_output);
+    */
+
     //     we have a routine that will generate a new test file based on the old.
     //       output: it just dumps that new test file to stdout.
 }

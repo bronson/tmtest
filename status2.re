@@ -21,7 +21,7 @@
 
 int cb_scanner_config(scanstate *ss)
 {
-    ss->token = ss->cursor;
+    scanner_enter(ss);
 
 /*!re2c
 WS      = [ \t];

@@ -26,5 +26,5 @@ MODIFY () { exit 0; }
 
 echo 'running: %(TESTFILE)' >&%(STATUSFD)
 exec >&%(OUTFD) 2>&%(ERRFD)
-LINENO=1
+LINENO=0
 %(TESTEXEC)
