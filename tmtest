@@ -1066,8 +1066,10 @@ sub read_test
 
         # append new value to old value if header was defined with '+='.
         if($header->{sep} && substr($header->{sep},0,1) eq '+') {
-            $header->{value} = $test->{header}->{lc $header->{key}}->{value} .
-                ' ' . $header->{value};
+            my $oldval = '';
+            $oldval = $test->{header}->{lc $header->{key}}->{value}
+                if exists $test->{header}->{lc $header->{key}};
+            $header->{value} = ($oldval ? $oldval.' ' : '') . $header->{value};
         }
 
 		$debug && print "  ... stored header \"" . $header->{key} . "\".\n";
