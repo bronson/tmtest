@@ -14,10 +14,15 @@
 #include <assert.h>
 #include "test.h"
 #include "vars.h"
-#include "qtempfile.h"
 
 
-static int var_title(struct test *test, FILE* fp, const char *var)
+/* These functions return errors only when there's a CONFIGURATION
+ * error (i.e. bad template variable, can't get user's login, etc).
+ * They should ignore write errors.  They will happpen whenever the
+ * test (or a config file) exits early and should properly be ignored.
+ */
+
+static int var_testfile(struct test *test, FILE* fp, const char *var)
 {
     assert(test->filename);
     fprintf(fp, test->filename);
@@ -54,43 +59,15 @@ static int var_date(struct test *test, FILE *fp, const char *var)
 }
 
 
-static int var_tmpfile(struct test *test, FILE *fp, const char *var)
+static int var_outfd(struct test *test, FILE *fp, const char *var)
 {
-    char buf[64];
-    char *fn;
-
-    snprintf(buf, sizeof(buf), "tmtest-%s-XXXXXX", var);
-    fn = qtempnam(buf, NULL);
-    if(!fn) {
-        // the tempnam already printed the reason why to stdout
-        return 1;
-    }
-
-    // store the generated filename in the test structure
-    if(strcmp(var, "STDOUT") == 0) {
-        test->outfile = fn;
-    } else if(strcmp(var, "STDERR") == 0) {
-        test->errfile = fn;
-    } else if(strcmp(var, "OUT_OF_BAND") == 0) {
-        test->oobfile = fn;
-    } else {
-        fprintf(stderr, "Unknown variable in var_tmpfile(): %s\n", var);
-        return 1;
-    }
-
-    fputs(fn, fp);
+    fprintf(fp, "%d", test->outfd);
     return 0;
 }
 
-
-static int var_oob_separator(struct test *test, FILE *fp, const char *var)
+static int var_errfd(struct test *test, FILE *fp, const char *var)
 {
-    // todo: make this thing random.  and less stupid.
-    static const char *sep =
-        "    -  - - --  dp TMTEST SEPARATOR pd  -- - -  -";
-
-    test->oobsep = sep;
-    fprintf(fp, sep);
+    fprintf(fp, "%d", test->errfd);
     return 0;
 }
 
@@ -135,11 +112,9 @@ int printvar(struct test *test, FILE *fp, const char *varname)
         { "AUTHOR",         var_author },
         { "CONFIG_FILES",   var_config_files },
         { "DATE",           var_date },
-        { "OUT_OF_BAND",    var_tmpfile },
-        { "OOB_SEPARATOR",  var_oob_separator },
-        { "STDOUT",         var_tmpfile },
-        { "STDERR",         var_tmpfile },
-        { "TITLE",          var_title },
+        { "OUTFD",          var_outfd },
+        { "ERRFD",          var_errfd },
+        { "TESTFILE",       var_testfile },
     };
 
     for(i=0; i<sizeof(funcs)/sizeof(funcs[0]); i++) {

@@ -4,6 +4,18 @@ bash is really fast and loose with variables.  It's going to give
 us trouble when trying to specify the stdout and stderr.
 Using string expansion $'a\n\n' might help.
 
+No problem.  We can't pull the value from variables anyway since
+STDOUT and STDERR should come after the tests.  If the test bails,
+they won't get executed.  So, we pull EXSTDOUT, ERR, and EXITVAL
+from the testfile before it even gets run.  Unlike the original
+tmtest, though, STDOUT and RESULT are split into their own sections,
+and the sections may come in any order.
+
+So, we specify the STDOUT and STDERR using sections like tmtest
+because, well, it's worked so far.  And heredocs are more complex
+and visually less pleasing.
+
+
 tmtest will always strip a single leading newline from
 STDOUT and STDERR.  This is because this:
 
@@ -35,6 +47,16 @@ disabled()
 tmpfile()
 newfile()
 
+
+By default tests run with "set -e".  This means that the shell
+will exit the first time a command returns a nonzero result code
+(unless it is being used in a pipeline, arithmetic expression, etc).
+That error code becomes the error code for your whole test.
+Usually this is what you want -- commands returning nonzero exit
+code typically indicate errors.  If not, put a "set +e" in either
+your script or a configuration file somewhere.  This means the
+test will run to completion and return 0, no matter what any
+intermediate commands returned.
 
 
 How it's going to work:

@@ -9,9 +9,6 @@
 struct test {
     // all of these need to be freed when the test is finished.
     const char *filename;
-    const char *outfile;
-    const char *errfile;
-    const char *oobfile;
-    const char *oobsep;
+    int outfd, errfd;   // actual stdout and stderr from test
 };
 

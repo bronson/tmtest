@@ -3,7 +3,11 @@ DATE='2004-12-29'
 
 echo Howdy
 
-EXITNO=0
-STDOUT='
-Howdy $a
-'
+RESULT : 3
+MODIFY : s/blah blah//g
+STDOUT : tabbed
+    Howdy $a
+    STDOUT :
+    Zanzibar.
+STDERR : tabbed
+    This is the error
