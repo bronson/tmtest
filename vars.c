@@ -11,18 +11,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <pwd.h>
 #include <assert.h>
+
 #include "test.h"
 #include "vars.h"
-
-// to get PATH_MAX:
-#include <dirent.h>
-
-// TODO: we call getcwd three different times.  we should just
-// call it once and cache the result.  but this file doesn't
-// know when a new test is starting...   fix this somehow.
-
+#include "curdir.h"
 
 #define CONFIG_FILE "tmtest.conf"
 #define HOME_CONFIG_FILE ".tmtestrc"
@@ -46,27 +41,13 @@
 
 static int var_testfile(struct test *test, FILE* fp, const char *var)
 {
-	char buf[PATH_MAX];
-
-    if(!getcwd(buf, sizeof(buf))) {
-        perror("Could not getcwd");
-        return 1;
-    }
-
-	fprintf(fp, "%s/%s", buf, test->testfilename);
+	fprintf(fp, "%s/%s", curabsolute(), test->testfilename);
     return 0;
 }
 
 static int var_testdir(struct test *test, FILE* fp, const char *var)
 {
-	char buf[PATH_MAX];
-
-    if(!getcwd(buf, sizeof(buf))) {
-        perror("Could not getcwd");
-        return 1;
-    }
-
-	fputs(buf, fp);
+	fputs(curabsolute(), fp);
     return 0;
 }
 
@@ -80,7 +61,7 @@ static int var_testexec(struct test *test, FILE* fp, const char *var)
         test_command_copy(test, fp);
     } else {
         test_command_copy(test, NULL);
-        fprintf(fp, ". '%s'", test->testfilename);
+        fprintf(fp, ". '%s/%s'", curabsolute(), test->testfilename);
     }
 
     return 0;
@@ -196,7 +177,7 @@ static void check_config(struct test *test, FILE *fp,
 
 	if(file_exists(buf)) {
 		fprintf(fp, "echo 'CONFIG: %s' >&%d\n", buf, test->statusfd);
-		fprintf(fp, "MYPATH='%.*s' MYFILE='%s' . '%s'\n", len, buf, buf, buf);
+		fprintf(fp, "MYDIR='%.*s'\nMYFILE='%s'\n. '%s'\n", len, buf, buf, buf);
 	}
 }
 
@@ -221,11 +202,7 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
 	check_config_str(test, fp, "/etc", CONFIG_FILE);
 	check_config_str(test, fp, get_home_dir(), HOME_CONFIG_FILE);
 
-    if(!getcwd(buf, sizeof(buf))) {
-        perror("Could not getcwd");
-        return 1;
-    }
-
+	strncpy(buf, curabsolute(), sizeof(buf));
     for(cp=buf; (cp=strchr(cp,'/')); cp++) {
 		check_config(test, fp, buf, cp-buf, CONFIG_FILE);
     }

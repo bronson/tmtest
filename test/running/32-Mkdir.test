@@ -15,6 +15,7 @@ fn=`mktemp -t`
 # then we run the subtest.  It uses MKTEMP to create the file and
 # fill it with data (technically, the empty file was created by the
 # mktemp(1) call above)
+cd "$TESTDIR"
 tmtest - <<-EOL
 	MKFILE sfn '$fn' <<-EOS
 		FileContents

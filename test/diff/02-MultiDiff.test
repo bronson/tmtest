@@ -18,7 +18,6 @@ MKFILE t2 <<-EOF
 	test 2 wrong output
 EOF
 
-
 tmtest --all-files -d "$t1" "$t2"
 
 

@@ -1,5 +1,9 @@
 Create tests:
 
+Handle running a test specified with an absolute path
+Handle running a test specified with a relative path in cwd.
+Handle running a test specified in a child dir.
+
 Calling with unkown switches, both short and long.
 Not specifying values for switches that take values.
 Naming the test on the command line
@@ -14,7 +18,7 @@ Test that both raw and modified work when stdout doesn't have a newline.
 2.0:
 - Make diff work in subdirs (need to cd back to superdir before
   forking, and use the proper partial path for the file)
-- Ensure that diffing works when running multiple tests in multiple dirs.
+- Ensure that diffing and patching works when running multiple tests in multiple dirs.
 - figure out whether to call it MODIFY or EACHLINE.  clean up the syntax.
 - get rid of all the exit(10) calls in test.c.  We need a better way to abort the test.
   should get rid of a whole bunch in main.c as well.
@@ -47,6 +51,7 @@ Test that both raw and modified work when stdout doesn't have a newline.
   DISABLED DISABLED:  Hopefully that will clean up 05-08-Disable/Abort.test
 - There should be a way of discovering that you copied a file and changed
   its functionality.  that way, tmtest will update its author and date.
+- Add a timeout that will terminate stalled tests.  You can set the timeout in the config file.
 
 
 

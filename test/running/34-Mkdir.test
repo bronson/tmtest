@@ -8,6 +8,7 @@ DATE='2005-01-29'
 
 dn=`mktemp -d -t`
 
+cd "$TESTDIR"
 tmtest - <<-EOL
 	MKDIR sdn '$dn'
 

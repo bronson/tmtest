@@ -1,0 +1,19 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-29'
+
+# Ensures that the cwd is /tmp when tests are running.
+# (though config files can override that of course)
+
+# Note that this only works if you either haven't specified the
+# TMPFILE environment variable, or if TMPFILE='/tmp'.  If you have
+# some other value in TMPFILE, you will have to modify this test.
+
+tmtest - <<-EOL
+	pwd
+	STDOUT:
+	/tmp
+EOL
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

@@ -15,13 +15,14 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <dirent.h>
+#include <getopt.h>
 #include <assert.h>
 
 #include "re2c/read-fd.h"
 
 #include "test.h"
+#include "curdir.h"
 #include "qscandir.h"
 #include "vars.h"
 #include "tfscan.h"
@@ -29,9 +30,6 @@
 
 #define DIFFPROG "/usr/bin/diff"
 #define SHPROG   "/bin/bash"
-
-// debugging flags:
-#define DUMP_EXEC 0
 
 
 enum {
@@ -42,6 +40,7 @@ enum {
 
 int outmode = outmode_test;
 int allfiles = 0;
+int dumpscript = 0;
 
 #define TESTDIR "/tmp/tmtest-XXXXXX"
 char g_testdir[sizeof(TESTDIR)];
@@ -270,6 +269,11 @@ int start_diff(struct test *test)
         }
         close(pipes[0]);
         close(pipes[1]);
+		curreset();
+		if(0 != chdir(curabsolute())) {
+            fprintf(stderr, "Could not chdir 1 to %s: %s\n", curabsolute(), strerror(errno));
+            exit(runtime_error);
+		}
         execl(DIFFPROG, DIFFPROG, "-u", filename, "-", (char*)NULL);
         perror("executing " DIFFPROG " for test");
         exit(runtime_error);
@@ -336,8 +340,8 @@ void run_test(const char *name, int warn_suffix)
     }
 
 	// so that we can safely single quote filenames in the shell.
-	if(strchr(name, '\'')) {
-		fprintf(stderr, "%s was skipped because its file name contains a single quote.\n", name);
+	if(strchr(name, '\'') || strchr(name, '"')) {
+		fprintf(stderr, "%s was skipped because its file name contains a quote character.\n", name);
 		return;
 	}
 
@@ -407,18 +411,27 @@ void run_test(const char *name, int warn_suffix)
 	} else if(is_dash(name)) {
         readfd_attach(&test.testfile, STDIN_FILENO);
     } else {
-        fd = open(name, O_RDONLY);
+		if(name[0] == '/') {
+			fd = open(name, O_RDONLY);
+		} else {
+			int keep = curpush(name);
+			if(keep <= 0) {
+				fprintf(stderr, "Path is too long.");
+				exit(runtime_error);
+			}
+			fd = open(curabsolute(), O_RDONLY);
+			curpop(keep);
+		}
         if(fd < 0) {
             fprintf(stderr, "Could not open %s: %s\n",
-                    name, strerror(errno));
+                    curabsolute(), strerror(errno));
             exit(runtime_error); // TODO
         }
         readfd_attach(&test.testfile, fd);
     }
     tfscan_attach(&test.testfile);
 
-    // a little debugging code
-    if(DUMP_EXEC) {
+    if(dumpscript) {
         print_template(&test, exec_template, stdout);
         exit(0);  // screw the kid
     }
@@ -482,6 +495,48 @@ int select_nodots(const struct dirent *d)
 void process_dir();
 
 
+/** Processes a directory specified using an absolute path.
+ *
+ * We need to save and restore curpath to do this.
+ */
+
+void process_absolute_file(const char *path, int warn_suffix)
+{
+	struct cursave save;
+
+	cursave(&save);
+	curinit("/");
+
+	if(outmode == outmode_test) {
+		printf("\nProcessing %s\n", path);
+	}
+	run_test(path, warn_suffix);
+
+	currestore(&save);
+}
+
+
+/** Processes a directory specified using an absolute path.
+ *
+ * We need to save and restore curpath to do this.
+ */
+
+void process_absolute_dir(const char *path)
+{
+	struct cursave save;
+
+	cursave(&save);
+	curinit(path);
+
+	if(outmode == outmode_test) {
+		printf("\nProcessing %s\n", path);
+	}
+	process_dir();
+
+	currestore(&save);
+}
+
+
 /** Process all entries in a directory.
  *
  * See run_test() for an explanation of warn_suffix.
@@ -489,11 +544,9 @@ void process_dir();
 
 void process_ents(char **ents, int warn_suffix)
 {
-    static char pathbuf[PATH_MAX];
     struct stat st;
     mode_t *modes;
     int i, n;
-    char *slash;
 
     for(n=0; ents[n]; n++)
         ;
@@ -507,10 +560,21 @@ void process_ents(char **ents, int warn_suffix)
     // first collect the stat info for each entry
     for(i=0; i<n; i++) {
         if(!is_dash(ents[i])) {
-            if(stat(ents[i], &st) < 0) {
-                fprintf(stderr, "%s: %s\n", ents[i], strerror(errno));
+			const char *cp = ents[i];
+			int keep = 0;
+			if(ents[i][0] != '/') {
+				keep = curpush(ents[i]);
+				if(keep <= 0) {
+					fprintf(stderr, "Path is too long.");
+					exit(runtime_error);
+				}
+				cp = curabsolute();
+			}
+            if(stat(cp, &st) < 0) {
+                fprintf(stderr, "%s: %s\n", cp, strerror(errno));
                 exit(runtime_error);
             }
+			if(ents[i][0] != '/') curpop(keep);
             modes[i] = st.st_mode;
         }
     }
@@ -518,7 +582,11 @@ void process_ents(char **ents, int warn_suffix)
     // process all files in dir
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || S_ISREG(modes[i])) {
-            run_test(ents[i], warn_suffix);
+			if(ents[i][0] == '/') {
+				process_absolute_file(ents[i], warn_suffix);
+			} else {
+				run_test(ents[i], warn_suffix);
+			}
             modes[i] = 0;
         }
     }
@@ -527,20 +595,20 @@ void process_ents(char **ents, int warn_suffix)
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || modes[i] == 0) continue;
         if(S_ISDIR(modes[i])) {
-            chdir(ents[i]);
-            if(pathbuf[0]) strncat(pathbuf, "/", sizeof(pathbuf));
-            strncat(pathbuf, ents[i], sizeof(pathbuf));
-            if(outmode == outmode_test) {
-                printf("\nProcessing %s\n", pathbuf);
-            }
-            process_dir();
-            slash = strrchr(pathbuf, '/');
-            if(slash) {
-                *slash = '\0';
-            } else {
-                pathbuf[0] = '\0';
-            }
-            chdir("..");
+			if(ents[i][0] == '/') {
+				process_absolute_dir(ents[i]);
+			} else {
+				int keep = curpush(ents[i]);
+				if(keep <= 0) {
+					fprintf(stderr, "Path is too long.");
+					exit(runtime_error);
+				}
+				if(outmode == outmode_test) {
+					printf("\nProcessing ./%s\n", currelative());
+				}
+				process_dir();
+				curpop(keep);
+			}
         }
     }
 
@@ -556,7 +624,7 @@ void process_dir()
     char **ents;
     int i;
 
-    ents = qscandir(".", select_nodots, qdirentcoll);
+    ents = qscandir(curabsolute(), select_nodots, qdirentcoll);
     if(!ents) {
         // qscandir has already printed the error message
         exit(runtime_error);
@@ -611,6 +679,8 @@ static void sig_int(int blah)
 
 void start_tests()
 {
+	char *cp;
+
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sig_int);
 
@@ -627,6 +697,19 @@ void start_tests()
 	assert(strlen(g_errname) == sizeof(g_errname)-1);
     g_statusfd = open_file(g_statusname, STATUSNAME, O_APPEND);
 	assert(strlen(g_statusname) == sizeof(g_statusname)-1);
+
+	if(curinit(NULL) != 0) {
+		fprintf(stderr, "Could not get the cwd: %s\n", strerror(errno));
+		exit(initialization_error);
+	}
+
+	// tmtest always runs with the CWD pointed to the temporary directory
+	cp = getenv("TMPDIR");
+	if(!cp) cp = "/tmp";
+	if(chdir(cp) != 0) {
+		fprintf(stderr, "Could not chdir 2 to %s: %s\n", cp, strerror(errno));
+		exit(initialization_error);
+	}
 }
 
 
@@ -654,6 +737,7 @@ void process_args(int argc, char **argv)
 		{"diff", 0, 0, 'd'},
 		{"help", 0, 0, 'h'},
 		{"all-files", 0, &allfiles, 1},
+		{"dump-script", 0, &dumpscript, 1},
 		{"output", 0, 0, 'o'},
 		{"version", 0, 0, 'V'},
 		{0, 0, 0, 0},
