@@ -390,10 +390,11 @@ sub explode_file
 		mkdir($dir, 0777) or die "Couldn't create dir $dir: $!";
 	}
 
-	my $ncmds = @{$test->{cmds}};
+	my $ncmds = 0;
+    $ncmds = @{$test->{cmds}} if exists $test->{cmds};
 
 	printf("Exploding $ncmds cmd%s from %s...\n",
-		0+@{$test->{cmds}} == 1 ? "" : "s", $testfile);
+		$ncmds == 1 ? "" : "s", $testfile);
 
 	# if the output directory already contains files, we'll move
 	# them into a different directory to avoid confusion.
@@ -433,7 +434,7 @@ sub explode_file
 
 EOL
 
-	for(my $i=1; $i <= @{$test->{cmds}}; $i++) {
+	for(my $i=1; $i <= $ncmds; $i++) {
 		my $istr = ('0' x (length($ncmds) - length($i))) . $i;
 		my $filename = "$dir/cmd-$istr";
 		my $herename = "$dir/here-$istr";
@@ -449,8 +450,8 @@ EOL
 		}
 
 		my $cmd = get_executable_command($test, $cs);
-		my $here = get_heredoc($cs, should_interpolate($test->{header}, "stdin") ?
-				$test->{header} : undef);
+		my $here = get_heredoc($cs,
+            should_interpolate($test->{header}) ?  $test->{header} : undef);
 
 		# create the cmd file
 		open(FD, ">$filename") or die "Couldn't open $filename: $!\n";

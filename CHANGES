@@ -2,16 +2,24 @@ Changes that potentially break backward compatibility
 are marked with a '*'.
 
 TODO:
-- make envvars work again
+- make envvars work again.  maybe add an export header?
 - make patching work when you supply multiple files
 - allow headers or options to tell where to explode the file
-- make it read a global configuration from /etc
-- get rid of exit_value_hack
+- show results when running sub-tests.
+- make it read a global configuration from /etc and ~/.tmtest.conf as well.
+- get rid of exit_value_hack (maybe add a header to do this?)
 - make tmtest work with test files starting with a shebang
 - add an alarm that will time out a stalled child processes
 - maybe allow crfiles to work backwards too: "execfile: postscr = <<EOF".  Seems more natural, though technically wrong.
 - work with spaces in the filenames.
-- rename the eachline header, mabye fixstdout, fixstderr, and fixoutput?
+  this way, starting a test is as easy as writing down some commands.
+- rename the eachline header, mabye to fixstdout, fixstderr, and fixoutput?
+- maybe add a switch to turn off header and command interpolation.
+  (they're on by default now, and there's no way to turn them off...?)
+- should automatically add title/author/date/output headers.
+- maybe implement a test-id header which is always unique.  that way tests
+  can be renamed but are still able to refer to each other.
+post-rewrite:
 - make debugging output much more presentable.
   - Split into parsing debug and running debug.
   - Turn it back into a one-letter option(s).
@@ -22,8 +30,12 @@ TODO:
   - get rid of test title grandfathering.
   - make it take the test title from the filename if a title isn't specified.
   - take the date from the mtime of the testfile if not specified?
+  - should run test while reading file.  header changes take place immediately.
+  - this means that headers are now basically no different from bash vars.
+    er, except for case-insensitivity.  Probably need to make everything case-sensitive.
+    Yes.  Headers in all-caps are reserved, small and mixed-case are for user.
+  - stdout, stderr, and exitval should be plain headers.
 - maybe backslash is overloaded.  $$ should escape a $ when interpolating, not \$?
-- maybe add a switch to turn off header and command interpolation.
 - maybe implement a related-to header, where a test can name related tests.
 - maybe implement a keyword header and search?  add keywords to tests?
 - maybe write a gui front-end
@@ -31,10 +43,12 @@ TODO:
 0.89:
 - maybe make headers use = as well as :, appears cleaner for some headers.
 - also made += be equivalent to "hdr = $(hdr) blah"
-- Unfortunately, this breaks envvar syntax.  For now envvars aren't supported.
+* Unfortunately, this breaks envvar syntax.  For now envvars aren't supported.
 - Added -D: define headers using -Dheader=value or --define-header=header=value
 - Now runs executable interpolation anywhere in command line, not just on first position.
 - now output the byte-for-byte stdout and stderr when --verbose is on.
+- Now strips whitespace from the front of the heredoc better (bugfix).
+- When exploding a test, files are created with their extensions (bugfix).
 
 0.88:	3 Nov 2004		169/169 tests passed		r15
 - Made interpolation support indirect args: $($(argname))

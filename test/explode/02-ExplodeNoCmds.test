@@ -1,0 +1,33 @@
+title:  Explode Test
+Author: Scott Bronson
+Date:   29 Sept 2004
+
+# Explodes the given test all over the /tmp/tmtest directory.
+# This is the same as 01, except that it doesn't list any commands to run.
+
+# This ensures that we don't get a "Moved existing files to tmpdir" message.
+# Note that this is inherently dangerous!!  I may want to rethink this...
+rm -rf /tmp/tmtest
+
+tmtest -e - <<-EOL
+	title: The test to be exploded
+	author: Sam the Tester
+	date: 31 Mar 2004
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+echo
+
+find /tmp/tmtest | sort
+
+echo
+
+/tmp/tmtest/RUN
+
+------ STDOUT: exit code 0 - no error
+Exploding 0 cmds from STDIN...
+
+/tmp/tmtest
+/tmp/tmtest/RUN
+
