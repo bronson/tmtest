@@ -16,8 +16,10 @@ static int readfd_read(scanstate *ss)
 {
     int n, avail;
 
-    // try to avoid hammering on the file's eof.
-    assert(!ss->at_eof);
+    if(ss->at_eof) {
+		// on some platforms, hammering on the eof can have bad consequences.
+		return 0;
+	}
 
     avail = read_shiftbuf(ss);
 

@@ -69,7 +69,7 @@ struct scanstate;
 
 /** Prototype of read function
  *
- * You only need to read this if you're writing your own read functions.
+ * You only need to know this if you're writing your own read functions.
  *
  * This function is used to fetch more data for the scanner.  It must
  * first shift the pointers in ss to make room (see read_shiftbuffer())
@@ -80,20 +80,17 @@ struct scanstate;
  * to the caller instead of a token.  This can indicate an error
  * condition, or just a situation such as EWOULDBLOCK.
  *
- * minbytes tells the minimum number of bytes that must be loaded.  If
- * you cannot load at least this many bytes, you must return 0.  It is
- * illegal for the scanner to return value between 0 and minbytes.
- * If you hit eof, and you can't satisfy minbytes, then return 0.
- * Otherwise, negative means error, and positive means the read was
- * successful and the scanner now has enough data to continue.
+ * Because of the way re2c handles buffering, it's possible for the
+ * read routine to be called multiple times after it has returned eof.
+ * This isn't an error.  If your read routine is called when
+ * ss->at_eof is true, you should just return without doing anything.
  *
  * All charptrs in the scanstate structure are declared const to help
  * ensure that you don't
  * accidentally end up modifying the buffer as it's being scanned.
  * This means that your read routine must cast them to be mutable
- * (char*) before reading them.
- *
- * It's too bad this declaration can't be in r2read.c.
+ * (char*) before reading them.  Only the readproc may modify the
+ * data that's in the scan buffer.
  */
 
 typedef int (*readproc)(struct scanstate *ss);
@@ -169,9 +166,9 @@ void scanstate_reset(scanstate *ss);
  */
 
 #define scan_finished(ss) \
-    ((ss)->at_eof || ( \
-      (ss)->cursor < (ss)->limit ? 0 : !(*(ss)->read)(ss) \
-    ))
+    (((ss)->cursor < (ss)->limit) ? 0 : \
+		 ((ss)->at_eof || ((*(ss)->read)(ss) <= 0)) \
+    )
 
 
 /** Fetches the next token in the stream from the scanner.
