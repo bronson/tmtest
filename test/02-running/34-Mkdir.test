@@ -6,10 +6,19 @@ DATE='2005-01-29'
 # be deleted if it is not empty.
 
 
+
 dn=`mktemp -d -t`
 
 cd "$TESTDIR"
 tmtest - <<-EOL
+
+	# normally we run tests in pedantic mode, where any single error
+	# will cause the test to bail and return a nonzero result code.
+	# In this case, though, we are intentionally causing an error.
+	# Since we don't want the platform-specific result code in the
+	# test results, we turn off errorexit.
+	set +e
+
 	MKDIR sdn '$dn'
 
 	echo start
@@ -17,13 +26,17 @@ tmtest - <<-EOL
 	touch obdurate && echo mid
 	echo end
 
+	# Error messages are very platform-specific.  We'll suppress
+	# the "Directory not empty" message  that would normally be
+	# printed to stderr by the ATEXIT routine.  The supertest will
+	# verify that the directory indeed failed to be deleted.
+	exec 2>/dev/null
+
+
 	STDOUT:
 	start
 	mid
 	end
-	MODIFY: s/rmdir:.*: /rmdir: DIRNAME: /
-	STDERR:
-	rmdir: DIRNAME: Directory not empty
 EOL
 
 
