@@ -2,9 +2,9 @@
   forking, and use the proper partial path for the file)
 - Ensure that it works when running multiple tests in multiple dirs.
 
-
-# TODO: write a function that allows you to disable the test.
+# TODO: write a function that allows you to disable the test.  <-- yes
 # TODO: write a function to make it easy to create crfiles.
+
 
 Create tests:
 
@@ -17,15 +17,18 @@ Naming a file that doesn't end in ".test" on the command line.
 
 Longer term:
 
+Convert to using the async io library.  Don't use temporary files.
+Add the eachline operator.
 the status file is too goddamn difficult to parse.
     think of a real format instead of a stupid logfile format.
 put the config files explicitly in the exec, rather than looping over them
-Make the tempname a lot harder to guess.  gen_tempname()
 Add the ability to run multiple tests from one testfile
 print a warning if a result section is found with nonws chars (test_parse_section())
-print a warning if a SECTION: is found (needs to be SECTION : , with a space)
 Provide some sort of XML output.
+There should be a way to run it with valgrind.
 
+
+Won't be fixed:
 
 It's a shame that bash can't print the correct line numbers when
     feeding the script on stdin.

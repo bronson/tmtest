@@ -20,9 +20,13 @@ done
 echo 'ready.' >&%(STATUSFD)
 
 STDOUT () { exit 0; }
+STDOUT: () { exit 0; }
 STDERR () { exit 0; }
+STDERR: () { exit 0; }
 RESULT () { exit 0; }
+RESULT: () { exit 0; }
 MODIFY () { exit 0; }
+MODIFY: () { exit 0; }
 
 echo 'running: %(TESTFILE)' >&%(STATUSFD)
 exec >&%(OUTFD) 2>&%(ERRFD)

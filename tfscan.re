@@ -30,10 +30,10 @@ WS      = [ \t];
 ANYN    = [\000-\377]\[\n];
 ANYNWS  = ANYN\WS;
 
-"STDOUT" WS+ ":" ANYN* "\n"  { START(exSTDOUT); return exNEW|exSTDOUT; }
-"STDERR" WS+ ":" ANYN* "\n"  { START(exSTDERR); return exNEW|exSTDERR; }
-"RESULT" WS+ ":" ANYN* "\n"  { START(exRESULT); return exNEW|exRESULT; }
-"MODIFY" WS+ ":" ANYN* "\n"  { START(exMODIFY); return exNEW|exMODIFY; }
+"STDOUT" WS* ":" ANYN* "\n"  { START(exSTDOUT); return exNEW|exSTDOUT; }
+"STDERR" WS* ":" ANYN* "\n"  { START(exSTDERR); return exNEW|exSTDERR; }
+"RESULT" WS* ":" ANYN* "\n"  { START(exRESULT); return exNEW|exRESULT; }
+"MODIFY" WS* ":" ANYN* "\n"  { START(exMODIFY); return exNEW|exMODIFY; }
 
 ANYN* "\n"                  { return (int)ss->scanref; }
 */
