@@ -43,6 +43,7 @@ static int var_testexec(struct test *test, FILE* fp, const char *var)
     if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
         test_command_copy(test, fp);
     } else {
+        test_command_copy(test, NULL);
         fprintf(fp, ". '%s'", test->testfilename);
     }
 

@@ -7,7 +7,6 @@
 
 #include "matchval.h"
 #include "r2scan.h"
-#include "memfile.h"
 
 
 // all strings are malloc'd and need to be freed when the test is finished.
@@ -15,12 +14,12 @@
 struct test {
     const char *testfilename;   // will be "-" if reading from stdin.
     scanstate testfile;         // may be stdin so seeking is not allowed.
-    memfile *cmdsection;        // if we're exectuing the test from stdin, we need to hang onto the cmdsection for later.  This field remains empty if we're executing the test from a file.
+
+    int rewritefd;         // where to dump the rewritten test.  -1 if we're just running the tests, or the fd of the file that should receive the test contents.
 
     int outfd;
     int errfd;
     int statusfd;
-
     int exitno;
 
     matchval exitno_match;

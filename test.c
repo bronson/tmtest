@@ -114,12 +114,30 @@ int test_ran(struct test *test, char *msgbuf, int msgbufsiz)
 }
 
 
-/** Copies the command section of the given text to the given fileptr.
+/** Prints the command section of the test suitable for how the test is being run.
  *
- * It also saves all data in a memory block.  We will probably need
- * this data again when we want to output the test file.  Luckily
- * the command section is usually tiny.  It's the output sections
- * that get lengthly.
+ * If the user is just running the test, nothing is printed.  If the
+ * user is diffing or dumping the test, however, the modified command
+ * section needs to be printed to the appropriate command.
+ */
+
+void rewrite_command_section(struct test *test, int tok, const char *ptr, int len)
+{
+    // only dump if we're asked to.
+    if(test->rewritefd < 0) {
+        return;
+    }
+
+    // for now we don't modify it at all.
+    write(test->rewritefd, ptr, len);
+}
+
+
+/** Copies the command section of the test to the given fileptr and
+ * also supplies it to the dump_command_section() routine.
+ *
+ * If you don't want to dump to a fileptr (i.e. if you're running
+ * the test from a file) just pass NULL for fp.
  *
  * This routine is a whole lot like scan_sections except that it stops
  * at the end of the command section.  It leaves the result sections
@@ -129,8 +147,6 @@ int test_ran(struct test *test, char *msgbuf, int msgbufsiz)
 void test_command_copy(struct test *test, FILE *fp)
 {
     int oldline;
-
-    test->cmdsection = memfile_alloc(512);
 
     do {
         oldline = test->testfile.line;
@@ -146,9 +162,6 @@ void test_command_copy(struct test *test, FILE *fp)
         assert(tokno);
 
         if(tokno != exCOMMAND) {
-            // this is the start of another section.  we're done.
-            memfile_freeze(test->cmdsection);
-
             // now we attempt to push the token back on the stream...
             scan_pushback(&test->testfile);
             test->testfile.line = oldline;
@@ -158,16 +171,19 @@ void test_command_copy(struct test *test, FILE *fp)
             // the new SECTION token it marks it NEW.  Reattaching resets
             // the state to a command state, so we can just do that.
             tfscan_attach(&test->testfile);
-            return;
+            break;
         }
 
-        fwrite(token_start(&test->testfile), token_length(&test->testfile), 1, fp);
-        memfile_write(test->cmdsection, token_start(&test->testfile), token_length(&test->testfile));
+        // print the modified data to the output stream.
+        rewrite_command_section(test, tokno, token_start(&test->testfile), token_length(&test->testfile));
+
+        if(fp) {
+            // print the unmodified data to the command script.
+            fwrite(token_start(&test->testfile), token_length(&test->testfile), 1, fp);
+        }
     } while(!scan_finished(&test->testfile));
 
-    // the scan finished without hitting another section.
-    // no problem -- that just means this test doesn't HAVE
-    // any other sections.
+    rewrite_command_section(test, 0, NULL, 0);
 }
 
 
@@ -466,14 +482,12 @@ void print_test_summary()
 void test_init(struct test *test)
 {
     memset(test, 0, sizeof(struct test));
+    test->rewritefd = -1;
 }
 
 
 void test_free(struct test *test)
 {
-    if(test->cmdsection) {
-        memfile_free(test->cmdsection);
-    }
 }
 
 
