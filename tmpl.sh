@@ -33,6 +33,8 @@ echo 'RUNNING: %(TESTFILE)' >&%(STATUSFD)
 MYDIR='%(TESTDIR)'
 MYFILE='%(TESTFILE)'
 exec >&%(OUTFD) 2>&%(ERRFD)
+exec %(OUTFD)>&-
+exec %(ERRFD)>&-
 LINENO=0
 %(TESTEXEC)
 

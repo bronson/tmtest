@@ -38,7 +38,6 @@ static int test_successes = 0;
 static int test_failures = 0;
 
 
-
 const char *convert_testfile_name(const char *fn)
 {
     if(fn[0] == '-' && fn[1] == '\0') {
@@ -634,6 +633,7 @@ void test_results(struct test *test)
 	if(was_aborted(test->status)) {
 		print_reason(test, "ABRT", "by");
 		test_failures++;
+		test->aborted = 1;
 		return;
 	}
 
@@ -895,6 +895,7 @@ void dump_results(struct test *test)
 {
 	if(was_aborted(test->status)) {
 		dump_reason(test, "was aborted");
+		test->aborted = 1;
 		return;
 	}
 

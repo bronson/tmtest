@@ -336,14 +336,17 @@ void finish_diff(struct test *test, int diffpid)
  * It may appear that outmode_dump mixes stdio and Unix I/O, but it
  * doesn't really.  We only print to stdio when testing, and we only
  * dump the file when dumping.  They cannot both happen simultaneously.
+ *
+ * @returns 1 if we should keep testing, 0 if we should stop now.
  */
 
-void run_test(const char *name, int warn_suffix)
+int run_test(const char *name, int warn_suffix)
 {
     struct test test;
     char buf[BUFSIZ];   // scan buffer for the testfile
     int pipes[2];
     int child;
+	int keepontruckin;
     int diffpid;
     int fd = -1;
     FILE *tochild;
@@ -355,13 +358,13 @@ void run_test(const char *name, int warn_suffix)
         if(warn_suffix) {
             fprintf(stderr, "%s was skipped because it doesn't end in '.test'.\n", name);
         }
-        return;
+        return 1;
     }
 
 	// so that we can safely single quote filenames in the shell.
 	if(strchr(name, '\'') || strchr(name, '"')) {
 		fprintf(stderr, "%s was skipped because its file name contains a quote character.\n", name);
-		return;
+		return 1;
 	}
 
     test_init(&test);
@@ -496,7 +499,10 @@ void run_test(const char *name, int warn_suffix)
     if(fd >= 0) {
         close(fd);
     }
+	keepontruckin = !test.aborted;
     test_free(&test);
+
+	return keepontruckin;
 }
 
 
@@ -511,17 +517,20 @@ int select_nodots(const struct dirent *d)
 
 
 // forward declaration for recursion
-void process_dir();
+int process_dir();
 
 
 /** Processes a directory specified using an absolute path.
  *
  * We need to save and restore curpath to do this.
+ *
+ * @returns 1 if we should continue testing, 0 if we should abort.
  */
 
-void process_absolute_file(const char *path, int warn_suffix)
+int process_absolute_file(const char *path, int warn_suffix)
 {
 	struct cursave save;
+	int keepontruckin;
 
 	cursave(&save);
 	curinit("/");
@@ -529,9 +538,10 @@ void process_absolute_file(const char *path, int warn_suffix)
 	if(outmode == outmode_test) {
 		printf("\nProcessing %s\n", path);
 	}
-	run_test(path, warn_suffix);
+	keepontruckin = run_test(path, warn_suffix);
 
 	currestore(&save);
+	return keepontruckin;
 }
 
 
@@ -540,9 +550,10 @@ void process_absolute_file(const char *path, int warn_suffix)
  * We need to save and restore curpath to do this.
  */
 
-void process_absolute_dir(const char *path)
+int process_absolute_dir(const char *path)
 {
 	struct cursave save;
+	int keepontruckin;
 
 	cursave(&save);
 	curinit(path);
@@ -550,9 +561,11 @@ void process_absolute_dir(const char *path)
 	if(outmode == outmode_test) {
 		printf("\nProcessing %s\n", path);
 	}
-	process_dir();
+	keepontruckin = process_dir();
 
 	currestore(&save);
+
+	return keepontruckin;
 }
 
 
@@ -561,11 +574,12 @@ void process_absolute_dir(const char *path)
  * See run_test() for an explanation of warn_suffix.
  */
 
-void process_ents(char **ents, int warn_suffix)
+int process_ents(char **ents, int warn_suffix)
 {
     struct stat st;
     mode_t *modes;
     int i, n;
+	int keepontruckin;
 
     for(n=0; ents[n]; n++)
         ;
@@ -602,9 +616,12 @@ void process_ents(char **ents, int warn_suffix)
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || S_ISREG(modes[i])) {
 			if(ents[i][0] == '/') {
-				process_absolute_file(ents[i], warn_suffix);
+				keepontruckin = process_absolute_file(ents[i], warn_suffix);
 			} else {
-				run_test(ents[i], warn_suffix);
+				keepontruckin = run_test(ents[i], warn_suffix);
+			}
+			if(!keepontruckin) {
+				goto abort;
 			}
             modes[i] = 0;
         }
@@ -615,7 +632,7 @@ void process_ents(char **ents, int warn_suffix)
         if(is_dash(ents[i]) || modes[i] == 0) continue;
         if(S_ISDIR(modes[i])) {
 			if(ents[i][0] == '/') {
-				process_absolute_dir(ents[i]);
+				keepontruckin = process_absolute_dir(ents[i]);
 			} else {
 				int keep = curpush(ents[i]);
 				if(keep <= 0) {
@@ -625,23 +642,29 @@ void process_ents(char **ents, int warn_suffix)
 				if(outmode == outmode_test) {
 					printf("\nProcessing ./%s\n", currelative());
 				}
-				process_dir();
+				keepontruckin = process_dir();
 				curpop(keep);
+			}
+			if(!keepontruckin) {
+				goto abort;
 			}
         }
     }
 
+abort:
     free(modes);
+	return keepontruckin;
 }
 
 
 /** Runs all tests in the current directory and all its subdirectories.
  */
 
-void process_dir()
+int process_dir()
 {
     char **ents;
     int i;
+	int keepontruckin;
 
     ents = qscandir(curabsolute(), select_nodots, qdirentcoll);
     if(!ents) {
@@ -649,12 +672,14 @@ void process_dir()
         exit(runtime_error);
     }
 
-    process_ents(ents, 0);
+    keepontruckin = process_ents(ents, 0);
 
     for(i=0; ents[i]; i++) {
         free(ents[i]);
     }
     free(ents);
+
+	return keepontruckin;
 }
 
 

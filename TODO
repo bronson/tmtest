@@ -1,13 +1,16 @@
 2.0:
+- stdin is all buggered up.  why is it that "cat" with no args will print
+  the rest of the test script?  And why is it that if you fork, diff freezes?
+  They're related problems I suspect.
 - get rid of all the exit(10) calls in test.c.  We need a better way to abort the test.
   should get rid of a whole bunch in main.c as well.
   this should prevent us from dropping turds in /tmp all the time.
-- Rewrite the test date and author if they aren't supplied.
 - Shouldn't run every test in a dir if the DISABLED directive is in a config file.
   Should discover what dir the DISABLED directive came from and refuse
   to run anything above that.
 - what do we do when stdout is missing a newline?
   Test that both raw and modified work when stdout doesn't have a newline.
+  Check that diff works too.
 
 2.2:
 - Tighten up printing a folder name when there are no files in it.  No need for double spacing.
@@ -20,6 +23,7 @@
 - add the ability to run valgrind over each test and print success/failure of that.
 - add gcov support so you can see what sort of coverage your tests provide.
 ?:
+- Rewrite the test date and author if they aren't supplied.
 - should probably indent stdout and stderr clauses two spaces.  otherwise
   we might misinterpret STDOUT: and STDERR: in a stdout or stderr clause.
 - Provide some sort of XML output.

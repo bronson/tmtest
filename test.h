@@ -49,6 +49,7 @@ struct test {
 
 	int num_config_files;	///< the number of config files we started processing.  If the status is higher than test_was_started, then this gives the total number of config files processed.
 	char *last_file_processed; ///< if it could be discovered, this contains the name of the last file to be started.  must be freed.
+	int aborted;			///< true if the test was aborted (and therefore no further tests should be run).
 
 	int expected_exitno;	///< the test's expected exit value.  this is only valid when stderr_match != match_unknown.
 

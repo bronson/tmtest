@@ -9,8 +9,8 @@
 # install multiple commands for the same condition.
 #
 # NOTE: you must not mix use of TRAP and trap on the same conndition.
-# trap will remove TRAP's condition, and all the commands installed
-# using TRAP will not be run.
+# The builtin trap will remove TRAP's condition, and all the commands
+# installed using TRAP will not be run.
 #
 # Call this routine exactly like the trap builtin: "TRAP cmd cond"
 #

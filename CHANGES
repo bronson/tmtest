@@ -1,2 +1,4 @@
+- We now stop running tests if any test aborts.  DISABLE stops the current test
+  from running but let all other tests finish; ABORT stops testing altogether.
 - Tests now start with /tmp as the cwd, not the testdir.
   The testdir is supplied in $TESTDIR (or $MYDIR inside the testfile)

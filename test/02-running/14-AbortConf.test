@@ -2,6 +2,9 @@ AUTHOR='Scott Bronson'
 DATE='2005-01-30'
 
 # Ensures that tests can be aborted by config files too.
+# Also ensures that if a test is aborted, tmtest quits running
+# tests altogether.  We have two tests here, but when the first
+# one aborts, the second one is never run.
 
 MKDIR dir
 cd "$dir"
@@ -31,6 +34,5 @@ STDOUT:
 
 Processing .
 ABRT t1.test                   by TMTEST.CONF: bail from config
-ABRT t2.test                   by TMTEST.CONF: bail from config
 
-2 tests run, 0 successes, 2 failures.
+1 test run, 0 successes, 1 failure.
