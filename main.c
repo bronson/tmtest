@@ -108,7 +108,9 @@ void process_dir()
         if(!ents[i]) continue;
         if(S_ISDIR(modes[i])) {
             chdir(ents[i]->d_name);
+            if(verbose) printf("Entering dir '%s'\n", ents[i]->d_name);
             process_dir();
+            chdir("..");
         }
         free(ents[i]);
     }
