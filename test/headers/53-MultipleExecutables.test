@@ -1,0 +1,40 @@
+title: 	Multiple Executables
+author:	Scott Bronson
+date: 	21 July 2004
+
+desc:	Ensure that we handle multiple executables in the executable header properly.
+
+
+# first we create a configuration file that specifies which command to run.
+
+/tmp/50-ExecutableHeader.conf = <<EOL
+executable: echo1=/tmp/53-ExecutableHeader.echo echo2=/tmp/53-ExecutableHeader.echo
+EOL
+
+
+# Then we create the command
+
+/tmp/53-ExecutableHeader.echo = +x <<EOL
+#!/bin/sh
+echo one $*
+EOL
+
+
+# Now, run tmtest.  If everything works, it should run the fabricated
+# command in /tmp, rather than the built-in echo.
+
+tmtest -o -f /tmp/50-ExecutableHeader.conf - <<EOL
+echo1 potato!
+echo2 and only one
+------ STDOUT: exit code 0 - no error
+one potato!
+one and only one
+EOL
+
+
+------ STDOUT: exit code 0 - no error
+echo1 potato!
+echo2 and only one
+------ STDOUT: exit code 0 - no error
+one potato!
+one and only one

@@ -33,6 +33,6 @@ tmtest /tmp/30-temporary-1.test \
 # ... and this should be the result of running the above tests.
 
 ------ STDOUT: exit code 0 - no error
-ok   30-temporary-1.test           
-ok   30-temporary-2.test           
-ok   30-temporary-3.test           
+ok   30-temporary-1.test
+ok   30-temporary-2.test
+ok   30-temporary-3.test

@@ -1,0 +1,22 @@
+# Escaped Here Doc
+# author: Scott Bronson
+# date:   23 June 2004
+#
+# If you escape both left angle brackets, it's not a here doc
+# it's just an argument.
+
+tmtest -o - <<-EOL
+	# Escaped Here Doc (sub)
+	# author: Scott Bronson
+
+	echo \<\<EOsL
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Escaped Here Doc (sub)
+# author: Scott Bronson
+
+echo \<\<EOsL
+------ STDOUT: exit code 0 - no error
+<<EOsL

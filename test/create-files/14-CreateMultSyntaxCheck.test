@@ -4,7 +4,7 @@
 
 # Ensures that the syntax check output works properly with multiple files.
 
-tmtest -c - <<-EOL
+tmtest -Z - <<-EOL
 	# Create File
 	# author: Scott Bronson
 	# date:   30 Mar 2004
@@ -31,13 +31,12 @@ tmtest -c - <<-EOL
 EOL
 
 ------ STDOUT: exit code 0 - no error
-name: Create File
+testfile: STDIN
+title: Create File
 author: Scott Bronson
-date:   30 Mar 2004
-from: STDIN
+date: 30 Mar 2004
 file: 10-tmpfile1
 file-descr:
-  
   # Ensures that the syntax check output works properly with multiple files.
   
 file-contents:

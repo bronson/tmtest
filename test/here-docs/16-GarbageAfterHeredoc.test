@@ -4,8 +4,11 @@
 
 # Ensures that we properly handle garbage after the here doc
 # (which needs to be the last item on the line)
+#
+# Updated 23 June 2004 for version 0.81: "garbage" after the here
+# doc is perfectly fine!  We're more bash-like now.
 
-tmtest -c - <<-EOL
+tmtest -o - <<-EOL
 	# Create File
 
 	cat <<-EOsL illegal text
@@ -16,6 +19,15 @@ tmtest -c - <<-EOL
 	------ STDOUT: exit code 0 - no error
 EOL
 
+------ STDOUT: exit code 0 - no error
+# Create File
+
+cat <<-EOsL illegal text
+	and p doesn't matter
+	and q doesn't matter
+EOsL
+
 ------ STDERR:
-STDIN line 3: garbage after here doc: 'illegal text'
------- STDOUT: exit code 255 - abort!
+cat: illegal: No such file or directory
+cat: text: No such file or directory
+------ STDOUT: exit code 1 - abort!

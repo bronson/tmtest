@@ -1,0 +1,46 @@
+title: 	Executables in Pipeline
+author:	Scott Bronson
+date: 	21 July 2004
+
+desc:	Ensures that $(PATH) substitution works in the middle of a pipeline
+
+
+# first we create a configuration file that specifies which command to run.
+
+/tmp/56-ExecutableHeader.conf = <<EOL
+executable: echo=$(CURPATH)/56-echo.cmd cat=$(CURPATH)/56-cat.cmd
+EOL
+
+
+# Then we create the commands
+
+/tmp/56-echo.cmd = +x <<EOL
+#!/bin/sh
+echo one $*
+EOL
+
+/tmp/56-cat.cmd = +x <<EOL
+#!/bin/sh
+echo "try to get"
+cat
+EOL
+
+
+# Now, run tmtest.  If everything works, it should run the fabricated
+# command in /tmp, rather than the built-in echo.  Note that we're also
+# using a custom version of cat that prepends the string "try to get"
+# before any of its output.
+
+tmtest -o -f /tmp/56-ExecutableHeader.conf - <<EOL
+echo up | cat
+------ STDOUT: exit code 0 - no error
+try to get
+one up
+EOL
+
+
+------ STDOUT: exit code 0 - no error
+echo up | cat
+------ STDOUT: exit code 0 - no error
+try to get
+one up

@@ -4,7 +4,7 @@
 #
 # Now tmtest supports blank lines in the trailing comment
 
-tmtest -c - <<-EOL
+tmtest -Z - <<-EOL
 	# Multi Line Trailing Comment
 	# author: Scott Bronson
 	# date:   3 Dec 2001
@@ -36,10 +36,10 @@ EOL
 # more
 
 ------ STDOUT: exit code 0 - no error
-name: Multi Line Trailing Comment
+testfile: STDIN
+title: Multi Line Trailing Comment
 author: Scott Bronson
-date:   3 Dec 2001
-from: STDIN
+date: 3 Dec 2001
 command 1:
   echo "slice"
 command-descr:

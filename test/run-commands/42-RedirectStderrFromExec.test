@@ -1,0 +1,26 @@
+# Stdout and Stderr From Executable File
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# We should be able to redirect both stdout and stderr from an executed file.
+# This example comes from the testfile documentation.
+
+42-tmpfile = +x <<-EOF
+	#!/bin/sh
+	perl -e 'print STDOUT "this goes to out\n"'
+	perl -e 'print STDERR "this goes to err\n"'
+EOF
+
+
+tmtest -o - <<-EOF
+
+	./42-tmpfile > /dev/null 2>&1 
+
+	------ STDOUT: exit code 0 - no error
+EOF
+
+------ STDOUT: exit code 0 - no error
+
+./42-tmpfile > /dev/null 2>&1 
+
+------ STDOUT: exit code 0 - no error

@@ -1,6 +1,68 @@
-todo:
-- change to Getopt::Long, add --version and --help
-- add an alarm that will time out stalled child processes
+0.9 TODO
+- make -df (debug config file) -dp (debug testfile parsing) -dc (syntax check) -dh (dump headers)
+- keywords?
+
+0.88:
+- make debugging output much more presentable
+- make tmtest work with test files starting with a shebang
+- get rid of exit_value_hack
+- add an alarm that will time out a stalled child processes
+- allow headers or options to tell where to explode the file
+- fix the goddamn headers once and for all
+- make it read a global configuration from /etc
+- make it unnecessary to enter filenames: it should name them for you.  Maybe :1:, then substitute $1 in the commands.
+
+0.87:	29 Sep 2004
+- Now uses Getopt::Long for more sensible argument handling.
+- Added -e option: explodes the command, runnable, into a directory in /tmp.
+- Deprecated -h and -c (print heredoc and cmd) -- -e works much better.
+- testfile now uses rfc822-style headers and shell-style cmd continuations.
+- Made the output clause optional (especially useful with -o)
+- No longer counts disabled tests as failures.
+- Made the -d option generate a legal patchfile ("tmtest -d | patch"!).
+- Now skip every file that doesn't end in .test, even if named on command line.
+- Added a sigabrt handler to possibly help with asserts.
+- Added -v to start an editor on the test file.  Just a shortcut.
+
+0.86:	20 July 2004
+- no longer requires a configuration file to run
+- add -f option to explicitly specify a configuration file
+- changed config file name to "tmtest.conf"
+- Now scans all of a test's parent dirs looking for tmtest.conf files.
+- config file now uses testfile syntax
+- got rid of most config variables.  they will be replaced by config file headers.
+- tmtest is now globally installable (runs from /usr/bin as well as local dirs)
+- deprecated the -c syntax check option (it's still available as -Z for now)
+- made exit_code_re not so strict.  It uses any integer it can find.
+- added the executable header to replace the executablepath config var.
+- executable now applies only to the command, not the entire command line.
+- decouple platform-specific errnos from the exit code -- we always return 255 if there was an error.
+- added the -c option that shows the exact command executed
+- now adds quotes around command name when it contains any whitespace
+- added the eachline, curfile, and curpath headers
+- added interpolating headers into other headers and into commands.
+- added the include directive (only includes headers for now)
+- tmtest now prints line numbers in error messages starting at 1 (like the
+  rest of the sane world) instead of at 0.
+
+0.82:	23 Jun 2004
+- Made it handle here documents in a pipeline correctly.
+- No longer mistakes '<<key' or \<\<key to be here docs.
+- No longer misses the command substitution if the command appears alone
+  in the testfile or mashed up to a heredoc or a pipe.
+- Commands and Create Files now preserve their order (crfiles used to always be first)
+- Added the -h option to dump heredocs.
+- Fixed bug where extra newline was added to empty here documents.
+- added a "require" header that skips the test if tmtest version is too old.
+- added disabling tests (the "disable: yes" or "enable: no" header).
+
+0.8:	31 Mar 2004
+- No longer need to prefix headers with '#' (but it still works if you do)
+- Can now have an unlimited number of headers of any name.
+- Headers can be continued by following them with a \
+- here docs: whitespace to be stripped is now taken from the first NONBLANK line.
+- Headers may now include comments.
+- Added some manpages.
 
 0.4:   30 Mar 2004
 - Added ability to redirect command output somewhere else
@@ -30,4 +92,3 @@ todo:
 
 0.1:	2000
 - initial release
-

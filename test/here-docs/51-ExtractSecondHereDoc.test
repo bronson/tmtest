@@ -1,0 +1,30 @@
+# Extract Second Here Doc
+# author: Scott Bronson
+# date:   4 July 2004
+#
+# Ensures that a simple here doc extraction works.
+
+tmtest -o --heredoc=2 - <<-EOL
+	# Extract Second Here Doc
+	# author: Scott Bronson
+	# date:   4 July 2004
+	#
+	# Ensures that a simple here doc extraction works.
+
+	cat <<-EOsL
+		This is heredoc 1.
+		It will be extracted
+	EOsL
+	cat <<-EOsL
+		This is not in heredoc 1.
+		It will not be extracted.
+		Oh, wait.  It's just the opposite.
+	EOsL
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+This is not in heredoc 1.
+It will not be extracted.
+Oh, wait.  It's just the opposite.

@@ -1,20 +1,15 @@
-# Trivial Test
-# author: Scott Bronson
-# date:   3 Dec 2001
-#
-# Except for the heredoc (used for convenience), this is about as
-# easy as it gets.
-#
+title: 	Trivial Test
+author: Scott Bronson
+date:   3 Dec 2001
+
+desc: 	Except for the heredoc (used for convenience), this is about
+		as easy as it gets.
 
 tmtest - <<-EOL
-	# Trivial Test
 	echo "may"
 	------ STDOUT: exit code 0 - no error
 	may
 EOL
 
-# Notice how there's no space before the "echo" below.
-# Earlier versions of tmtest would erroneously put a space there.
-
 ------ STDOUT: exit code 0 - no error
-ok   STDIN                         
+ok   STDIN

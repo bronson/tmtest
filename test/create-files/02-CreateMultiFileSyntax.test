@@ -4,7 +4,7 @@
 
 # ensure that tmtest can read test descriptions that contain files.
 
-tmtest -c - <<-EOL
+tmtest -Z - <<-EOL
 	# Create File
 	# author: Scott Bronson
 	# date:   29 Mar 2004
@@ -28,13 +28,12 @@ tmtest -c - <<-EOL
 EOL
 
 ------ STDOUT: exit code 0 - no error
-name: Create File
+testfile: STDIN
+title: Create File
 author: Scott Bronson
-date:   29 Mar 2004
-from: STDIN
+date: 29 Mar 2004
 file: tmpfile1
 file-descr:
-  
   # ensure that tmtest can read test descriptions that contain files.
   
 file-contents:

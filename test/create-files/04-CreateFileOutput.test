@@ -1,13 +1,13 @@
-# Create File Output
-# author: Scott Bronson
-# date:   29 Mar 2004
+title:  Create File Output
+author: Scott Bronson
+date:   29 Mar 2004
 
 # ensures that the test remains unchanged when you dump it using -o.
 
 tmtest -o - <<-EOL
-	# Create File
-	# author: Scott Bronson
-	# date:   29 Mar 2004
+	title:  Create File Output
+	author: Scott Bronson
+	date:   29 Mar 2004
 
 	# ensure that tmtest can read test descriptions that contain files.
 
@@ -27,9 +27,9 @@ tmtest -o - <<-EOL
 EOL
 
 ------ STDOUT: exit code 0 - no error
-# Create File
-# author: Scott Bronson
-# date:   29 Mar 2004
+title:  Create File Output
+author: Scott Bronson
+date:   29 Mar 2004
 
 # ensure that tmtest can read test descriptions that contain files.
 

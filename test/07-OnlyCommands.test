@@ -1,0 +1,17 @@
+# Only Commands
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This ensures that a test doesn't need any comments or headers
+#
+
+tmtest -o - <<-EOL
+	echo "may"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+------ STDOUT: exit code 0 - no error
+echo "may"
+------ STDOUT: exit code 0 - no error
+may

@@ -5,7 +5,7 @@
 # Ensures we properly handle garbage after the here document
 # when declaring an executable file.
 
-tmtest -c - <<-EOL
+tmtest -Z - <<-EOL
 	# Create File
 
 	10-tmpfile2 = +x <<-EOsL illegal text $ ya ya 1#$!%
@@ -19,5 +19,5 @@ tmtest -c - <<-EOL
 EOL
 
 ------ STDERR:
-STDIN line 3: garbage after here doc: 'illegal text $ ya ya 1#$!%'
+STDIN line 4: garbage after here doc: 'illegal text $ ya ya 1#$!%'
 ------ STDOUT: exit code 255 - abort!

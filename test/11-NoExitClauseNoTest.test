@@ -1,0 +1,17 @@
+# No Exit Clause
+# author: Scott Bronson
+# date:   23 June 2004
+#
+# All tests need to have an exit clause.  What happens when
+# one isn't given, AND we didn't specify any commands to run?
+#
+
+tmtest -o - <<-EOL
+	# No Exit Clause (sub)
+	# author: Scott Bronson
+EOL
+
+------ STDOUT: exit code 0 - no error
+# No Exit Clause (sub)
+# author: Scott Bronson
+------ STDOUT: exit code 0 - no error

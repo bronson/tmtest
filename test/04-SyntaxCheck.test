@@ -11,7 +11,7 @@
 
 # line three
 
-tmtest -c - <<-EOL
+tmtest -Z - <<-EOL
 	# Syntax Check
 	# author:Scott Bronson
 	# date:3 Dec 2001
@@ -32,10 +32,10 @@ EOL
 
 
 ------ STDOUT: exit code 0 - no error
-name: Syntax Check
-author:Scott Bronson
-date:3 Dec 2001
-from: STDIN
+testfile: STDIN
+title: Syntax Check
+author: Scott Bronson
+date: 3 Dec 2001
 command 1:
   echo "a"
 command-descr:

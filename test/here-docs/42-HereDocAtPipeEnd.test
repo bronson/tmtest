@@ -1,0 +1,23 @@
+# Here Doc at Pipe Start
+# author: Scott Bronson
+# date:   23 June 2004
+#
+# If you have a pipeline and want to feed it from a here doc,
+# the here doc must be applied to the first command in the pipeline.
+
+tmtest -o - <<-EOL
+	# Here Doc at Pipe Start (sub)
+	# author: Scott Bronson
+	# date:   23 June 2004
+
+	tr a-z A-Z | tr 0-9 a-z | tr blah BLAH <<EOL
+		ABCdef ghi 123
+	EOL
+
+	------ STDOUT: exit code 0 - no error
+		ABCDEF GHI bcd
+EOL
+
+------ STDERR:
+STDIN line 6: We don't support sending here docs deep into a pipeline.
+------ STDOUT: exit code 255 - abort!

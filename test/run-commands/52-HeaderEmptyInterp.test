@@ -1,0 +1,16 @@
+title:	Header Empty Interp
+author:	Scott Bronson
+date:	22 July 2004
+
+doc:	Ensures unset headers expand to nothing in commands.
+
+tmtest -o - <<-EOL
+	echo $(noCmd) "may"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+------ STDOUT: exit code 0 - no error
+echo $(noCmd) "may"
+------ STDOUT: exit code 0 - no error
+may

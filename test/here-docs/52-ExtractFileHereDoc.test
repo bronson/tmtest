@@ -1,0 +1,26 @@
+# Extract File Here Doc
+# author: Scott Bronson
+# date:   4 July 2004
+#
+# Ensures that a simple here doc extraction works for files as well as commands.
+
+tmtest -o --heredoc=1 - <<-EOL
+	# Extract File Here Doc
+	# author: Scott Bronson
+	# date:   4 July 2004
+
+	/tmp/52-check = <<-EOsL
+		This is heredoc 1 from a file.
+		It will be extracted
+	EOsL
+	cat <<-EOsL
+		This is not in heredoc 1.
+		It will not be extracted.
+	EOsL
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+This is heredoc 1 from a file.
+It will be extracted

@@ -1,0 +1,20 @@
+# Enabled Garbage
+# author:Scott Bronson
+# date: 6 July 2004
+
+# Ensures the enabled header defaults to running the test.
+
+tmtest -o - <<-EOL
+	# enabled: ferget
+
+	echo "Worked!"
+	------ STDOUT: exit code 0 - no error
+	Worked!
+EOL
+
+------ STDOUT: exit code 0 - no error
+# enabled: ferget
+
+echo "Worked!"
+------ STDOUT: exit code 0 - no error
+Worked!

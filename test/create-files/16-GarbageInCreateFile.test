@@ -22,5 +22,5 @@ tmtest -o - <<-EOL
 EOL
 
 ------ STDERR:
-STDIN line 5: garbage in file declaration: 'blah blah'
+STDIN line 6: garbage in file declaration: 'blah blah'
 ------ STDOUT: exit code 255 - abort!

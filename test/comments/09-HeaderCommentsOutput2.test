@@ -1,0 +1,36 @@
+# Headers Comments Output 2
+# author: Scott Bronson
+# date  : 1 Apr 2004
+#
+# Ensures tmtest supports comments in headers
+# and output produces the exact same results.
+# Like Header Comments Output, but with different input text.
+
+tmtest -o - <<EOL
+# Header Comments Output 2
+# random-header:
+# this is a comment for a header
+# author: Scott Bronson
+
+	# and another comment for a non-commented header
+
+date  : 1 Apr 2004
+
+# and done.
+
+------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Header Comments Output 2
+# random-header:
+# this is a comment for a header
+# author: Scott Bronson
+
+	# and another comment for a non-commented header
+
+date  : 1 Apr 2004
+
+# and done.
+
+------ STDOUT: exit code 0 - no error

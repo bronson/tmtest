@@ -1,0 +1,22 @@
+title: 	Use Config File
+author: Scott Bronson
+date:   21 July 2004
+
+desc: 	Ensures that -f bails properly when the config file doesn't exist.
+
+
+# run the test
+
+tmtest -f /tmp/02-UseConfigFile-DOESNTEXIST.conf - <<-EOL
+	echo "may"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+
+# If the test is skipped, then we know that the configuration
+# file was properly read.
+
+------ STDERR:
+Could not open /tmp/02-UseConfigFile-DOESNTEXIST.conf: No such file or directory
+------ STDOUT: exit code 255 - abort!

@@ -1,0 +1,19 @@
+title:	Header Interp CI
+author:	Scott Bronson
+date:	22 July 2004
+
+doc:	Same as 50-HeaderInterp, but includes a case mismatch to test \
+		case sensitivity.
+
+tmtest -o - <<-EOL
+	cmd: echo
+	$(Cmd) "may"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+------ STDOUT: exit code 0 - no error
+cmd: echo
+$(Cmd) "may"
+------ STDOUT: exit code 0 - no error
+may

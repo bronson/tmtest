@@ -1,0 +1,31 @@
+# Here Doc Mashed To Pipe
+# author: Scott Bronson
+# date:   23 June 2004
+#
+# The pipe is tokenizing, so it should be perfectly fine if
+# it's mashed against the here document without any space.
+
+tmtest -o - <<-EOL
+	# Here Doc Mashed To Pipe (sub)
+	# author: Scott Bronson
+	# date:   23 June 2004
+
+	tr a-z A-Z <<EOL| tr 0-9 a-z
+		ABCdef ghi 123
+	EOL
+
+	------ STDOUT: exit code 0 - no error
+		ABCDEF GHI bcd
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Here Doc Mashed To Pipe (sub)
+# author: Scott Bronson
+# date:   23 June 2004
+
+tr a-z A-Z <<EOL| tr 0-9 a-z
+	ABCdef ghi 123
+EOL
+
+------ STDOUT: exit code 0 - no error
+	ABCDEF GHI bcd

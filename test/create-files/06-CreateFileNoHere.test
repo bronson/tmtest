@@ -15,7 +15,9 @@ tmtest -o - <<-EOL
 
 	08-tmpfile =
 
+	echo one
 	cat 08-tmpfile
+	echo two
 
 	------ STDOUT: exit code 0 - no error
 EOL
@@ -30,7 +32,10 @@ EOL
 
 08-tmpfile =
 
+echo one
 cat 08-tmpfile
+echo two
 
 ------ STDOUT: exit code 0 - no error
-
+one
+two

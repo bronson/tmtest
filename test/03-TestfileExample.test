@@ -1,0 +1,54 @@
+# Trivial Test
+# author: Scott Bronson
+# date:   3 Dec 2001
+#
+# This is the complex example from the testfile(1) manpage.
+#
+
+tmtest - <<-EOL
+    # title:   Ensure the Echo Command Works
+    # author:  Sam the Tester
+    # date:    31 Mar 2004
+
+    # CREATE FILES:
+
+        # create a regular file continaing a single line:
+    01-crfile = <<-EOL
+        some more output
+    EOL
+
+        # create a bash script:
+    01-execout = +x <<-EOL
+        #!/bin/bash
+        echo "... and even more output!"
+    EOL
+
+
+    # COMMANDS:
+
+        # 1. a simple command
+    echo "some output"
+        # 2. taking its input from the first create file
+    cat 01-crfile
+        # 3. taking its stdin from a here document:
+    cat <<-EOL
+        a little more
+    EOL
+        # 4. executing the second here document that we created:
+    ./01-execout
+
+
+    # OUTPUT CLAUSE:
+
+    ---- STDOUT: exit code 0 - no error
+    some output
+    some more output
+    a little more
+    ... and even more output!
+EOL
+
+# Notice how there's no space before the "echo" below.
+# Earlier versions of tmtest would erroneously put a space there.
+
+------ STDOUT: exit code 0 - no error
+ok   STDIN

@@ -1,32 +1,5 @@
-- make tmtest support -f config-file
-
-- Write a manpage for tmtest.  First should be a quick reference,
-  then should come a nice tutorialy ssection
-
-- Document the format of tests run by tmtest
-
-- should add a pre-test script and a post-test script to the test
-  file.  That way the tester could rearrange stuff to test just
-  about anything.
-
-- Should add output file support.  You name the file in the script,
-  tmtest will delete/empty the file at the start of the test, then
-  check file contents at the end.
-
-It's easy to integrate both.  In the startup script, you do either:
-   >out.file   # empty the file
-   rm out.file # delete the file
-Then, to test files, you simply include them in the expected output!
-
 - Make tmtest use mime separators to report expected test output.
   That way, I don't have to worry about escaping test output in test output.
-
-- Have an "output to directory" option, where all the tests you run
-  are NOT checked against the expected results.  They just store
-  the actual results in a separate directory.  This way, if you made
-  a small change that breaks a ton of tests, you can output a bunch
-  of new test files, run a recursive diff to make sure all the changes
-  are expected, then check in the new tests.
 
 - Make tests somewhat self-aware.  I.e.
   "I'm like B, but more complex -- more specific"
@@ -37,18 +10,22 @@ Then, to test files, you simply include them in the expected output!
 
   This requires the header changes.
 
-- should use config files to make the parent exit clause and child
-  exit clause visually distinct.  (only in tmtest tesdts)
-
 - should allow specifying regexps or other executable code to determine
-  if the test succeeds or fails.  This exact match might not be useful
+  if the test succeeds or fails.  The exact match might not be useful
   everywhere.
 
-- Should give the internal tests distinct comments from the external
-  tests.
- 
-- Make header totally free-form.  Remove the need to explicitly declare
-  a title for the test.
-
 - It's awful hard syntactically to tell files from commands.  Is there
-  any way to make them distinct?
+  any way to make them distinct in the test file?
+ 
+
+Maybe never:
+
+Completely revamp the testfile format:
+	- I'll wait until I can use Perl6 rules to parse the test file.
+	- Everything is either a header, a command, or a crfile (or comment).
+	- Headers can take heredocs ("stdout: <<EOL")
+	- stdout, stderr, and exitcode are specified using headers
+
+This way, the exit clause is gone for good, and testfiles are much
+easier to parse.  Too bad it's such a big change...
+

@@ -6,7 +6,7 @@
 # doesn't actually contain any commands.
 #
 
-tmtest -c - <<-EOL
+tmtest -Z - <<-EOL
 	# Test With No Commands
 	# author: Scott Bronson
 	# date:   30 Mar 2004
@@ -22,10 +22,10 @@ EOL
 # Earlier versions of tmtest would erroneously put a space there.
 
 ------ STDOUT: exit code 0 - no error
-name: Test With No Commands
+testfile: STDIN
+title: Test With No Commands
 author: Scott Bronson
-date:   30 Mar 2004
-from: STDIN
+date: 30 Mar 2004
 result descr:
   #
   # This verifies what happens when you try to run a test that

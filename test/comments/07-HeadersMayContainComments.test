@@ -1,0 +1,39 @@
+# Headers May Contain Comments
+# author: Scott Bronson
+# date  : 1 Apr 2004
+#
+# Ensures tmtest supports comments in headers.
+
+tmtest -Z - <<EOL
+# Indented Comments
+
+# this is a comment for a header
+
+# author: Scott Bronson
+
+# and another comment for a non-commented header
+
+date  : 1 Apr 2004
+
+# and done.
+
+------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+testfile: STDIN
+title: Indented Comments
+author: Scott Bronson
+author-descr:
+  # this is a comment for a header
+  
+date: 1 Apr 2004
+date-descr:
+  # and another comment for a non-commented header
+  
+result descr:
+  # and done.
+  
+logfile:
+exit status: 0
+result:

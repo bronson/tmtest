@@ -1,0 +1,37 @@
+title: 	Multiple EachLine Headers
+author:	Scott Bronson
+date: 	22 July 2004
+
+desc:	Ensures that the eachline header can handle multiple subsitutions.
+
+
+# first we create a configuration file that specifies which command to run.
+
+/tmp/60-EachLine.conf = <<EOL
+eachline: s/oo/ooh/g; s/go/GO/gi;
+EOL
+
+
+tmtest -o -f /tmp/60-EachLine.conf - <<-EOL
+	cat <<EOL
+	oo!  Bondage a gogo.
+	Go to work.  oo no.
+	Logos oo oo oo
+	EOL
+	------ STDOUT: exit code 0 - no error
+	ooh!  Bondage a GOGO.
+	GO to work.  ooh no.
+	LoGOs ooh ooh ooh
+EOL
+
+
+------ STDOUT: exit code 0 - no error
+cat <<EOL
+oo!  Bondage a gogo.
+Go to work.  oo no.
+Logos oo oo oo
+EOL
+------ STDOUT: exit code 0 - no error
+ooh!  Bondage a GOGO.
+GO to work.  ooh no.
+LoGOs ooh ooh ooh

@@ -1,0 +1,12 @@
+# No Exit Clause
+# author: Scott Bronson
+# date:   23 June 2004
+#
+# What happens when the user runs a totally empty test file?
+#
+
+tmtest -o - <<-EOL
+EOL
+
+------ STDOUT: exit code 0 - no error
+------ STDOUT: exit code 0 - no error

@@ -1,0 +1,30 @@
+# Extract No Arg
+# author: Scott Bronson
+# date:   4 July 2004
+#
+# Ensures failure if you neglect to specify a here doc to extract.
+# Actually, this tests how badly getopt sucks.
+
+
+tmtest -o - --heredoc <<-EOL
+	# Extract No Arg
+	# author: Scott Bronson
+	# date:   4 July 2004
+	#
+	# Ensures that a simple here doc extraction works.
+
+	cat <<-EOsL
+		This is heredoc 1.
+		It will be extracted
+	EOsL
+	cat <<-EOsL
+		This is not in heredoc 1.
+		It will not be extracted.
+	EOsL
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDERR:
+Option heredoc requires an argument
+------ STDOUT: exit code 1 - abort!

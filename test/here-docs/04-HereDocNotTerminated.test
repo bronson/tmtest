@@ -19,5 +19,5 @@ tmtest -o - <<-EOL
 EOL
 
 ------ STDERR:
-file STDIN line 11: did you forget to terminate the here doc?
+STDIN line 12: did you forget to terminate the here doc?
 ------ STDOUT: exit code 255 - abort!

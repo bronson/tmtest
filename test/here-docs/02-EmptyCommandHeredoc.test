@@ -3,17 +3,18 @@
 # date:   29 Mar 2004
 
 # There was a bug in tmtest where it would insert an implicit
-# newline into empty files.
+# newline into heredocs.
 
 tmtest -o - <<-EOL
 	# Create File
 	# author: Scott Bronson
 	# date:   29 Mar 2004
 
-	03-tmpfile = <<-EOsL
+	cat > /tmp/02-empty.tmp <<-EOsL
 	EOsL
-
+	cat /tmp/02-empty.tmp
 	echo "nada"
+	rm /tmp/02-empty.tmp
 
 	------ STDOUT: exit code 0 - no error
 	nada
@@ -24,10 +25,11 @@ EOL
 # author: Scott Bronson
 # date:   29 Mar 2004
 
-03-tmpfile = <<-EOsL
+cat > /tmp/02-empty.tmp <<-EOsL
 EOsL
-
+cat /tmp/02-empty.tmp
 echo "nada"
+rm /tmp/02-empty.tmp
 
 ------ STDOUT: exit code 0 - no error
 nada

@@ -33,4 +33,4 @@ tmtest - <<-EOL
 EOL
 
 ------ STDOUT: exit code 0 - no error
-ok   STDIN                         
+ok   STDIN

@@ -1,0 +1,29 @@
+title: 	Use Config File
+author: Scott Bronson
+date:   21 July 2004
+
+desc: 	Ensures that -f works to import a config file. \
+		(the config file ensures the test won't run due to version mismatch)
+
+
+# create the config file
+
+/tmp/01-UseConfigFile.conf = <<-EOL
+	require-tmtest: 100
+EOL
+
+
+# run the test
+
+tmtest -f /tmp/01-UseConfigFile.conf - <<-EOL
+	echo "may"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+
+# If the test is skipped, then we know that the configuration
+# file was properly read.
+
+------ STDOUT: exit code 0 - no error
+skip STDIN

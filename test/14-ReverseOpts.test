@@ -1,0 +1,26 @@
+title:  Reverse Opts
+Author: Scott Bronson
+Date:   30 Sept 2004
+
+# Ensures that we interpret all options before running any tests.
+
+tmtest - -o <<-EOL
+	title: The test to be exploded
+	author: Sam the Tester
+	date: 31 Mar 2004
+
+	echo "howdy!"
+
+	------ STDOUT: exit code 0 - no error
+	howdy!
+EOL
+
+------ STDOUT: exit code 0 - no error
+title: The test to be exploded
+author: Sam the Tester
+date: 31 Mar 2004
+
+echo "howdy!"
+
+------ STDOUT: exit code 0 - no error
+howdy!

@@ -1,0 +1,16 @@
+title:	Same Header Interp
+author:	Scott Bronson
+date:	22 July 2004
+
+tmtest -o - <<-EOL
+	arg2: $() def
+	echo "$(arg2) ghi"
+	------ STDOUT: exit code 0 - no error
+	 def ghi
+EOL
+
+------ STDOUT: exit code 0 - no error
+arg2: $() def
+echo "$(arg2) ghi"
+------ STDOUT: exit code 0 - no error
+ def ghi

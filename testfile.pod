@@ -1,0 +1,399 @@
+=head1 NAME
+
+testfile - the format of tmtest's input files.
+
+
+=head1 DESCRIPTION
+
+A test file is a script that describes a single test to perform.
+It is a simple text file with a syntax that is inspired by bash and
+RFC822 email messages.
+
+=head1 FILE NAMES
+
+Test files may be named anything at all just so long as they end in ".test".
+The ".test" extension is mandatory (this way, you can run "tmtest *" inside a
+directory that contains all kinds of files, and tmtest will only
+execute the test files).
+
+Test files are often named using following convention:
+
+    01-EnsureEchoCmdWorks.test
+    02-TestEchoNewlines.test
+    etc.
+
+The 2-digit sequence number specifies the order in which the tests should be
+run.  The simplest tests should be run first, and the most specific and complex
+tests should be run last.  After the sequence number comes the test's title
+and the F<.test> extension.
+
+=head1 COMMENTS
+
+Lines that begin with '#' are comments.
+Leading whitespace is ignored so comments may be indented.
+You might be able to use the L<desc> header instead of comments.
+
+=head1 HERE DOCUMENTS
+
+You can send arbitrary text to commands and files using a here document.
+In its most basic form a here document looks like this:
+
+    testcommand <<EOL
+    text content
+        indented text
+    more text
+    EOL
+
+See L<Create Files> and L<Commands> below for more examples.
+
+A here document is started using"<<KEY" where
+KEY is a word that will never appear on a line by itself
+in the document itself.  The document continues until
+the first line that contains KEY on a line by itself with
+no leading or trailing whitespace.  If KEY is omitted, the
+here document will be terminated at C<E<gt>E<gt>> on a line by itself.
+
+To improve legibility of the here douments, leading whitespace
+can be stripped using '-'.  The following here document would produce
+exactly the same output as the previous one:
+
+    testcommand <<-EOL
+        text content
+            indented text
+        more text
+    EOL
+
+The dash says to strip the exact whitespace found on the front of the
+first nonblank line from the front of all subsequent lines.  Note that
+the difference between spaces and tabs is significant, so you need be
+careful that each line is indented with the exact same characters.
+
+When putting a here document in a pipeline, you're passing
+the document to the first command, not to the last.  Make sure to
+specify the here document in the correct place:
+
+    $ tr a-z A-Z <<EOL | tr 0-3 a-c		# correct
+    $ tr a-z A-Z | tr 0-3 a-c <<EOL		# wrong -- ambiguous!
+
+=head1 HEADERS
+
+Headers contain information about the test, such as the title,
+author, and date.  They may come in any order.  Header names are always
+case-insensitive.  In general, they are just RFC822 headers.
+
+Headers are very simple: "name: value".  The name cannot contain any whitespace.
+The value is interpreted up until the newline.  A header may be continued
+by indenting the following line.
+
+    author: jimmy james, joe parrot,
+	   joebob, jasper, and jed.
+
+If whitespace is significant, use a here document instead of indentation
+to continue the header:
+
+    stdout: <<EOL
+        it worked.
+        sucess!!
+    EOL
+
+=head2 Interpolation
+
+You can interpolate headers into commands or other headers using C<$(I<header>)>
+or C<${I<header>}> syntax.  For example, the following is equivalent
+to the command "echo hi":
+
+	cmd: echo
+	phrase: hi
+	$(cmd) $(phrase)
+
+And this adds a new eachline command without removing any eachlines
+set in previous config files.
+
+    eachline: $(eachline) s/\d+\.\d+/VERSION/g
+
+The following are the headers that tmtest currently recognizes.
+
+=over 8
+
+=item title
+
+This is the name of the test.  It should be descriptive, but be less
+than 40 characters or so.  Tests conventionally use book title
+capitalization.
+
+=item author
+
+The author of the test.  This may be the author's initials, his
+login, her email address, or any other identifier unique to the
+project.
+
+=item date
+
+The date the test was first written.  It should not be updated if the
+test is modified.  "12 Jul 2003" is the suggested date format because it
+doesn't suffer from the European vs. American month/day ambiguity yet it's
+still very readable.  However, you may use any standard format you'd like.
+
+=item desc
+
+A brief description for this test.  This should not be more than 2 or
+3 lines.
+
+=item doc
+
+Comprehensive documentation for the test.
+
+=item curfile
+
+This header is supplied automatically.  It contains the name
+of the file currently being read.
+
+=item curpath
+
+This header is supplied automatically.  It contains the full path
+to the file currently being read.
+
+=item include
+
+This allows you to include headers from another file in the current
+test file.  It doens't run commands or create the files listed in
+the included file -- it only works for headers.
+
+    include: clean-headers.inc
+
+=item disabled
+
+Disables the test from being executed.  It won't be counted as a
+failure, but it won't be counted as a success either.  You can
+capitalize the words any way you want -- case is ignored.
+"disable" also works.
+
+    Disabled: Yes
+
+=item enabled
+
+You can mark a test disabled by adding an "enabled: no" header.
+You can optionally follow the "no" with a blurb describing why
+the test has been disabled: "enabled: no, because it's obsolete."
+"Enable" also works.
+
+The L<disabled> header does the exact same thing, but with the
+opposite sense.
+
+=item require-tmtest
+
+Some tests require features not found in earlier versions of tmtest.
+This header makes these dependencies explicit.  If the version of
+tmtest running the test is too old, the test will be skipped.
+
+    require-tmtest: 1.01
+
+=item executable
+
+Normally tmtest discovers which executable to run via the PATH
+environment variable.  However, during development, there's slim
+chance that the program under test will be in your PATH.  Use
+"executable" to specify the executable file.
+
+The format is "name=value", where name is the name as it appears
+in the testfile, and value is its full path.  For instance, the
+following lines cause /usr/local/bin/banner to be called with the
+string "hello":
+
+    executable: banner=/usr/local/bin/banner
+    banner hello
+
+In an executable header, C<$(PATH)> will be replaced with the full
+path of the directory containing the configuration file currently being parsed.  Therefore,
+If you know that the command is in the same directory
+as the config file, you can simply put this line in your config file:
+
+    executable: mycmd=$(PATH)/mycmd
+
+Now, for all testfiles in that directory, running "mycmd" actually
+executes $(PATH)/mycmd.
+
+=item eachline
+
+This allows you to run a perl statement on each line of the command's
+output (both stdout and stderr).  For instance, because timestamps change
+each second, they cannot remain in the test results.  The following
+example converts lines like "Date: Thu, 22 Jul 2004 06:58:33 GMT" to
+"Date: DATE DATE DATE".
+
+	eachline: s/^Date:.*$/Date: DATE DATE DATE/
+
+=back
+
+=head2 Create Files
+
+You can create files during the testing.
+The following command creates a file named "01-contfile"
+that contains a single line, "contents".  See
+L<Here Documents|"HERE DOCUMENTS"> for how the here
+document (E<lt>E<lt>-EOL) works.
+
+  file: 01-contfile = <<-EOL
+    contents
+  EOL
+ 
+This is equivalent to running the following commands:
+
+  cat > 01-contfile <<-EOL
+    contents
+  EOL
+
+  (run the tests...)
+
+  rm 01-contfile
+
+Unless a full path is given, the file is created in the directory 
+containing the testfile currently being executed.  New files always
+clobber old (permissions willing), so be careful what you name them.
+
+Create files are automatically deleted when the commands are run without
+error.  If one of the commands returns a nonzero exit code, the create
+files are not cleaned up (this allows you to use them to try to figure
+out what went wrong).
+
+You may specify that the created file should be marked executable
+by appending a "+x":
+
+  02-execfile = +x <<-EOL
+    #!/bin/sh
+    echo "This will be run"
+  EOL
+
+Now you can execute this file as a command: "./02-execfile".
+Its stdout and stderr will be appended to your expected stdout and stderr
+unless you redirect them using something like this:
+
+  ./02-execfile > /dev/null 2>&1
+
+It is a good idea to name your files something similar to the 
+testfile that created them.
+Otherwise, when things go horribly wrong and all the tests are failing, it
+can be hard to tell which file goes with which test.  It's also a good
+thing to store them in /tmp when possible.  There might come a time
+when you want to execute tests out of a read-only directory.
+
+=head2 Commands
+
+You may list any number of commands to be executed in a single test file.
+Their stdout and stderr will be concatenated together.
+
+	echo "First Test"
+	echo "Second Test"
+
+If any of the commands returns a nonzero exit code, the test is terminated
+immediately and the Create Files are not cleaned up.  This is so that
+you can run the test by hand on the created files to see what went wrong.
+Note that only exit codes are checked -- the created files are still deleted
+if the test fails because the actual output didn't match the expected output.
+
+As with the shell, use a backslash to continue a command on the following
+line.
+
+    cat my.file | tr [a-z] [A-Z] | \
+        grep mydata | sort
+
+You can pass data to your commands's standard input using either the
+echo command or L<here documents|"HERE DOCUMENTS">:
+
+	echo "single-line input text" | mycommand
+    mycommand <<-EOL
+       multi-line input passed
+       on the command's stdin
+    EOL
+
+=head2 Output Clause
+
+The output clause specifies the output that you're expecting the command
+to produce.  For instance, the following output clause shows a command
+that outputs text on both stdout and stderr, and returns a 0 exit code:
+
+  ------ STDERR: 
+  this is some output on stderr
+  ------ STDOUT: exit code 0 - no error
+  First Test
+  some more output
+
+If the commands don't produce any stderr, then the stderr seciton is usually
+omitted.  The stdout section is mandatory, but may be empty if the commands
+don't produce any stdout.
+
+Exit clauses always begin with at least 4 dashes.  This means that the
+stderr section in your test file cannot include a line beginning with 4
+dashes.  Because it's the last in the file, this restriction does not apply
+to stdout.
+
+tmtest ensures that the expected output matches the actual output down to
+the last bit.  It will not ignore whitepace.  See L<eachline> if you
+need to loosen the test requirements a bit.
+
+=head1 EXAMPLE
+
+Here is an example of a complete test file:
+
+    title: Run Echo
+    author: Sam the Tester
+    date: 31 Mar 2004
+
+    echo this is some text
+
+    ------ STDOUT: exit code 0 - no error
+    this is some text
+
+And here is a complex example.  This demonstrates how
+to use most of tmtest's features:
+
+    title:   Ensure the Echo Command Works
+    author:  Sam the Tester
+    date:    31 Mar 2004
+
+    # CREATE FILES:
+
+        # create a regular file continaing a single line:
+    01-crfile = <<-EOL
+        some more output
+    EOL
+
+        # create a bash script:
+    01-execout = +x <<-EOL
+        #!/bin/bash
+        echo "... and even more output!"
+    EOL
+
+
+    # COMMANDS:
+
+        # 1. a simple command
+    echo "some output"
+        # 2. taking its input from the first create file
+    cat 01-crfile
+        # 3. taking its stdin from a here document:
+    cat <<-EOL
+        a little more
+    EOL
+        # 4. executing the second here document that we created:
+    ./01-execout
+
+
+    # OUTPUT CLAUSE:
+
+    ---- STDOUT: exit code 0 - no error
+    some output
+    some more output
+    a little more
+    ... and even more output!
+
+
+=head1 SEE ALSO
+
+L<tmtest(1)>
+
+=head1 AUTHOR
+
+Scott Bronson E<lt>bronson@rinspin.comE<gt>
+
+

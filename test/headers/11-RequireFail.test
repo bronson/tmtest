@@ -1,0 +1,21 @@
+title: 	Require Fail
+author:	Scott Bronson
+date: 	6 July 2004
+
+desc: Ensures we can run tests that require an earlier version of tmtest.
+
+# remove the version from the output (otherwise we'd have to update
+# this test every time the version number changed).
+eachline: s/\d+\.\d+/VERSION/
+
+
+tmtest -o - <<-EOL
+	# require-tmtest: 100
+
+	echo "Worked!"
+	------ STDOUT: exit code 0 - no error
+	Worked!
+EOL
+
+------ STDOUT: exit code 0 - no error
+STDIN says it requires tmtest version 100 but this is only version VERSION.

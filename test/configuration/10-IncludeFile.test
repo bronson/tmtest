@@ -1,0 +1,29 @@
+title: 	Include File
+author: Scott Bronson
+date:   22 July 2004
+
+desc: 	Ensures that including a file works.
+
+
+# create the config file
+
+/tmp/10-IncludeFile.inc = <<-EOL
+	new-header: yo
+EOL
+
+
+# run the test
+
+tmtest -o - <<-EOL
+	include: /tmp/10-IncludeFile.inc
+	echo ${new-header}gurt
+	------ STDOUT: exit code 0 - no error
+	yogurt
+EOL
+
+
+------ STDOUT: exit code 0 - no error
+include: /tmp/10-IncludeFile.inc
+echo ${new-header}gurt
+------ STDOUT: exit code 0 - no error
+yogurt

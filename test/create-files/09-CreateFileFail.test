@@ -27,4 +27,4 @@ EOL
 
 ------ STDERR:
 Could not create a/b/c/d/tmpfile: No such file or directory
------- STDOUT: exit code 2 - abort!
+------ STDOUT: exit code 255 - abort!

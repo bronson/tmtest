@@ -1,0 +1,31 @@
+# Here Doc Mashed To Command
+# author: Scott Bronson
+# date:   3 July 2004
+#
+# Sees what happens if no whitespace separates the here doc and the
+# the command.  This was a bug in 0.81 and previous.
+
+tmtest -o - <<-EOL
+	# Here Doc Mashed To Command (sub)
+	# author: Scott Bronson
+	# date:   3 July 2004
+
+	cat<<EOL | tr ABC abc
+		ABCdef ghi 123
+	EOL
+
+	------ STDOUT: exit code 0 - no error
+		abcdef ghi 123
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Here Doc Mashed To Command (sub)
+# author: Scott Bronson
+# date:   3 July 2004
+
+cat<<EOL | tr ABC abc
+	ABCdef ghi 123
+EOL
+
+------ STDOUT: exit code 0 - no error
+	abcdef ghi 123

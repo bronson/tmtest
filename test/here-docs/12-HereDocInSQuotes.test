@@ -1,0 +1,23 @@
+# Here Doc in Single Quotes
+# author: Scott Bronson
+# date:   29 Mar 2004
+#
+# If what appears to be a here doc appears on the command line within
+# single quotes, it's not actually a here doc.  It's just an argument.
+# tmtest used to erroneously blow it away.
+
+tmtest -o - <<-EOL
+	# Here Doc in Single Quotes (sub)
+	# author: Scott Bronson
+
+	echo '<<EOsL'
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Here Doc in Single Quotes (sub)
+# author: Scott Bronson
+
+echo '<<EOsL'
+------ STDOUT: exit code 0 - no error
+<<EOsL

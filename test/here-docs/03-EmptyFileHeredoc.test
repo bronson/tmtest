@@ -1,0 +1,33 @@
+# Create Empty File Output
+# author: Scott Bronson
+# date:   29 Mar 2004
+
+# There was a bug in tmtest where it would insert an implicit
+# newline into empty files.
+
+tmtest -o - <<-EOL
+	# Create File
+	# author: Scott Bronson
+	# date:   29 Mar 2004
+
+	/tmp/03-tmpfile = <<-EOsL
+	EOsL
+	cat /tmp/03-tmpfile
+	echo "nada"
+
+	------ STDOUT: exit code 0 - no error
+	nada
+EOL
+
+------ STDOUT: exit code 0 - no error
+# Create File
+# author: Scott Bronson
+# date:   29 Mar 2004
+
+/tmp/03-tmpfile = <<-EOsL
+EOsL
+cat /tmp/03-tmpfile
+echo "nada"
+
+------ STDOUT: exit code 0 - no error
+nada

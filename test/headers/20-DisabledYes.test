@@ -1,0 +1,16 @@
+# Disabled Yes
+# author:Scott Bronson
+# date: 6 July 2004
+
+# Ensures the disabled header works
+
+tmtest -o - <<-EOL
+	# Disabled: YES
+
+	echo "Worked!"
+	------ STDOUT: exit code 0 - no error
+	Worked!
+EOL
+
+------ STDOUT: exit code 0 - no error
+STDIN says that it is disabled.

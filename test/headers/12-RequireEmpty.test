@@ -1,0 +1,21 @@
+title: 	Require Empty
+author:	Scott Bronson
+date: 	6 July 2004
+
+desc: verifies what happens when you specify a nonsensical version ("yadda")
+
+# remove the version from the output (otherwise we'd have to update
+# this test every time the version number changed).
+eachline: s/\d+\.\d+/VERSION/
+
+
+tmtest -o - <<-EOL
+	# require-tmtest: yadda
+
+	echo "Worked!"
+	------ STDOUT: exit code 0 - no error
+	Worked!
+EOL
+
+------ STDOUT: exit code 0 - no error
+STDIN says it requires tmtest version yadda but this is only version VERSION.

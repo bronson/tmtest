@@ -1,0 +1,16 @@
+title:	Header Interp
+author:	Scott Bronson
+date:	22 July 2004
+
+tmtest -o - <<-EOL
+	cmd: echo
+	$(cmd) "may"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+------ STDOUT: exit code 0 - no error
+cmd: echo
+$(cmd) "may"
+------ STDOUT: exit code 0 - no error
+may

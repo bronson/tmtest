@@ -1,12 +1,3 @@
-This is where the latest version of tmtest can always be found.
-
-Projects using tmtest:
-	trestlemail (what tmtest was created for)
-	tagstack
-	xmldialog
-
-
-
 It is very hard to write tests before the functionality in the
 product works pretty well.  This is because it's normally so tedious
 to hand-generate output.
@@ -14,7 +5,7 @@ to hand-generate output.
 So, typically you'd get a feature up and working.  The first moment
 it works, you write a test for it.  Any time you find a bug, write
 a test, correct the test output, and then fix the program until the
-test passes.
+test passes.  It's very much an iterative process.
 
 At first this seems pointless.  I mean, what good is 6 lousy tests
 going to do anybody?  But, give it time.  Once you have 50

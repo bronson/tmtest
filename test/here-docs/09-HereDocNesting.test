@@ -2,19 +2,17 @@
 # author: Scott Bronson
 # date:   29 Mar 2004
 #
-# Here docs can't nest unless you're stripping tabs.
+# Here docs can't nest unless you're stripping tabs and indent
+# the nested here doc.
 
 tmtest -o - <<EOL
 # Here Doc Nesting
 # author: Scott Bronson
-# date:   3 Dec 2001
-#
-# Here docs should nest, even if they have the same name.
 
 cat <<EOL
 	Yo!
 EOL
 
 ------ STDERR:
-file STDIN line 8: did you forget to terminate the here doc?
+STDIN line 6: did you forget to terminate the here doc?
 ------ STDOUT: exit code 255 - abort!

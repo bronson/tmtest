@@ -1,0 +1,38 @@
+title: 	Each Line Header
+author:	Scott Bronson
+date: 	22 July 2004
+
+desc:	This is exactly like 60-EachLine.test, except that the \
+		eachline statement has a semicolon at the end (both are legal)
+
+
+# first we create a configuration file that specifies which command to run.
+
+/tmp/61-EachLine.conf = <<EOL
+eachline: s/go/GO/gi;
+EOL
+
+
+tmtest -o -f /tmp/61-EachLine.conf - <<-EOL
+	cat <<EOL
+	Bondage a gogo.
+	Go to work.
+	Logos
+	EOL
+	------ STDOUT: exit code 0 - no error
+	Bondage a GOGO.
+	GO to work.
+	LoGOs
+EOL
+
+
+------ STDOUT: exit code 0 - no error
+cat <<EOL
+Bondage a gogo.
+Go to work.
+Logos
+EOL
+------ STDOUT: exit code 0 - no error
+Bondage a GOGO.
+GO to work.
+LoGOs

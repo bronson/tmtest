@@ -33,4 +33,3 @@ EOL
 cat 07-tmpfile
 
 ------ STDOUT: exit code 0 - no error
-

@@ -11,7 +11,7 @@
 
 # line three
 
-tmtest -c - <<-EOL
+tmtest -Z - <<-EOL
 	# Multi Line Leading Comment
 	# author: Scott Bronson
 	# date  : 3 Dec 2001
@@ -31,10 +31,10 @@ tmtest -c - <<-EOL
 EOL
 
 ------ STDOUT: exit code 0 - no error
-name: Multi Line Leading Comment
+testfile: STDIN
+title: Multi Line Leading Comment
 author: Scott Bronson
 date: 3 Dec 2001
-from: STDIN
 command 1:
   echo "I"
 command-descr:

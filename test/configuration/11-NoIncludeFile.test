@@ -1,0 +1,17 @@
+title: 	No Include File
+author: Scott Bronson
+date:   22 July 2004
+
+desc: 	Ensures that we fail if we try to include a nonexistant include file.
+
+
+tmtest -o - <<-EOL
+	include: /tmp/11-NoIncludeFile.inc
+	echo ${new-header}gurt
+	------ STDOUT: exit code 0 - no error
+	yogurt
+EOL
+
+------ STDERR:
+STDIN line 1: Could not open /tmp/11-NoIncludeFile.inc: No such file or directory
+------ STDOUT: exit code 255 - abort!

@@ -1,0 +1,28 @@
+# Extract Bad Arg
+# author: Scott Bronson
+# date:   4 July 2004
+#
+# Ensures failure if you neglect to specify a here doc to extract.
+
+tmtest -o --heredoc=1a - <<-EOL
+	# Extract Bad Arg
+	# author: Scott Bronson
+	# date:   4 July 2004
+	#
+	# Ensures that a simple here doc extraction works.
+
+	cat <<-EOsL
+		This is heredoc 1.
+		It will be extracted
+	EOsL
+	cat <<-EOsL
+		This is not in heredoc 1.
+		It will not be extracted.
+	EOsL
+
+	------ STDOUT: exit code 0 - no error
+EOL
+
+------ STDERR:
+-h requires a positive integer, not '1a'!
+------ STDOUT: exit code 255 - abort!
