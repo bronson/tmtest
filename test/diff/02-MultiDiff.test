@@ -1,58 +1,42 @@
-# Diff
 # author: Scott Bronson
 # date:   14 Nov 2004
 
-# updated for 2.0 on 27 Jan 2005
-
-# tests tmtest -d file1 file2
-
-DISABLED
+# tests that diff works on multiple files (tmtest -d file1 file2)
+# updated for 2.0 on 29 Jan 2005
 
 
-eachline:   s/^\-\-\-.*1\.test.*/--- \/tmp\/STDIN-pid.1.test DATE TIME TZ/,
-            s/^\-\-\-.*2\.test.*/--- \/tmp\/STDIN-pid.2.test DATE TIME TZ/,
-            s/^\+\+\+.*/+++ - DATE TIME TZ/
 
-
-1.test: file = <<-EOF
-    # title:   Ensure the Echo Command Works
-    # author:  Sam the Tester
-    # date:    31 Mar 2004
-
-    echo "test 1 right output"
-
-    ------ STDOUT: exit code 0 - no error
-    test 1 wrong output
+MKFILE t1 <<-EOF
+	echo "test 1 right output"
+	STDOUT:
+	test 1 wrong output
 EOF
 
-2.test: file = <<-EOF
-    # title:   Ensure the Echo Command Works
-    # author:  Sam the Tester
-    # date:    31 Mar 2004
-
-    echo "test 2 right output"
-
-    ------ STDOUT: exit code 0 - no error
-    test 2 wrong output
+MKFILE t2 <<-EOF
+	echo "test 2 right output"
+	STDOUT:
+	test 2 wrong output
 EOF
 
-tmtest -d $(1.test)
-tmtest -d $(2.test)
 
------- STDOUT: exit code 0 - no error
---- /tmp/STDIN-pid.1.test DATE TIME TZ
+tmtest --all-files -d "$t1" "$t2"
+
+
+MODIFY:   s/^\-\-\-.*\/tmp\/tmtest.*/--- \/tmp\/testfile DATE TIME TZ/,
+          s/^\+\+\+.*/+++ - DATE TIME TZ/
+
+STDOUT:
+--- /tmp/testfile DATE TIME TZ
 +++ - DATE TIME TZ
-@@ -5,4 +5,4 @@
+@@ -1,3 +1,3 @@
  echo "test 1 right output"
- 
- ------ STDOUT: exit code 0 - no error
+ STDOUT:
 -test 1 wrong output
 +test 1 right output
---- /tmp/STDIN-pid.2.test DATE TIME TZ
+--- /tmp/testfile DATE TIME TZ
 +++ - DATE TIME TZ
-@@ -5,4 +5,4 @@
+@@ -1,3 +1,3 @@
  echo "test 2 right output"
- 
- ------ STDOUT: exit code 0 - no error
+ STDOUT:
 -test 2 wrong output
 +test 2 right output
