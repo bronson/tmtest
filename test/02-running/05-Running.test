@@ -34,6 +34,12 @@ cat > sub/sub.test <<-EOL
 	middir
 EOL
 
+cat > sub/sub.test <<-EOL
+	echo middir
+	STDOUT:
+	middir
+EOL
+
 tmtest mid.test sub/sub.test ../sup.test sub . ..
 
 # clean up after ourselves

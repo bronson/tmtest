@@ -289,11 +289,11 @@ void test_command_copy(struct test *test, FILE *fp)
             fprintf(stderr, "Error %d pulling status tokens: %s\n", 
                     tokno, strerror(errno));
             exit(10);
-        }
+        } else if(tokno == 0) {
+			// if the test file is totally empty.
+			break;
+		}
 
-        // I don't think the scanner will return a 0 token anymore.
-        // Let's check that out.  Need to know for the parser.
-        assert(tokno);
 
         if(tokno != exCOMMAND) {
             // now we attempt to push the token back on the stream...

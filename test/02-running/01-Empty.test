@@ -1,0 +1,9 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-29'
+
+# What happens when we output an empty test file?
+# Should just produce nothing.
+
+tmtest -o - <<-EOL
+EOL
+

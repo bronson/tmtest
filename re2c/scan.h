@@ -60,7 +60,23 @@
 #define YYCURSOR    (ss->cursor)
 #define YYLIMIT     (ss->limit)
 #define YYMARKER    (ss->marker)
-#define YYFILL(n)   (*ss->read)(ss)
+
+// This routine needs to force a return if 0 bytes were read because
+// otherwise we might end up scanning garbage waaay off the end of
+// the buffer.  We ignore n because there can be cases where there
+// are less than n bytes left in the file, but it's perfectly valid
+// data and one or more tokens will match.  n is useless.
+// We also don't want to return prematurely.  If there's still data
+// in the buffer, even if the read returned 0, we'll continue parsing.
+// But, if read is at eof and there's no data left in the buffer, then
+// there's nothing to do BUT return 0.
+
+#define YYFILL(n)   do { \
+		int r = (*ss->read)(ss); \
+		if(r <= 0 && (ss)->cursor >= (ss)->limit) { \
+			return r; \
+		} \
+	} while(0);
 
 
 // forward declaration

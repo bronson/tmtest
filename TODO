@@ -1,13 +1,5 @@
 Create tests:
 
-Handle running a test specified with an absolute path
-Handle running a test specified with a relative path in cwd.
-Handle running a test specified in a child dir.
-
-Calling with unkown switches, both short and long.
-Not specifying values for switches that take values.
-Naming the test on the command line
-Naming a dir on the command line
 Naming a file that doesn't end in ".test" on the command line.
 Tests that fail before they're run (bad config files)
 Tests that fail to run (syntax error)

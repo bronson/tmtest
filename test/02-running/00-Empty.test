@@ -1,0 +1,17 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-29'
+
+# What happens when we run an empty test file?
+
+# It should succeed since all the defaults are met: no stdout,
+# no stderr, and an exit code of 0.
+
+
+tmtest - <<-EOL
+EOL
+
+
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.
