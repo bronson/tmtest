@@ -19,6 +19,7 @@ TODO:
 - should automatically add title/author/date/output headers.
 - maybe implement a test-id header which is always unique.  that way tests
   can be renamed but are still able to refer to each other.
+- figure out indenting/continuation problem.  See run-commands/10-IndentedCommand.test
 post-rewrite:
 - make debugging output much more presentable.
   - Split into parsing debug and running debug.
@@ -47,7 +48,7 @@ post-rewrite:
 - Added -D: define headers using -Dheader=value or --define-header=header=value
 - Now runs executable interpolation anywhere in command line, not just on first position.
 - now output the byte-for-byte stdout and stderr when --verbose is on.
-- Now strips whitespace from the front of the heredoc better (bugfix).
+- now properly explodes a test containing 0 commands (used to give a Perl error).
 - When exploding a test, files are created with their extensions (bugfix).
 
 0.88:	3 Nov 2004		169/169 tests passed		r15

@@ -442,6 +442,7 @@ EOL
 
 		# if this command is actually a crfile, create the file
 		if($cs->{crfile}) {
+            $herename .= "_" . $cs->{name};
 			my $name = create_crfile($cs, $test, $herename);
 			printf("  created $name\n");
 			$test->{header}->{lc $cs->{name}} = {value => $name};

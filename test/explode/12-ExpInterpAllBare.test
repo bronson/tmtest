@@ -125,11 +125,11 @@ Wrote /tmp/tmtest/cmd-07
 Wrote /tmp/tmtest/cmd-08
 Wrote /tmp/tmtest/cmd-09
 Wrote /tmp/tmtest/cmd-10
-  created /tmp/tmtest/here-11
+  created /tmp/tmtest/here-11_ff
 Wrote /tmp/tmtest/cmd-12
 Wrote /tmp/tmtest/cmd-13
 Wrote /tmp/tmtest/cmd-14
-  created /tmp/tmtest/here-15
+  created /tmp/tmtest/here-15_ef
 Wrote /tmp/tmtest/cmd-16
 Wrote /tmp/tmtest/cmd-17
 Wrote /tmp/tmtest/cmd-18
@@ -154,8 +154,8 @@ Wrote /tmp/tmtest/cmd-19 and /tmp/tmtest/here-19
 /tmp/tmtest/cmd-17
 /tmp/tmtest/cmd-18
 /tmp/tmtest/cmd-19
-/tmp/tmtest/here-11
-/tmp/tmtest/here-15
+/tmp/tmtest/here-11_ff
+/tmp/tmtest/here-15_ef
 /tmp/tmtest/here-19
 
 

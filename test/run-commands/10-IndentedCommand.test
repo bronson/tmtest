@@ -1,0 +1,30 @@
+title: Indented Command
+Author: Scott Bronson
+Date:   14 Nov 2004
+
+# The problem here is that the command is indented using spaces
+# while everything else is indented using tabs.  This means that
+# the command is indented in the heredoc, and is therefore a
+# continuation of the previous Date header.
+
+# I don't know how to fix this.  :(  This test at least standardizes
+# tmtest's behavior.  You can see that the command isn't run because
+# there's no "howdy!" in the stdout.
+
+tmtest -o - <<-EOL
+	title: No Leading Space In Command
+	author: Scott Bronson
+	date: 3 Dec 2001
+
+    echo "howdy!"
+	------ STDOUT: exit code 0 - no error
+	may
+EOL
+
+------ STDOUT: exit code 0 - no error
+title: No Leading Space In Command
+author: Scott Bronson
+date: 3 Dec 2001
+
+    echo "howdy!"
+------ STDOUT: exit code 0 - no error
