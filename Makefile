@@ -7,8 +7,8 @@ VERSION=0.91
 COPTS=-g -Wall -Werror
 
 # utilities:
-CSRC=qscandir.c qtempfile.c pcrs.c
-CHDR=qscandir.h qtempfile.h pcrs.h
+CSRC=qscandir.c pcrs.c
+CHDR=qscandir.h pcrs.h
 
 # scanner files
 CSRC+=re2c/read.c re2c/read-fd.c re2c/scan.c

@@ -16,19 +16,16 @@ Test that both raw and modified work when stdout doesn't have a newline.
 - Make diff work in subdirs (need to cd back to superdir before
   forking, and use the proper partial path for the file)
 - Ensure that diffing works when running multiple tests in multiple dirs.
-- figure out whether to call it MODIFY or EACHLINE.
-  clean up the syntax.
-- add a CLEAR_EACHLINE option or something, to turn off all modifications.
+- figure out whether to call it MODIFY or EACHLINE.  clean up the syntax.
 - get rid of all the exit(10) calls in test.c.  We need a better way to abort the test.
   should get rid of a whole bunch in main.c as well.
   this should prevent us from dropping turds in /tmp all the time.
 - Rewrite the test date and author if they aren't supplied.
 - should probably indent stdout and stderr clauses two spaces.  otherwise
   we might misinterpret STDOUT: and STDERR: in a stdout or stderr clause.
-- Shouldn't run every test if the DISABLED directive is in a config file.
+- Shouldn't run every test in a dir if the DISABLED directive is in a config file.
   Should discover what dir the DISABLED directive came from and refuse
   to run anything above that.
-- How can we integrate with bash's assert function?
 
 2.2:
 - Add the ability to run multiple tests from one testfile
@@ -53,6 +50,12 @@ Test that both raw and modified work when stdout doesn't have a newline.
   its functionality.  that way, tmtest will update its author and date.
 
 
+
 - Wow, the pcrs error messages suck.  Is there any way to improve them?
   "(pcrs:) Syntax error while parsing command (-11)."
+
+
+maybe never:
+- add a CLEAR_EACHLINE or CLEAR_MODIFY option to to turn off all substitutions.
+  It would be easy to do.  I'm just not convinced that anyone would find it useful.
 
