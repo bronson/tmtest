@@ -1,0 +1,58 @@
+/* graphs:
+
+ANYN    = [\000-\377]\[\n];
+ANYNSQ  = ANYN\['];
+ANYNDQ  = ANYN\["];
+
+["] (ANYNDQ | "\\\"")+ ["] { ss->token++; ss->tokend = ss->cursor-1;
+                             RETURN(); return CBFILE;
+                           }
+[\000-\377]                { return GARBAGE; }
+
+*/
+
+digraph tt {
+    yy0 [shape=box, label="yy0\nfill(2)"];
+    yy0 -> yy2 [label="[\"]"];
+    yy0 -> yy4 [label="*"];
+
+//  yy1 -> yy0 [label="*"];
+
+    yy2 [label="yy2\nyyaccept=0"];
+    yy2 -> yy3 [label="[\"\\n]"];
+    yy2 -> yy6 [label="*"];
+
+    yy3 [shape=diamond, label="yy3\nreturn ERROR"];
+
+    yy4 -> yy3;
+
+    yy5 [shape=box, label="yy5\nfill(1)"];
+    yy5 -> yy6;
+
+    yy6 -> yy7 [label="[\\n]"];
+    yy6 -> yy12 [label="[\"]"];
+    yy6 -> yy8 [label="[\\]"];
+    yy6 -> yy5 [label="*"];
+
+    yy7 -> yy3 [label="yyaccept==0", decorate];
+    yy7 -> yy1 [label="yyaccept==1", decorate];
+    yy7 -> yy8;
+
+    yy8 [shape=box, label="yy8\nfill(1)"];
+    yy8 -> yy9;
+
+    yy9 -> yy7 [label="[\\n]"];
+    yy9 -> yy10 [label="[\"]"];
+    yy9 -> yy8 [label="[\\]"];
+    yy9 -> yy5 [label="*"];
+
+    yy10 [shape=box, label="yy8\nfill(1)\nyyaccept=1"];
+    yy10 -> yy11 [label="[\\n]"];
+    yy10 -> yy12 [label="[\"]"];
+    yy10 -> yy8 [label="[\\]"];
+    yy10 -> yy5 [label="*"];
+
+    yy11 [shape=diamond, label="yy11\nreturn CBFILE"];
+
+    yy12 -> yy11;
+}

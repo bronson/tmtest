@@ -36,8 +36,8 @@ static int var_author(struct test *test, FILE *fp, const char *var)
     if(u) {
         fputs(u, fp);
     } else {
-        fprintf(stderr, "getlogin() returned null!\n");
-        return 1;
+        // probably not using a login shell...?
+        fputs("UNKNOWN", fp);
     }
 
     return 0;

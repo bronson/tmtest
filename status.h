@@ -1,5 +1,11 @@
 #include "r2scan.h"
 
+/* This file declares the interface to the status file parser.
+ * It's actually a lot simpler than it looks -- if I could fit
+ * multiple re2c parsers into a single file, this would all be
+ * very straightforward.  Alas...
+ */
+
 
 // start states
 int cb_scanner_start(scanstate *ss);
@@ -18,7 +24,12 @@ enum {
     CBRUNNING = 4,
     CBFILE = 5,
     GARBAGE = 100,
+    NEWLINE = 101,
+    WHITESPACE = 101,
 };
+
+
+#define scanstatus_attach(ss)   ((ss)->state = cb_scanner_start)
 
 
 // macros for the scanners

@@ -6,7 +6,7 @@
  * It contains all the scanners required by tmtest.
  */
 
-#include "scan.h"
+#include "status.h"
 
 
 /** This is the third and last state in the scan progression.
@@ -25,11 +25,13 @@ int cb_scanner_running(scanstate *ss)
 /*!re2c
 WS      = [ \t];
 ANYN    = [\000-\377]\[\n];
+ANYNWS  = ANYN\[ \t];
 RUNNING = "running";
-READY   = "ready.";
 
 RUNNING WS* ":" WS* { BEGINSUB(file); return CBRUNNING; }
-ANYN* "\n"          { return GARBAGE;                   }
+ANYNWS*          { return GARBAGE;                   }
+WS*              { return WHITESPACE;               }
+"\n"             { return NEWLINE;                  }
 */
 }
 

@@ -10,7 +10,7 @@
  * eradicated.
  */
 
-#include "scan.h"
+#include "status.h"
 
 
 // because I'm used to lex...  This is how we enter the

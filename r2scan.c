@@ -15,7 +15,7 @@
 void scanstate_init(scanstate *ss, const char *bufptr, int bufsiz)
 {
     ss->cursor = bufptr;
-    ss->limit = bufptr + bufsiz;
+    ss->limit = bufptr;
     ss->marker = NULL;
     ss->token = bufptr;
     ss->bufptr = bufptr;

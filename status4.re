@@ -6,7 +6,7 @@
  * It contains all the scanners required by tmtest.
  */
 
-#include "scan.h"
+#include "status.h"
 
 
 /** This is the file substate of the cb scanner.

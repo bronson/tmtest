@@ -10,7 +10,7 @@
  * eradicated.
  */
 
-#include "scan.h"
+#include "status.h"
 
 
 /** This is the second state in the scan progression.
@@ -28,12 +28,16 @@ int cb_scanner_config(scanstate *ss)
 /*!re2c
 WS      = [ \t];
 ANYN    = [\000-\377]\[\n];
+ANYNWS  = ANYN\WS;
 CONFIG  = "config";
 READY   = "ready.";
 
 CONFIG WS* ":" WS* { BEGINSUB(file); return CBCONFIG; }
-READY WS* "\n"     { BEGIN(running); return CBREADY; }
-ANYN* "\n"         { return GARBAGE;                  }
+READY WS*          { BEGIN(running); return CBREADY; }
+ANYNWS*            { return GARBAGE;                  }
+WS*                { return WHITESPACE;             }
+"\n"               { return NEWLINE;                }
+
 */
 }
 

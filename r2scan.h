@@ -161,7 +161,7 @@ typedef struct scanstate {
 void scanstate_init(scanstate *ss, const char *bufptr, int bufsiz);
 
 
-#define get_next_token(ss) ((*ss->state)(ss))
+#define get_next_token(ss) ((*((ss)->state))(ss))
 
 #endif
 

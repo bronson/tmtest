@@ -16,7 +16,7 @@
 
 #include "test.h"
 #include "r2read-fd.h"
-#include "scan.h"
+#include "status.h"
 
 static int test_runs = 0;
 static int test_successes = 0;
@@ -51,18 +51,42 @@ int fd_has_data(int fd)
  * where in the test process the error occurred.
  */
 
-int config_bailed(struct test *test, char *msg, int msglen)
+int test_ran(struct test *test, char *msg, int msglen)
 {
+    char buf[100];
+    scanstate ss;
+    int tok;
+
     // first rewind the status file
     if(lseek(test->statusfd, 0, SEEK_SET) < 0) {
         fprintf(stderr, "read_file lseek for status file: %s\n", strerror(errno));
         exit(10);   // todo: consolidate with error codes in main
     }
 
-    // now, if we see the token "CBRUNNING" in the status stream,
-    // it means that we attempted to start the test.
+    // then create our scanner
+    scanstate_init(&ss, buf, sizeof(buf));
+    readfd_attach(&ss, test->statusfd);
+    scanstatus_attach(&ss);
 
+    printf("starting...\n");
+    // now, if we see the token "CBRUNNING" in the token stream,
+    // it means that we attempted to start the test.  If not,
+    // then the test bailed early.
+    do {
+        tok = get_next_token(&ss);
+        printf("token: %d\n", tok);
+        if(tok < 0) {
+            fprintf(stderr, "Error %d pulling status tokens: %s\n", 
+                    tok, strerror(errno));
+            exit(10);
+        }
+        if(tok == CBRUNNING) {
+            printf("Found it!\n");
+            return 1;
+        }
+    } while(tok);
 
+    printf("not found.\n");
     return 0;
 }
 
@@ -113,7 +137,7 @@ void test_results(struct test *test)
     char msg[100];
     int diffs;
 
-    if(config_bailed(test, msg, sizeof(msg))) {
+    if(!test_ran(test, msg, sizeof(msg))) {
         printf("ERR  %s: %s\n", test->filename, msg);
         test_failures++;
         return;

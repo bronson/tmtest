@@ -9,7 +9,7 @@
  * I also wish it supported multiple scanners per file.
  */
 
-#include "scan.h"
+#include "status.h"
 
 
 /* This is the first state in the cb scanners.  It just looks for

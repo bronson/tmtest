@@ -10,5 +10,5 @@
 #include "r2read.h"
 
 
-scanstate* readfd_init(scanstate *ss, int fd);
+scanstate* readfd_attach(scanstate *ss, int fd);
 

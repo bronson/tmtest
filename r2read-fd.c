@@ -22,30 +22,22 @@ static int readfd_read(scanstate *ss, int minneeded)
     } while(n < 0 && errno == EINTR);
     ss->limit += n;
 
-    if(n > minneeded) {
-        // it's a good read so return the data.
-        return n;
-    }
+    // n > 0: good read
+    // n == 0: eof
+    // n < 0: error
+    //
+    // TODO: it's possible to return fewer bytes than minneeded.
+    // is this a problem?
 
-    if(n == 0) {
-        // we're at eof
-        return 0;
-    }
-
-    if(n < 0) {
-        // error during read -- return it to the caller.
-        return n;
-    }
-
-    // unknown error!
-    assert(0);
-    return -3;
+    return n;
 }
 
 
 /** Attaches the existing fd to the existing scanstate object.
  * Note that this routine checks the fd and if it's less than 0
  * (indicating an error) it returns null.
+ *
+ * If you pass it a valid fd, there's no way it will possibly fail.
  */
 
 scanstate* readfd_attach(scanstate *ss, int fd)
