@@ -19,14 +19,16 @@
 #include <dirent.h>
 #include <assert.h>
 
+#include "re2c/read-fd.h"
+
 #include "test.h"
 #include "qscandir.h"
 #include "vars.h"
-#include "r2read-fd.h"
 #include "tfscan.h"
 
+
 #define DIFFPROG "/usr/bin/diff"
-#define SH   "/bin/bash"
+#define SHPROG   "/bin/bash"
 
 // debugging flags:
 #define DUMP_EXEC 0
@@ -340,6 +342,12 @@ void run_test(const char *name, int warn_suffix)
         return;
     }
 
+	// so that we can safely single quote filenames in the shell.
+	if(strchr(name, '\'')) {
+		fprintf(stderr, "%s was skipped because its file name contains a single quote.\n", name);
+		return;
+	}
+
     test_init(&test);
     test.testfilename = name;
     test.outfd = g_outfd;
@@ -388,8 +396,8 @@ void run_test(const char *name, int warn_suffix)
         }
         close(pipes[0]);
         close(pipes[1]);
-        execl(SH, SH, "-s", (char*)NULL);
-        perror("executing " SH " for test");
+        execl(SHPROG, SHPROG, "-s", (char*)NULL);
+        perror("executing " SHPROG " for test");
         exit(runtime_error);
     }
 

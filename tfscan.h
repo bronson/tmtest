@@ -1,18 +1,20 @@
-#include "r2scan.h"
+/* tfscan.h
+ * Scott Bronson
+ */
 
-/* This file declares the interface to the expected results test
+/** @file tfscan.h
+ *
+ * This file declares the interface to the expected results test
  * file scanner.
  */
 
 
-/** Tells the scanstate to use the expec scanner.
- * Simply returns its input argument.  It's legal to pass NULL.
+#include "re2c/scan.h"
+
+
+/** This lists all the tokens that the test file scanner may return.
  */
 
-scanstate* tfscan_attach(scanstate *ss);
-
-
-// tokens for the config bail checker
 enum {
     // command sections are numbered between 1 and 63
     exCOMMAND = 1,			///< marks a new line in the command section.  (in the future, we might actually start parsing the command section)
@@ -33,4 +35,6 @@ enum {
 #define EX_ISNEW(x) ((x)&exNEW)
 #define is_command_token(x) (EX_TOKEN(x)>=exCOMMAND && EX_TOKEN(x)<ex_COMMAND_TOKEN_END)
 #define is_section_token(x) (EX_TOKEN(x)>=exSTDOUT && EX_TOKEN(x)<exRESULT_TOKEN_END)
+
+scanstate* tfscan_attach(scanstate *ss);
 

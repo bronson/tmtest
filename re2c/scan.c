@@ -5,7 +5,8 @@
 
 #include <string.h>
 #include <assert.h>
-#include "r2scan.h"
+
+#include "scan.h"
 
 
 /** Initializes the given scanstate to use the provided buffer.

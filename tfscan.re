@@ -15,7 +15,7 @@
 /* This scanner scans lines.  When it finds a line that begins
  * with a new section, it returns the token name of that section
  * with the exNEW flag turned on.  After that, it returns each
- * line in the section with the token's identifier.  When it
+ * line in the section with the token's identifier.  Then, when it
  * finds a new section, you get a exNEW+TOKEN of the new section.
  */
 
@@ -35,9 +35,16 @@ ANYN    = [\000-\377]\[\n];
 "MODIFY" WS* ":" ANYN* "\n"  { START(exMODIFY); return exNEW|exMODIFY; }
 
 ANYN* "\n"                  { return (int)ss->scanref; }
+
 */
 }
 
+
+/** Prepares the given scanner to scan a testfile.
+ *
+ *  @param ss the scanstate to attach to.  Passing NULL is safely ignored.
+ *  @returns ss.  Always.  This routine makes no calls that can fail.
+ */
 
 scanstate* tfscan_attach(scanstate *ss)
 {

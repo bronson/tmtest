@@ -10,12 +10,9 @@
 #define R2READ_H
 
 #include <assert.h>
-#include "r2scan.h"
 
-/** @file r2read.h
- *
- * The readproc is documented in r2scan.h.
- */
+#include "scan.h"
+
 
 int read_shiftbuf(scanstate *ss);
 

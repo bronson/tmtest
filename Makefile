@@ -11,29 +11,22 @@ CSRC=qscandir.c qtempfile.c pcrs.c
 CHDR=qscandir.h qtempfile.h pcrs.h
 
 # scanner files
-CSRC+=r2read.c r2read-fd.c r2scan.c r2scan-dyn.c
-CHDR+=r2read.h r2read-fd.h r2scan.h r2scan-dyn.h
+CSRC+=re2c/read.c re2c/read-fd.c re2c/scan.c
+CHDR+=re2c/read.h re2c/read-fd.h re2c/scan.h
 
 # program files:
-CSRC+=vars.c test.c compare.c status.c tfscan.o main.c
-CHDR+=vars.h test.h compare.h status.h tfscan.h matchval.h
+CSRC+=vars.c test.c compare.c tfscan.o stscan.o main.c
+CHDR+=vars.h test.h compare.h tfscan.h stscan.h matchval.h
 
-# arg. re2c should allow multiple scanners per file.
-# and produce code that isn't riddled with warnings...
-CSRC+=status1.o status2.o status3.o status4.o
-
-# make removes these files if we don't do this.  makes it hard to debug...
-INTERMEDIATES+=status1.c status2.c status3.c status4.c tfscan.c
+# makes it rather hard to debug if Make deletes the intermediate files.
+INTERMED=tfscan.c stscan.c
 
 
-tmtest: $(CSRC) $(CHDR) tmpl.c Makefile $(INTERMEDIATES)
+tmtest: $(CSRC) $(CHDR) tmpl.c Makefile $(INTERMED)
 	$(CC) $(COPTS) $(CSRC) -lpcre tmpl.c -o tmtest
 
 tmpl.c: tmpl.sh cstrfy Makefile
 	./cstrfy -n exec_template < tmpl.sh > tmpl.c
-
-status.c: status1.o status2.o status3.o status4.o
-	touch status.c
 
 %.c: %.re
 	re2c $(REOPTS) $< > $@
@@ -43,7 +36,7 @@ status.c: status1.o status2.o status3.o status4.o
 	$(CC) -g -c $< -o $@
 	
 test: tmtest
-	./tmtest
+	tmtest test
 
 install: tmtest
 	cp tmtest /usr/local/bin/tmtest
@@ -52,7 +45,7 @@ bin: tmtest
 	cp tmtest ~/bin/tmtest
 
 clean:
-	rm -f tmtest tmpl.c status.c tfscan.c status[1-4].c *.o
+	rm -f tmtest tmpl.c stscan.[co] tfscan.[co]
 
 doc:
 	doxygen

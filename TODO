@@ -7,6 +7,7 @@ Naming a dir on the command line
 Naming a file that doesn't end in ".test" on the command line.
 Tests that fail before they're run (bad config files)
 Tests that fail to run (syntax error)
+Try running a testfile whose name contains a single quote.
 
 2.0:
 - the status file is too goddamn difficult to parse.

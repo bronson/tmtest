@@ -1,9 +1,7 @@
 /* vars.c
  * 29 Dec 2004
  * Copyright (C) 2004 Scott Bronson
- * This entire file is covered by the GNU GPL V2.
- * 
- * Generates default values for all the variables.
+ * This file is released under the MIT license.
  */
 
 #include <stdio.h>
@@ -21,11 +19,17 @@
 // to get PATH_MAX:
 #include <dirent.h>
 
+
 #define CONFIG_FILE "tmtest.conf"
 #define HOME_CONFIG_FILE ".tmtestrc"
 
 
-/* These functions return errors only when there's a CONFIGURATION
+/** @file vars.c
+ *
+ * Generates values for all the variables that appear in the
+ * shell template.
+ *
+ * The functions in this file return errors only when there's a config
  * error (i.e. bad template variable, can't get user's login, etc).
  * They should ignore write errors.  They will happpen whenever the
  * test (or a config file) exits early and should properly be ignored.
@@ -33,7 +37,7 @@
  * NOTE: this file is the only place in this project that we use
  * fileptrs.  Well, other than printing status information from main.c,
  * and, by proxy, the test_command_copy() routine.
- * Everywhere else we use Unix I/O.  Never mix them.
+ * Everywhere else we use Unix I/O.  Ensure they never mix.
  */
 
 static int var_testfile(struct test *test, FILE* fp, const char *var)
@@ -146,7 +150,10 @@ int file_exists(char *path)
 #define check_config_str(t,f,s,n) check_config((t),(f),(s),strlen(s),(n))
 
 
-/** Checks to see if the file exists and, if it does, then output the appropriate commands.
+/** Checks to see if the file exists and, if it does, then it
+ *  outputs the appropriate commands.
+ *
+ *  @see var_config_files()
  */
 
 static void check_config(struct test *test, FILE *fp,
@@ -165,13 +172,22 @@ static void check_config(struct test *test, FILE *fp,
 	buf[len+1+namelen]='\0';
 
 	if(file_exists(buf)) {
-		fprintf(fp, "echo \'config: %s\' >&%d\n", buf, test->statusfd);
+		fprintf(fp, "echo \'CONFIG: %s\' >&%d\n", buf, test->statusfd);
 		fprintf(fp, ". '%s'\n", buf);
 	}
 }
 
 
-/** Prints the shell commands needed to read in all config files.
+/** Prints the shell commands needed to read in all available config files.
+ *
+ * for instance:
+ *
+ *     echo 'CONFIG: /etc/tmtest' >&5
+ *     . '/etc/tmtest'
+ *     echo 'CONFIG: /home/bronson/tmtest/tmtest.conf' >&5
+ *     . '/home/bronson/tmtest/tmtest.conf'
+ *
+ *     and so on...
  */
 
 static int var_config_files(struct test *test, FILE *fp, const char *var)

@@ -7,7 +7,7 @@
 
 #include "pcrs.h"
 #include "matchval.h"
-#include "r2scan.h"
+#include "re2c/scan.h"
 
 
 // all strings are malloc'd and need to be freed when the test is finished.
@@ -27,6 +27,8 @@ struct test {
 
 	char *diffname;			///< if we're diffing against stdin, this contains the name of the required tempfile.
 	int diff_fd;			///< if diffname is set, then this is the fd of the tempfile we're using to store stdin.
+
+	int test_was_started;	///< 0 if the test didn't run or we don't know.  1 if we have verified that configuration happened without error and the test was successfully started.  This does not imply that the test completed without errors of course.
 
 	int expected_exitno;	///< the test's expected exit value.  this is only valid when stderr_match != match_unknown.
 

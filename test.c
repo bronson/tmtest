@@ -15,9 +15,10 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "re2c/read-fd.h"
+
 #include "test.h"
-#include "r2read-fd.h"
-#include "status.h"
+#include "stscan.h"
 #include "tfscan.h"
 #include "compare.h"
 
@@ -79,12 +80,12 @@ int fd_has_data(int fd)
  * to run was, or where else in the test process we bailed.
  */
 
-int test_ran(struct test *test, char *msgbuf, int msgbufsiz)
+void scan_status_file(struct test *test)
 {
     char buf[BUFSIZ];
     scanstate ss;
-
     int tok;
+	int state = 0;
 
     // first rewind the status file
     if(lseek(test->statusfd, 0, SEEK_SET) < 0) {
@@ -95,29 +96,33 @@ int test_ran(struct test *test, char *msgbuf, int msgbufsiz)
     // then create our scanner
     scanstate_init(&ss, buf, sizeof(buf));
     readfd_attach(&ss, test->statusfd);
-    cb_scanner_attach(&ss);
+    stscan_attach(&ss);
 
     // now, if we see the token "CBRUNNING" in the token stream,
     // it means that we attempted to start the test.  If not,
     // then the test bailed early.
     do {
         tok = scan_token(&ss);
+
+		// look for errors...
         if(tok < 0) {
             fprintf(stderr, "Error %d pulling status tokens: %s\n", 
                     tok, strerror(errno));
             exit(10);
-        }
-        if(tok == CBRUNNING) {
-            // it's ok to bail early since there's no memory to
-            // deallocate and no files that need closing.
-            return 1;
+        } else if(tok == stGARBAGE) {
+			fprintf(stderr, "Garbage on line %d in the status file: '%.*s'\n",
+					ss.line, token_length(&ss)-1, token_start(&ss));
+		} else if(tok < state) {
+			fprintf(stderr, "Out-of-order token on line %d in the status file (token=%d, state=%d): '%.*s'\n",
+					ss.line, tok, state, token_length(&ss)-1, token_start(&ss));
+		} else {
+			state = tok;
+		}
+
+        if(tok == stRUNNING) {
+			test->test_was_started = 1;
         }
     } while(!scan_finished(&ss));
-
-    // should add a short message to the user saying what happened.
-    strncpy(msgbuf, "todo: add a message here.", msgbufsiz);
-
-    return 0;
 }
 
 
@@ -486,13 +491,14 @@ void scan_sections(struct test *test, scanstate *scanner,
 
 void test_results(struct test *test)
 {
-    char buf[120];
     scanstate scanner;
     char scanbuf[MAX_LINE_LENGTH];
 	int stdo, stde, exno;	// true if there are differences.
-
-    if(!test_ran(test, buf, sizeof(buf))) {
-        printf("ERR  %s: %s\n", get_testfile_name(test), buf);
+	
+	scan_status_file(test);
+    if(!test->test_was_started) {
+        printf("Error: %s was not started.  TODO: add more info\n",
+				get_testfile_name(test));
         test_failures++;
         return;
     }

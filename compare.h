@@ -7,7 +7,7 @@
 
 #include "pcrs.h"
 #include "matchval.h"
-#include "r2scan.h"
+#include "re2c/scan.h"
 
 
 /** Returns zero if the compare has stopped (i.e. the files differed).

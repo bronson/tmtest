@@ -1,5 +1,6 @@
-set -e
+echo START >&%(STATUSFD)
 
+set -e
 # PS4='TEST: '
 # set -x
 
@@ -9,11 +10,9 @@ TITLE='%(TESTFILE)'
 AUTHOR='%(AUTHOR)'
 DATE='%(DATE)'
 
-echo 'start.' >&%(STATUSFD)
-
 %(CONFIG_FILES)
 
-echo 'ready.' >&%(STATUSFD)
+echo PREPARE >&%(STATUSFD)
 
 STDOUT () { exit 0; }
 STDOUT: () { exit 0; }
@@ -24,7 +23,10 @@ RESULT: () { exit 0; }
 MODIFY () { exit 0; }
 MODIFY: () { exit 0; }
 
-echo 'running: %(TESTFILE)' >&%(STATUSFD)
+echo 'RUNNING: %(TESTFILE)' >&%(STATUSFD)
 exec >&%(OUTFD) 2>&%(ERRFD)
 LINENO=0
 %(TESTEXEC)
+
+echo DONE >&%(STATUSFD)
+

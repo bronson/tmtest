@@ -7,10 +7,8 @@
  */
 
 
-#include "r2read.h"
+#include "read.h"
 
 
 scanstate* readfd_attach(scanstate *ss, int fd);
-scanstate* readfd_open(const char *path, int bufsiz);
-void readfd_close(scanstate *ss);
 
