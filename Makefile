@@ -2,7 +2,7 @@
 # Scott Bronson
 # 28 Dec 2004
 
-VERSION=0.91
+VERSION=1.91
 
 COPTS=-g -Wall -Werror
 
@@ -23,7 +23,7 @@ INTERMED=tfscan.c stscan.c
 
 
 tmtest: $(CSRC) $(CHDR) tmpl.c Makefile $(INTERMED)
-	$(CC) $(COPTS) $(CSRC) -lpcre tmpl.c -o tmtest
+	$(CC) $(COPTS) $(CSRC) -lpcre tmpl.c -o tmtest "-DVERSION=$(VERSION)"
 
 tmpl.c: tmpl.sh cstrfy Makefile
 	./cstrfy -n exec_template < tmpl.sh > tmpl.c
