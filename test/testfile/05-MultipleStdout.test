@@ -1,0 +1,23 @@
+AUTHOR='Scott Bronson'
+DATE='2004-12-31'
+
+# Ensure we emit a warning if we notice multiple STDOUT sections.
+#
+# Note that there's still something weird going on here.
+# The subtest should pass!
+
+
+tmtest - <<-EOL
+	echo Howdy
+	STDOUT :
+	Howdy
+	STDOUT :
+EOL
+
+STDERR : 
+(STDIN) line 4 Error: duplicate STDOUT section.  Ignored.
+RESULT : 0
+STDOUT : 
+FAIL (STDIN)                   .E.  stderr differed
+
+1 test run, 0 successes, 1 failure.

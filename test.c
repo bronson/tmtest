@@ -23,6 +23,11 @@
 #include "compare.h"
 
 
+// This is the maximum line length for the eachline substitution.
+// Lines longer than this will be parsed as 2 separate lines.
+#define MAX_LINE_LENGTH BUFSIZ
+
+
 static int test_runs = 0;
 static int test_successes = 0;
 static int test_failures = 0;
@@ -194,8 +199,8 @@ void test_command_copy(struct test *test, FILE *fp)
  * it up.
  */
 
-void compare_section_start(scanstate *cmpscan, int fd, matchval *mv,
-        const char *filename, const char *sectionname)
+void compare_section_start(scanstate *cmpscan, int fd, pcrs_job *joblist,
+		matchval *mv, const char *filename, const char *sectionname)
 {
     assert(!compare_in_progress(cmpscan));
 
@@ -214,7 +219,7 @@ void compare_section_start(scanstate *cmpscan, int fd, matchval *mv,
 
     scanstate_reset(cmpscan);
     readfd_attach(cmpscan, fd);
-    compare_attach(cmpscan, mv);
+	compare_attach(cmpscan, mv, joblist);
 
     // we may want to check the token to see if there are any
     // special requests (like detabbing).
@@ -268,6 +273,63 @@ void parse_exit_clause(struct test *test, const char *cp, int len)
 }
 
 
+/** Increments cp past the section name.
+ *
+ * Will not increment cp by more than len bytes.
+ * This routine must match the token parsing found in the tfscan_start routine.
+ */
+
+const char *skip_section_name(const char *cp, int len)
+{
+	const char *ce = cp + len;
+
+	// skip to colon separating section name from data
+	while(*cp != ':' && *cp != '\n' && cp < ce) cp++;
+	if(*cp == ':') cp++;
+	return cp;
+}
+
+
+void parse_modify_clause(struct test *test, const char *cp, const char *ce)
+{
+	pcrs_job *job, **p;
+	char *string;
+	int err;
+
+	// skip any leading whitespace
+	while(isspace(*cp) && cp < ce) cp++;
+
+	// ensure there's still data worth parsing
+	if(*cp == '\n' || cp >= ce) {
+		return;
+	}
+
+	// it's retarded that I can't pass a buf/len combo to pcrs_compile_command.
+	string = malloc(ce-cp+1);
+	if(!string) {
+		perror("malloc in parse_modify_clause");
+		exit(10);
+	}
+	memcpy(string, cp, ce-cp);
+	string[ce-cp] = '\0';
+	job = pcrs_compile_command(string, &err);
+	if(job == NULL) {
+		fprintf(stderr, "%s: compile error:  %s (%d).\n",
+				string, pcrs_strerror(err), err);
+	}
+	memset(string, '1', ce-cp+1);
+	free(string);
+	if(job == NULL) {
+		return;
+	}
+
+	// link this job onto the end of the list.
+	p = &test->eachline;
+	while(*p) p = &(**p).next;
+	*p = job;
+}
+
+
 /** This routine parses the tokens returned by scan_sections() and
  * compares them against the actual test results.  It stores the
  * results in test->match_stdout, match_stderr, and match_result.
@@ -312,18 +374,32 @@ void parse_section_compare(struct test *test, int sec,
         set_cur_state(cmpscan, newsec);
         switch(get_cur_state(cmpscan)) {
             case exSTDOUT:
-                compare_section_start(cmpscan, test->outfd,
-                        &test->stdout_match, get_testfile_name(test), "STDOUT");
+				if(test->stdout_match == match_unknown) {
+					compare_section_start(cmpscan, test->outfd, test->eachline,
+							&test->stdout_match, get_testfile_name(test), "STDOUT");
+				} else {
+					fprintf(stderr, "%s line %d Error: duplicate STDOUT section.  Ignored.\n",
+							get_testfile_name(test), test->testfile.line);
+					// as long as scanref == null, no comparison will happen.
+					assert(!cmpscan->scanref);
+				}
                 break;
             case exSTDERR:
-                compare_section_start(cmpscan, test->errfd,
-                        &test->stderr_match, get_testfile_name(test), "STDERR");
+				if(test->stderr_match == match_unknown) {
+					compare_section_start(cmpscan, test->errfd, test->eachline,
+							&test->stderr_match, get_testfile_name(test), "STDERR");
+				} else {
+					fprintf(stderr, "%s line %d Error: duplicate STDERR section.  Ignored.\n",
+							get_testfile_name(test), test->testfile.line);
+					// as long as scanref == null, no comparison will happen.
+					assert(!cmpscan->scanref);
+				}
                 break;
             case exRESULT:
 				parse_exit_clause(test, datap, len);
                 break;
             case exMODIFY:
-                // add data to modify clause.
+				parse_modify_clause(test, skip_section_name(datap,len), datap+len);
                 break;
             case exCOMMAND:
                 assert(!"Well, this is impossible.  How did you start a new command section??");
@@ -346,7 +422,7 @@ void parse_section_compare(struct test *test, int sec,
 				}
                 break;
             case exMODIFY:
-                // add line to modify clause.
+				parse_modify_clause(test, datap, datap+len);
                 break;
             case exCOMMAND:
                 break;
@@ -417,7 +493,7 @@ void test_results(struct test *test)
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
-    ref = dynscan_create(BUFSIZ);
+    ref = dynscan_create(MAX_LINE_LENGTH);
     if(!ref) {
         perror("Could not allocate section compare scanner");
         exit(10);
@@ -504,6 +580,9 @@ static void write_file(int outfd, const char *name, int infd)
     } while(cnt);
 }
 
+
+/** Writes the actual results in place of the expected results.
+ */
 
 void parse_section_output(struct test *test, int sec,
         const char *datap, int len, void *refcon)
@@ -594,6 +673,8 @@ void test_init(struct test *test)
 
 void test_free(struct test *test)
 {
+	// the buffer for the testfile scanner is allocated on the stack.
+	if(test->eachline) pcrs_free_joblist(test->eachline);
 }
 
 

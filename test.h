@@ -5,6 +5,7 @@
  * All the data needed to run a test and print the results.
  */
 
+#include "pcrs.h"
 #include "matchval.h"
 #include "r2scan.h"
 
@@ -15,12 +16,14 @@ struct test {
     const char *testfilename;   ///< will be "-" if reading from stdin.
     scanstate testfile;         ///< scans the testfile.  may be stdin so seeking is not allowed.
 
-    int rewritefd;         ///< where to dump the rewritten test.  -1 if we're just running the tests, or the fd of the file that should receive the test contents.
+    int rewritefd;          ///< where to dump the rewritten test.  -1 if we're just running the tests, or the fd of the file that should receive the test contents.
 
     int outfd;				///< the file that receives the test's stdout.
     int errfd;				///< the file that receives the test's stderr.
     int statusfd;			///< receives the runtime test status messages.
     int exitno;				///< the test's actual exit value.
+
+	pcrs_job *eachline;		///< a linked list of pcrs jobs to be applied to each line.
 
 	int expected_exitno;	///< the test's expected exit value.  this is only valid when stderr_match != match_unknown.
 

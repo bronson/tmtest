@@ -1,0 +1,16 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-26'
+
+# Ensures a simple substitution works.
+
+
+tmtest - <<-EOL
+	echo Howdy
+	MODIFY : s/Howdy/HOWDY/
+	STDOUT :
+	HOWDY
+EOL
+STDOUT : 
+ok   (STDIN)
+
+1 test run, 1 success, 0 failures.

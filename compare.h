@@ -5,6 +5,7 @@
  * File comparison.
  */
 
+#include "pcrs.h"
 #include "matchval.h"
 #include "r2scan.h"
 
@@ -15,7 +16,7 @@
 #define compare_in_progress(ss) ((ss)->scanref)
 
 
-void compare_attach(scanstate *ss, matchval *mv);
+void compare_attach(scanstate *ss, matchval *mv, pcrs_job *joblist);
 void compare_continue(scanstate *ss, const char *ptr, int len);
 void compare_end(scanstate *cmp);
 

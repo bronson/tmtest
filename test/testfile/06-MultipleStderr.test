@@ -1,0 +1,22 @@
+AUTHOR='Scott Bronson'
+DATE='2004-12-31'
+
+# Ensure we emit a warning if the user includes multiple stderr sections.
+# This test succeeds because the second stderr section is ignored.
+
+tmtest - <<-EOL
+	echo Howdy
+	STDOUT :
+	Howdy
+	STDERR :
+	STDERR :
+	bogus!
+EOL
+
+STDERR : 
+(STDIN) line 5 Error: duplicate STDERR section.  Ignored.
+RESULT : 0
+STDOUT : 
+ok   (STDIN)
+
+1 test run, 1 success, 0 failures.

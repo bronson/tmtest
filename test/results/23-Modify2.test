@@ -1,0 +1,18 @@
+AUTHOR='Scott Bronson'
+DATE='2004-01-26'
+
+# Ensures multiple substitutions work with multiple options.
+
+tmtest - <<-EOL
+	echo hoWdY Hody Hi Hody
+	MODIFY :
+		s/Howdy/HOWDY/i
+		s/Hody/HODY/g
+		s/hi/HI/
+	STDOUT :
+	HOWDY HODY Hi HODY
+EOL
+STDOUT : 
+ok   (STDIN)
+
+1 test run, 1 success, 0 failures.

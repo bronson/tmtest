@@ -4,6 +4,6 @@ DATE='2004-12-29'
 echo Howdy
 
 RESULT : 0
-MODIFY : s/blah blah//g
+MODIFY : s/Howdy/HOWDY/
 STDOUT : tabbed
-Howdy
+HOWDY

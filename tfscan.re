@@ -28,7 +28,6 @@ int tfscan_start(scanstate *ss)
 
 WS      = [ \t];
 ANYN    = [\000-\377]\[\n];
-ANYNWS  = ANYN\WS;
 
 "STDOUT" WS* ":" ANYN* "\n"  { START(exSTDOUT); return exNEW|exSTDOUT; }
 "STDERR" WS* ":" ANYN* "\n"  { START(exSTDERR); return exNEW|exSTDERR; }

@@ -3,6 +3,8 @@
 - Ensure that it works when running multiple tests in multiple dirs.
 
 - get rid of all the exit(10) calls in test.c.  We need a better way to abort the test.
+- allow multiple s/// expressions on a single line.  will probably require modifications to pcrs_compile_command, so make it support buf/len at the same time.
+- add the ability to run valgrind over each test and print success/failure of that.
 
 # TODO: write a function that allows you to disable the test.  <-- yes
 # TODO: write a function to make it easy to create crfiles.
