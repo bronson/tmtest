@@ -2,22 +2,22 @@ AUTHOR='Scott Bronson'
 DATE='2004-12-31'
 
 # Ensure we emit a warning if we notice multiple STDOUT sections.
-#
-# Note that there's still something weird going on here.
-# The subtest should pass!
 
 
 tmtest - <<-EOL
+	# tmtest will use the empty section which comes first.
+	# Therefore, since the test actually does produce output,
+	# this test is expected to fail.
+
 	echo Howdy
 	STDOUT :
-	Howdy
 	STDOUT :
+	Howdy
 EOL
 
-STDERR : 
-(STDIN) line 4 Error: duplicate STDOUT section.  Ignored.
-RESULT : 0
-STDOUT : 
-FAIL (STDIN)                   .E.  stderr differed
+STDERR:
+(STDIN) line 7 Error: duplicate STDOUT section.  Ignored.
+STDOUT:
+FAIL (STDIN)                   O..  stdout differed
 
 1 test run, 0 successes, 1 failure.

@@ -8,12 +8,21 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
 #include <assert.h>
 #include "test.h"
 #include "vars.h"
+
+// to get PATH_MAX:
+#include <dirent.h>
+
+#define CONFIG_FILE "tmtest.conf"
+#define HOME_CONFIG_FILE ".tmtestrc"
 
 
 /* These functions return errors only when there's a CONFIGURATION
@@ -99,10 +108,79 @@ static int var_statusfd(struct test *test, FILE *fp, const char *var)
 }
 
 
+/** Returns the full path to the user's home directory.
+ */
+
+static char* get_home_dir()
+{
+	char *cp;
+	struct passwd *entry;
+	
+	cp = getenv("HOME");
+	if(cp) return cp;
+	cp = getenv("LOGDIR");
+	if(cp) return cp;
+
+	entry = getpwuid(getuid());
+	if(entry) {
+		cp = entry->pw_dir;
+		if(cp) return cp;
+	}
+
+	fprintf(stderr, "Could not locate your home directory!\n");
+	exit(10);
+}
+
+
+/** Returns true if the given file exists, false if not.
+ */
+
+int file_exists(char *path)
+{
+	struct stat st;
+	return stat(path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
+
+
+#define check_config_str(t,f,s,n) check_config((t),(f),(s),strlen(s),(n))
+
+
+/** Checks to see if the file exists and, if it does, then output the appropriate commands.
+ */
+
+static void check_config(struct test *test, FILE *fp,
+		const char *base, int len, const char *name)
+{
+	char buf[PATH_MAX];
+	int namelen = strlen(name);
+	
+	// if the buffer isn't big enough then don't even try.
+	if(len + namelen + 2 > sizeof(buf)) return;
+
+	// assemble the file name
+	memcpy(buf, base, len);
+	buf[len] = '/';
+	memcpy(buf+len+1, name, namelen);
+	buf[len+1+namelen]='\0';
+
+	if(file_exists(buf)) {
+		fprintf(fp, "echo \'config: %s\' >&%d\n", buf, test->statusfd);
+		fprintf(fp, ". '%s'\n", buf);
+	}
+}
+
+
+/** Prints the shell commands needed to read in all config files.
+ */
+
 static int var_config_files(struct test *test, FILE *fp, const char *var)
 {
     char *cwd;
     char *cp;
+
+	check_config_str(test, fp, "/etc", CONFIG_FILE);
+	check_config_str(test, fp, get_home_dir(), HOME_CONFIG_FILE);
 
     cwd = getcwd(NULL, 0);
     if(!cwd) {
@@ -110,13 +188,10 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
         return 1;
     }
 
-    fprintf(fp, "'/etc/tmtest.conf' ");
-    fprintf(fp, "'~/.tmtestrc' ");
-
     for(cp=cwd; (cp=strchr(cp,'/')); cp++) {
-        fprintf(fp, "'%.*s/tmtest.conf' ", cp-cwd, cwd);
+		check_config(test, fp, cwd, cp-cwd, CONFIG_FILE);
     }
-    fprintf(fp, "'%s/tmtest.conf' ", cwd);
+	check_config_str(test, fp, cwd, CONFIG_FILE);
 
     free(cwd);
 

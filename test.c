@@ -553,7 +553,7 @@ static void write_exit_no(int fd, int exitno)
     char buf[512];
     int cnt;
 
-    cnt = snprintf(buf, sizeof(buf), "RESULT : %d\n", exitno);
+    cnt = snprintf(buf, sizeof(buf), "RESULT: %d\n", exitno);
     write(fd, buf, cnt);
 }
 

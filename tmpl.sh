@@ -11,13 +11,7 @@ DATE='%(DATE)'
 
 echo 'start.' >&%(STATUSFD)
 
-for f in %(CONFIG_FILES)
-do
-    if [[ -f "$f" ]]; then
-        . "$f"
-        echo "config: $f" >&%(STATUSFD)
-    fi
-done
+%(CONFIG_FILES)
 
 echo 'ready.' >&%(STATUSFD)
 
