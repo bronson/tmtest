@@ -14,22 +14,14 @@ EOL
 
 # stupid bash3 won't allow LINENO=0 to set the proper lineno.
 MODIFY: s/: line \d+:/: line BLAH:/
+MODIFY: s/^/  /
 
 STDOUT:
-set -e
-iusedtobullseyewompratsinmypants
-echo it ran
-STDOUT:
-RESULT: 127
-STDERR:
-/bin/bash: line BLAH: iusedtobullseyewompratsinmypants: command not found
-STDOUT:
-set -e
-iusedtobullseyewompratsinmypants
-echo it ran
-STDOUT:
-RESULT: 127
-STDERR:
-/bin/bash: line BLAH: iusedtobullseyewompratsinmypants: command not found
-RESULT: 0
-STDERR:
+  set -e
+  iusedtobullseyewompratsinmypants
+  echo it ran
+  STDOUT:
+  RESULT: 127
+  STDERR:
+  /bin/bash: line BLAH: iusedtobullseyewompratsinmypants: command not found
+  

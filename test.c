@@ -592,11 +592,9 @@ void scan_sections(struct test *test, scanstate *scanner,
             fprintf(stderr, "Error %d pulling status tokens: %s\n", 
                     tokno, strerror(errno));
             exit(10);
-        }
-
-        // I don't think the scanner will return a 0 token anymore.
-        // Let's check that out.  Need to know for the parser.
-        assert(tokno);
+        } else if(tokno == 0) {
+			break;
+		}
 
         (*parseproc)(test, tokno, token_start(scanner),
                 token_length(scanner), refcon);
