@@ -17,7 +17,7 @@
  * The readproc is documented in r2scan.h.
  */
 
-void read_shiftbuf(scanstate *ss);
+int read_shiftbuf(scanstate *ss);
 
 #endif
 

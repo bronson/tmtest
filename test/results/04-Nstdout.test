@@ -1,9 +1,11 @@
+#!/usr/bin/tmtest
+
 AUTHOR='Scott Bronson'
-DATE='2004-12-29'
+DATE='2004-12-31'
 
 echo Howdy
 
 RESULT : 3
 MODIFY : s/blah blah//g
 STDOUT : tabbed
-Howdy
+Howd

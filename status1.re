@@ -3,7 +3,6 @@
  * 30 Dec 2004
  *
  * This file needs to be processed by re2c, http://re2c.org
- * It contains all the scanners required by tmtest.
  *
  * If re2c supported capturing parentheses, the file state could be removed.
  * I also wish it supported multiple scanners per file.
@@ -33,5 +32,16 @@ START   = "start.";
 START WS* "\n"   { BEGIN(config); return CBSTART; }
 ANYN* "\n"       { return GARBAGE; }
 */
+}
+
+
+scanstate* cb_scanner_attach(scanstate *ss)
+{
+    if(ss) {
+        ss->line = 1;
+        ss->state = cb_scanner_start;
+    }
+
+    return ss;
 }
 

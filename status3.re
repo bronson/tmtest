@@ -3,7 +3,6 @@
  * 30 Dec 2004
  *
  * This file needs to be processed by re2c, http://re2c.org
- * It contains all the scanners required by tmtest.
  */
 
 #include "status.h"
@@ -20,7 +19,6 @@
 int cb_scanner_running(scanstate *ss)
 {
     ss->token = ss->cursor;
-    ss->line++;
 
 /*!re2c
 WS      = [ \t];
@@ -31,7 +29,7 @@ RUNNING = "running";
 RUNNING WS* ":" WS* { BEGINSUB(file); return CBRUNNING; }
 ANYNWS*          { return GARBAGE;                   }
 WS*              { return WHITESPACE;               }
-"\n"             { return NEWLINE;                  }
+"\n"             { ss->line++; return NEWLINE;      }
 */
 }
 

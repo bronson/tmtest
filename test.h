@@ -5,15 +5,10 @@
  * All the data needed to run a test and print the results.
  */
 
+#include "matchval.h"
+
 
 // all strings are malloc'd and need to be freed when the test is finished.
-
-typedef enum {
-    match_unknown = -1,
-    match_no = 0,
-    match_yes = 1,
-} matchval;
-
 
 struct test {
     const char *filename;

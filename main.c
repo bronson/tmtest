@@ -536,6 +536,7 @@ int main(int argc, char **argv)
     if(optind < argc) {
         process_ents(argv+1, 1);
     } else {
+        printf("\nProcessing .\n");
         process_dir();
     }
     stop_tests();

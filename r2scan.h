@@ -54,21 +54,13 @@
 #ifndef R2SCAN_H
 #define R2SCAN_H
 
-#include <assert.h>
-
 
 // for re2c...
 #define YYCTYPE     char
 #define YYCURSOR    (ss->cursor)
 #define YYLIMIT     (ss->limit)
 #define YYMARKER    (ss->marker)
-#define YYFILL(n)   do {                    \
-        int tt;                             \
-        assert(ss->read);                  \
-        tt = (*ss->read)(ss,n);           \
-        assert(tt <= 0 || tt >= n);         \
-        if(tt <= 0) return tt;              \
-    } while(0)
+#define YYFILL(n)   (*ss->read)(ss)
 
 
 // forward declaration
@@ -104,7 +96,7 @@ struct scanstate;
  * It's too bad this declaration can't be in r2read.c.
  */
 
-typedef int (*readproc)(struct scanstate *ss, int minbytes);
+typedef int (*readproc)(struct scanstate *ss);
 
 
 /** Prototype of scanner function
@@ -126,6 +118,7 @@ typedef int (*readproc)(struct scanstate *ss, int minbytes);
 typedef int (*scanproc)(struct scanstate *ss);
 
 
+
 /** Represents the current state for a single scanner.
  *
  * This structure is used by a scanner to preserve its state.
@@ -135,7 +128,6 @@ typedef int (*scanproc)(struct scanstate *ss);
  * This means that any time you want to read the buffer, you need
  * to cast the pointers to be nonconst.
  */
-
 
 typedef struct scanstate {
     const char *cursor;   ///< The current character being looked at by the scanner
@@ -155,13 +147,35 @@ typedef struct scanstate {
     void *scanref;      ///< Data specific to the scanner
     scanproc state;     ///< some scanners are made up of multiple individual scan routines.  They store their state here.
     int line;           ///< The scanner may or may not use this to tell the current line number.
+    int at_eof;         ///< true when the readproc realizes it has hit eof.
 } scanstate;
 
 
 void scanstate_init(scanstate *ss, const char *bufptr, int bufsiz);
+void scanstate_reset(scanstate *ss);
 
 
-#define get_next_token(ss) ((*((ss)->state))(ss))
+/** Returns true when there's no more data to be scanned.
+ *
+ * How what this macro does:
+ *
+ * If the reader has already marked the stream at eof, then we're finished.
+ * Otherwise, if there's still more data in the buffer, then we're not
+ * finished.  Finally, if there's no data in the buffer but we're not at
+ * eof, then we need te execute a read to determine.  If the read doesn't
+ * return any data, then we're finished.
+ */
+
+#define scan_finished(ss) \
+    ((ss)->at_eof || ( \
+      (ss)->cursor < (ss)->limit ? 0 : !(*(ss)->read)(ss) \
+    ))
+
+
+/** Fetches the next token in the stream from the scanner.
+ */
+#define scan_token(ss) ((*((ss)->state))(ss))
+
 
 #endif
 

@@ -3,7 +3,6 @@
  * 30 Dec 2004
  *
  * This file needs to be processed by re2c, http://re2c.org
- * It contains all the scanners required by tmtest.
  */
 
 #include "status.h"
@@ -13,6 +12,13 @@
  * It tries to scan a filename.  It returns either
  * CBFILE if the filename name could be scanned
  * or GARBAGE if it couldn't.
+ *
+ * Well, it's been simplified a lot now that we don't attempt to quote
+ * filenames.  The filename just extends from the current cursor position
+ * to the end of the line.  This scanner always returns a CBFILE token
+ * and resets the start state.  It could go away completely if re2c
+ * would support capturing parentheses (but that would probably require
+ * a rewrite...)
  */
 
 int cb_scanner_file(scanstate *ss)
@@ -22,13 +28,26 @@ int cb_scanner_file(scanstate *ss)
 
 /*!re2c
 ANYN    = [\000-\377]\[\n];
+
+ANYN* "\n"    { ss->tokend = ss->cursor;
+                RETURN(); return CBFILE;
+              }
+*/
+}
+
+
+
+/*
+we're not quoting the filenames anyway.
+
 ANYNSQ  = ANYN\['];
 ANYNDQ  = ANYN\["];
+NONWS   = ANYN\[\t ];
 
 ["] (ANYNDQ | "\\\"")+ ["] { ss->token++; ss->tokend = ss->cursor-1;
                              RETURN(); return CBFILE;
                            }
-[\000-\377]                { return GARBAGE; }
+['] (ANYNDQ | "\\\'")+ ['] { ss->token++; ss->tokend = ss->cursor-1;
+                             RETURN(); return CBFILE;
+                           }
 */
-}
-

@@ -7,11 +7,11 @@ VERSION=1.5
 COPTS=-g -Wall
 # -Werror
 
-CSRC=qscandir.c qtempfile.c vars.c test.c status.c main.c
-CHDR=qscandir.h qtempfile.h vars.h test.h status.h
+CSRC=qscandir.c qtempfile.c vars.c test.c compare.c status.c expec.c main.c
+CHDR=qscandir.h qtempfile.h vars.h test.h compare.h status.h expec.h matchval.h
 
-CSRC+=r2read.c r2read-fd.c r2scan.c
-CHDR+=r2read.h r2read-fd.h r2scan.h
+CSRC+=r2read.c r2read-fd.c r2scan.c r2scan-dyn.c
+CHDR+=r2read.h r2read-fd.h r2scan.h r2scan-dyn.h
 
 CSRC+=status1.c status2.c status3.c status4.c
 
@@ -41,8 +41,15 @@ status4.c: status4.re status.h r2scan.h Makefile
 	re2c $(REOPTS) status4.re > status4.c
 	perl -pi -e 's/^\#line.*$$//' status4.c
 
+expec.c: expec.re expec.h r2scan.h Makefile
+	re2c $(REOPTS) expec.re > expec.c
+	perl -pi -e 's/^\#line.*$$//' expec.c
+
+test: tmtest
+	./tmtest
+
 clean:
-	rm -f tmtest tmpl.c status.c status[1-4].c
+	rm -f tmtest tmpl.c status.c expec.c status[1-4].c
 
 doc:
 	doxygen

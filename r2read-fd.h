@@ -11,4 +11,6 @@
 
 
 scanstate* readfd_attach(scanstate *ss, int fd);
+scanstate* readfd_open(const char *path, int bufsiz);
+void readfd_close(scanstate *ss);
 

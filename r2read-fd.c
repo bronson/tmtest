@@ -3,31 +3,34 @@
  * 28 Dec 2004
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <assert.h>
+
+#include "r2scan-dyn.h"
 #include "r2read-fd.h"
 
 
-static int readfd_read(scanstate *ss, int minneeded)
+static int readfd_read(scanstate *ss)
 {
     int n, avail;
 
-    read_shiftbuf(ss);
-    avail = ss->bufsiz - (ss->bufptr - ss->limit);
+    // try to avoid hammering on the file's eof.
+    assert(!ss->at_eof);
+
+    avail = read_shiftbuf(ss);
 
     // ensure we get a full read
     do {
-        n = read((int)ss->readref, (void*)ss->cursor, avail);
+        n = read((int)ss->readref, (void*)ss->limit, avail);
     } while(n < 0 && errno == EINTR);
     ss->limit += n;
 
-    // n > 0: good read
-    // n == 0: eof
-    // n < 0: error
-    //
-    // TODO: it's possible to return fewer bytes than minneeded.
-    // is this a problem?
+    if(n == 0) {
+        ss->at_eof = 1;
+    }
 
     return n;
 }
@@ -49,5 +52,42 @@ scanstate* readfd_attach(scanstate *ss, int fd)
     ss->readref = (void*)fd;
     ss->read = readfd_read;
     return ss;
+}
+
+
+/* Creates a new scanner and opens the given file.
+ *
+ * You need to call readfd_close() to close the file and
+ * deallocate the scanner.
+ *
+ * Bufsiz tells how big the scan buffer will be.  No single
+ * token may be larger than bufsiz (it will be broken up
+ * and the scanner may return strange things if it is).
+ */
+
+scanstate* readfd_open(const char *path, int bufsiz)
+{
+    scanstate *ss;
+    int fd;
+
+    fd = open(path, O_RDONLY);
+    if(fd < 0) {
+        return NULL;
+    }
+
+    ss = dynscan_create(bufsiz);
+    if(!ss) {
+        close(fd);
+        return NULL;
+    }
+
+    return readfd_attach(ss, fd);
+}
+
+
+void readfd_close(scanstate *ss)
+{
+    close((int)ss->readref);
+    dynscan_free(ss);
 }
 

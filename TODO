@@ -12,9 +12,12 @@ Naming a file that doesn't end in ".test" on the command line.
 
 Longer term:
 
+the status file is too goddamn difficult to parse.
+    think of a real format instead of a stupid logfile format.
+put the config files explicitly in the exec, rather than looping over them
 Make the tempname a lot harder to guess.  gen_tempname()
-Make the OOB separator somewhat random.  var_oob_separator()
 Add the ability to run multiple tests from one testfile
-Do everything with unlinked files.
-put the config file explicitly in the exec, rather than looping over them
+print a warning if a result section is found with nonws chars (test_parse_section())
+print a warning if a SECTION: is found (needs to be SECTION : , with a space)
+Provide some sort of XML output.
 
