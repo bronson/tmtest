@@ -6,18 +6,18 @@ VERSION=1.5
 
 COPTS=-g -Wall -Werror
 
-CSRC=qscandir.c main.c
-CHDR=qscandir.h
+CSRC=qscandir.c qtempfile.c vars.c main.c
+CHDR=qscandir.h qtempfile.h vars.h test.h
 
 
-tmtest: $(CSRC) $(CHDR) exec.c
-	$(CC) $(COPTS) $(CSRC) exec.c -o tmtest
+tmtest: $(CSRC) $(CHDR) tmpl.c Makefile
+	$(CC) $(COPTS) $(CSRC) tmpl.c -o tmtest
 
-exec.c: exec.tmpl cstrfy
-	./cstrfy -n exec < exec.tmpl > exec.c
+tmpl.c: tmpl.sh cstrfy Makefile
+	./cstrfy -n exec_template < tmpl.sh > tmpl.c
 
 clean:
-	rm -f tmtest
+	rm -f tmtest tmpl.c
 
 doc:
 	doxygen

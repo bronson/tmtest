@@ -4,7 +4,7 @@ bash is really fast and loose with variables.  It's going to give
 us trouble when trying to specify the stdout and stderr.
 Using string expansion $'a\n\n' might help.
 
-tmtest will always strip a single leading and trailing newline from
+tmtest will always strip a single leading newline from
 STDOUT and STDERR.  This is because this:
 
     STDOUT='
@@ -25,8 +25,15 @@ Our variables:
 TITLE
 AUTHOR
 DATE
+STDOUT
+STDERR
+RESULT
 
-We reserve all variables beginning with _TM_.
+
+Our functions:
+disabled()
+tmpfile()
+newfile()
 
 
 
