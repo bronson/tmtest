@@ -25,7 +25,7 @@
 #include "r2read-fd.h"
 #include "tfscan.h"
 
-#define DIFF "/usr/bin/diff"
+#define DIFFPROG "/usr/bin/diff"
 #define SH   "/bin/bash"
 
 // debugging flags:
@@ -42,15 +42,18 @@ int outmode;
 int verbose = 0;
 double timeout = 10.0;		// timeout in seconds
 
-#define TM_DIRNAME "/tmp/tmtest-XXXXXX"
-char g_dirname[sizeof(TM_DIRNAME)];
+#define TESTDIR "/tmp/tmtest-XXXXXX"
+char g_testdir[sizeof(TESTDIR)];
 
 #define OUTNAME "stdout"
 #define ERRNAME "stderr"
 #define STATUSNAME "status"
-char g_outname[sizeof(TM_DIRNAME)+sizeof(OUTNAME)];
-char g_errname[sizeof(TM_DIRNAME)+sizeof(ERRNAME)];
-char g_statusname[sizeof(TM_DIRNAME)+sizeof(STATUSNAME)];
+char g_outname[sizeof(TESTDIR)+sizeof(OUTNAME)];
+char g_errname[sizeof(TESTDIR)+sizeof(ERRNAME)];
+char g_statusname[sizeof(TESTDIR)+sizeof(STATUSNAME)];
+
+// file in tmpdir that holds stdout
+#define DIFFNAME "diff"
 
 
 int g_outfd;
@@ -199,6 +202,43 @@ int wait_for_child(int child, const char *name)
 }
 
 
+int open_file(char *fn, const char *name, int flags)
+{
+	strcpy(fn, g_testdir);
+	strcat(fn, "/");
+	strcat(fn, name);
+
+    int fd = open(fn, flags|O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
+
+    if(fd < 0) {
+        fprintf(stderr, "couldn't open %s: %s\n", fn, strerror(errno));
+        exit(runtime_error);	// TODO
+    }
+
+    return fd;
+}
+
+
+int write_stdin_to_tmpfile(struct test *test)
+{
+	char *buf;
+	int fd;
+
+	buf = malloc(sizeof(TESTDIR) + sizeof(DIFFNAME));
+	if(!buf) {
+		perror("malloc");
+		exit(10);	// TODO
+	}
+
+	test->diffname = buf;
+	fd = open_file(buf, DIFFNAME, 0);
+	assert(strlen(buf) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
+	write_raw_file(fd, 0);
+
+	return fd;
+}
+
+
 /** Forks off a diff process and sets it up to receive the dumped test.
  */
 
@@ -206,11 +246,15 @@ int start_diff(struct test *test)
 {
     int pipes[2];
     int child;
+	const char *filename = test->testfilename;
 
     assert(test->testfilename);
     if(is_dash(test->testfilename)) {
-        fputs("Can't diff tests supplied on stdin.\n", stderr);
-        exit(argument_error);
+		// first, write all of our stdin to a tmpfile.
+		write_stdin_to_tmpfile(test);
+		// then, read the test from this file instead of stdin.
+		filename = test->diffname;
+		assert(filename);
     }
 
     if(pipe(pipes) < 0) {
@@ -231,8 +275,8 @@ int start_diff(struct test *test)
         }
         close(pipes[0]);
         close(pipes[1]);
-        execl(DIFF, DIFF, "-u", test->testfilename, "-", (char*)NULL);
-        perror("executing " DIFF " for test");
+        execl(DIFFPROG, DIFFPROG, "-u", filename, "-", (char*)NULL);
+        perror("executing " DIFFPROG " for test");
         exit(runtime_error);
     }
 
@@ -352,14 +396,21 @@ void run_test(const char *name, int warn_suffix)
     // create the testfile scanner.  it will either scan from
     // the testfile itself or from stdin if filename is "-".
     scanstate_init(&test.testfile, buf, sizeof(buf));
-    if(is_dash(name)) {
+	if(test.diffname) {
+		if(lseek(test.diff_fd, 0, SEEK_SET) < 0) {
+			fprintf(stderr, "Couldn't seek to start of %s: %s\n",
+					test.diffname, strerror(errno));
+			exit(runtime_error);
+		}
+        readfd_attach(&test.testfile, test.diff_fd);
+	} else if(is_dash(name)) {
         readfd_attach(&test.testfile, STDIN_FILENO);
     } else {
         fd = open(name, O_RDONLY);
         if(fd < 0) {
             fprintf(stderr, "Could not open %s: %s\n",
-                    test.testfilename, strerror(errno));
-            exit(runtime_error);
+                    name, strerror(errno));
+            exit(runtime_error); // TODO
         }
         readfd_attach(&test.testfile, fd);
     }
@@ -452,7 +503,7 @@ void process_ents(char **ents, int warn_suffix)
     for(i=0; i<n; i++) {
         if(!is_dash(ents[i])) {
             if(stat(ents[i], &st) < 0) {
-                fprintf(stderr, "stat error on '%s': %s\n", ents[i], strerror(errno));
+                fprintf(stderr, "%s: %s\n", ents[i], strerror(errno));
                 exit(runtime_error);
             }
             modes[i] = st.st_mode;
@@ -515,23 +566,6 @@ void process_dir()
 }
 
 
-int open_file(char *fn, const char *name, int flags)
-{
-	strcpy(fn, g_dirname);
-	strcat(fn, "/");
-	strcat(fn, name);
-
-    int fd = open(fn, flags|O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
-
-    if(fd < 0) {
-        fprintf(stderr, "couldn't open %s: %s\n", fn, strerror(errno));
-        exit(runtime_error);
-    }
-
-    return fd;
-}
-
-
 static void checkerr(int err, const char *op, const char *name)
 {
 	if(err < 0) {
@@ -552,7 +586,7 @@ void stop_tests()
 	checkerr(unlink(g_errname), "deleting", g_errname);
 	checkerr(unlink(g_statusname), "deleting", g_statusname);
 
-	checkerr(rmdir(g_dirname), "removing directory", g_dirname);
+	checkerr(rmdir(g_testdir), "removing directory", g_testdir);
 }
 
 
@@ -575,9 +609,9 @@ void start_tests()
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sig_int);
 
-	strcpy(g_dirname, TM_DIRNAME);
-	if(!mkdtemp(g_dirname)) {
-		fprintf(stderr, "Could not call mkdtemp() on %s: %s\n", g_dirname, strerror(errno));
+	strcpy(g_testdir, TESTDIR);
+	if(!mkdtemp(g_testdir)) {
+		fprintf(stderr, "Could not call mkdtemp() on %s: %s\n", g_testdir, strerror(errno));
 		exit(initialization_error);
 	}
 

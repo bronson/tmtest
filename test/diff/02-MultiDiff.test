@@ -2,11 +2,15 @@
 # author: Scott Bronson
 # date:   14 Nov 2004
 
+# updated for 2.0 on 27 Jan 2005
+
+# tests tmtest -d file1 file2
+
+
 eachline:   s/^\-\-\-.*1\.test.*/--- \/tmp\/STDIN-pid.1.test DATE TIME TZ/,
             s/^\-\-\-.*2\.test.*/--- \/tmp\/STDIN-pid.2.test DATE TIME TZ/,
             s/^\+\+\+.*/+++ - DATE TIME TZ/
 
-# tests tmtest -d file1 file2
 
 1.test: file = <<-EOF
     # title:   Ensure the Echo Command Works

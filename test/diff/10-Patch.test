@@ -8,13 +8,8 @@ eachline: s/^patching .*/patching ((FILE))/
 
 
 tt.test: file = <<-EOL
-    # title:   Ensure the Echo Command Works
-    # author:  Sam the Tester
-    # date:    31 Mar 2004
-
     echo "right output"
-
-    ------ STDOUT: exit code 0 - no error
+    STDOUT:
     wrong output
 EOL
 

@@ -26,6 +26,8 @@
 // Lines longer than this will be parsed as 2 separate lines.
 #define MAX_LINE_LENGTH BUFSIZ
 
+// utility function so you can say i.e. write_strconst(fd, "/");
+#define write_strconst(fd, str) write((fd), (str), sizeof(str)-1)
 
 static int test_runs = 0;
 static int test_successes = 0;
@@ -556,7 +558,7 @@ static void write_exit_no(int fd, int exitno)
 }
 
 
-static void write_raw_file(int outfd, const char *name, int infd)
+void write_raw_file(int outfd, int infd)
 {
     char buf[BUFSIZ];
     int rcnt, wcnt;
@@ -566,9 +568,6 @@ static void write_raw_file(int outfd, const char *name, int infd)
         fprintf(stderr, "write_file lseek on %d: %s\n", infd, strerror(errno));
         exit(10);   // todo: consolidate with error codes in main
     }
-
-    // write the section header
-    write(outfd, name, strlen(name));
 
     // then write the file.
     do {
@@ -593,7 +592,7 @@ static void write_raw_file(int outfd, const char *name, int infd)
 }
 
 
-static void write_modified_file(int outfd, const char *name, int infd, pcrs_job *job)
+static void write_modified_file(int outfd, int infd, pcrs_job *job)
 {
     // this routine is fairly similar to compare_continue_lines.
     // it would be nice to unify them.  that would take some fairly
@@ -615,9 +614,6 @@ static void write_modified_file(int outfd, const char *name, int infd, pcrs_job 
     // create the scanner we'll use to buffer the lines
     scanstate_init(ss, scanbuf, sizeof(scanbuf));
     readfd_attach(ss, infd);
-
-    // write the section header
-    write(outfd, name, strlen(name));
 
     do {
         p = memchr(ss->cursor, '\n', ss->limit - ss->cursor);
@@ -655,14 +651,14 @@ static void write_modified_file(int outfd, const char *name, int infd, pcrs_job 
 }
 
 
-static void write_file(int outfd, const char *name, int infd, pcrs_job *job)
+static void write_file(int outfd, int infd, pcrs_job *job)
 {
 	if(!job) {
 		// use the simple, fast routine
-		write_raw_file(outfd, name, infd);
+		write_raw_file(outfd, infd);
 	} else {
 		// use the line buffered routine
-		write_modified_file(outfd, name, infd, job);
+		write_modified_file(outfd, infd, job);
 	}
 }
 
@@ -682,7 +678,8 @@ void parse_section_output(struct test *test, int sec,
 
         case exSTDOUT|exNEW:
             test->stdout_match = match_yes;
-            write_file(test->rewritefd, "STDOUT:\n", test->outfd, test->eachline);
+			write_strconst(test->rewritefd, "STDOUT:\n");
+            write_file(test->rewritefd, test->outfd, test->eachline);
             break;
         case exSTDOUT:
             // ignore all data in the expected stdout.
@@ -690,7 +687,8 @@ void parse_section_output(struct test *test, int sec,
 
         case exSTDERR|exNEW:
             test->stderr_match = match_yes;
-            write_file(test->rewritefd, "STDERR:\n", test->errfd, test->eachline);
+			write_strconst(test->rewritefd, "STDERR:\n");
+            write_file(test->rewritefd, test->errfd, test->eachline);
         case exSTDERR:
             // ignore all data in the expected stderr
             break;
@@ -749,10 +747,12 @@ void dump_results(struct test *test)
         write_exit_no(test->rewritefd, test->exitno);
     }
     if(test->stderr_match == match_unknown && fd_has_data(test->errfd)) {
-        write_file(test->rewritefd, "STDERR:\n", test->errfd, test->eachline);
+		write_strconst(test->rewritefd, "STDERR:\n");
+        write_file(test->rewritefd, test->errfd, test->eachline);
     }
     if(test->stdout_match == match_unknown && fd_has_data(test->outfd)) {
-        write_file(test->rewritefd, "STDOUT:\n", test->outfd, test->eachline);
+		write_strconst(test->rewritefd, "STDOUT:\n");
+        write_file(test->rewritefd, test->outfd, test->eachline);
     }
 }
 
@@ -776,8 +776,24 @@ void test_init(struct test *test)
 
 void test_free(struct test *test)
 {
+	int err;
+
 	// the buffer for the testfile scanner is allocated on the stack.
-	if(test->eachline) pcrs_free_joblist(test->eachline);
+	if(test->eachline) {
+		pcrs_free_joblist(test->eachline);
+	}
+
+	if(test->diffname) {
+		err = close(test->diff_fd);
+		if(err < 0) {
+			fprintf(stderr, "Could not close %s: %s\n", test->diffname, strerror(errno));
+		}
+		err = unlink(test->diffname);
+		if(err < 0) {
+			fprintf(stderr, "Could not remove %s: %s\n", test->diffname, strerror(errno));
+		}
+		free(test->diffname);
+	}
 }
 
 

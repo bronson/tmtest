@@ -25,6 +25,9 @@ struct test {
 
 	pcrs_job *eachline;		///< a linked list of pcrs jobs to be applied to each line.
 
+	char *diffname;			///< if we're diffing against stdin, this contains the name of the required tempfile.
+	int diff_fd;			///< if diffname is set, then this is the fd of the tempfile we're using to store stdin.
+
 	int expected_exitno;	///< the test's expected exit value.  this is only valid when stderr_match != match_unknown.
 
     matchval exitno_match;	///< tells whether the expected and actual exit values match.
@@ -42,4 +45,8 @@ void print_test_summary();
 
 void test_init(struct test *test);
 void test_free(struct test *test);
+
+
+// random utility function for start_diff:
+void write_raw_file(int outfd, int infd);
 

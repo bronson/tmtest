@@ -117,10 +117,11 @@ char* substitute_string(pcrs_job *job, const char *cp, const char *ce, int *news
 
 	cnt = 0;
 	old = (char*)cp;
+	*newsize = ce - cp;
 
 	while(job) {
 		// Now, run the line through the substitutions.
-		nsubs = pcrs_execute(job, old, ce-cp, &new, newsize);
+		nsubs = pcrs_execute(job, old, *newsize, &new, newsize);
 		if(nsubs < 0) {
 			fprintf(stderr, "error while substituting expr %d: %s (%d).\n",
 					cnt, pcrs_strerror(nsubs), nsubs);
@@ -130,6 +131,8 @@ char* substitute_string(pcrs_job *job, const char *cp, const char *ce, int *news
             }
 			break;
 		}
+
+		assert(strlen(new) == *newsize);
 
 		if(old != cp) {
 			// free the intermediate result.
