@@ -6,9 +6,13 @@
  */
 
 
+// all strings are malloc'd and need to be freed when the test is finished.
+
 struct test {
-    // all of these need to be freed when the test is finished.
     const char *filename;
-    int outfd, errfd;   // actual stdout and stderr from test
+
+    int outfd;
+    int errfd;
+    int statusfd;
 };
 

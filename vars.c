@@ -71,6 +71,12 @@ static int var_errfd(struct test *test, FILE *fp, const char *var)
     return 0;
 }
 
+static int var_statusfd(struct test *test, FILE *fp, const char *var)
+{
+    fprintf(fp, "%d", test->statusfd);
+    return 0;
+}
+
 
 static int var_config_files(struct test *test, FILE *fp, const char *var)
 {
@@ -114,6 +120,7 @@ int printvar(struct test *test, FILE *fp, const char *varname)
         { "DATE",           var_date },
         { "OUTFD",          var_outfd },
         { "ERRFD",          var_errfd },
+        { "STATUSFD",       var_statusfd },
         { "TESTFILE",       var_testfile },
     };
 

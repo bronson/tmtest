@@ -24,6 +24,10 @@
 #include "vars.h"
 
 
+// debugging flags:
+#define DUMP_EXEC 0
+
+
 enum {
     outmode_normal,
     outmode_output,
@@ -37,6 +41,7 @@ double timeout = 10.0;		// timeout in seconds
 
 int g_outfd;
 int g_errfd;
+int g_statusfd;
 
 
 
@@ -117,25 +122,17 @@ void print_template(struct test *test, const char *tmpl,  FILE *fp)
 }
 
 
-void reset_test(struct test *test)
+void reset_fd(int fd, const char *fname)
 {
-    if(lseek(test->outfd, 0, SEEK_SET) < 0) {
-        perror("seeking to beginning of stdout");
+    if(lseek(fd, 0, SEEK_SET) < 0) {
+        fprintf(stderr, "Couldn't seek to start of %s: %s\n",
+                fname, strerror(errno));
         exit(runtime_error);
     }
 
-    if(ftruncate(test->outfd, 0) < 0) {
-        perror("resetting stdout");
-        exit(runtime_error);
-    }
-
-    if(lseek(test->errfd, 0, SEEK_SET) < 0) {
-        perror("seeking to beginning of stderr");
-        exit(runtime_error);
-    }
-
-    if(ftruncate(test->errfd, 0) < 0) {
-        perror("resetting stderr");
+    if(ftruncate(fd, 0) < 0) {
+        fprintf(stderr, "Couldn't reset file %s: %s\n",
+                fname, strerror(errno));
         exit(runtime_error);
     }
 }
@@ -210,9 +207,17 @@ void run_test(const char *name, int warn_suffix)
     test.filename = name;
     test.outfd = g_outfd;
     test.errfd = g_errfd;
+    test.statusfd = g_statusfd;
+
+    if(DUMP_EXEC) {
+        print_template(&test, exec_template, stdout);
+        exit(0);
+    }
 
     // reset the stdout and stderr capture files.
-    reset_test(&test);
+    reset_fd(test.outfd, "stdout");
+    reset_fd(test.errfd, "stderr");
+    reset_fd(test.statusfd, "status");
 
     // set up the pipe to feed input to the child.
     // ignore sigpipes since we don't want a signal raised if child
@@ -237,7 +242,6 @@ void run_test(const char *name, int warn_suffix)
         }
         close(pipes[0]);
         close(pipes[1]);
-        printf("child: executing...\n");
         execl("/bin/sh", "/bin/sh", "-s", NULL);
         perror("executing /bin/sh for test");
         exit(runtime_error);
@@ -250,7 +254,6 @@ void run_test(const char *name, int warn_suffix)
         exit(runtime_error);
     }
 
-    printf("parent: printing...\n");
     print_template(&test, exec_template, tochild);
     fclose(tochild);
 
@@ -259,6 +262,9 @@ void run_test(const char *name, int warn_suffix)
 
     // if shell returned an error, then we need to know if this
     // error was during the config phase or the test run phase.
+    // We need a status file.  Each step in the test's execution
+    // goes into the status file.
+    //
     // TODO: how do we tell the difference between a config file
     // error and a real error?
 
@@ -375,9 +381,9 @@ void process_dir()
 }
 
 
-int open_file(const char *fn)
+int open_file(const char *fn, int flags)
 {
-    int fd = open(fn, O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
+    int fd = open(fn, flags|O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
 
     if(fd < 0) {
         fprintf(stderr, "couldn't open %s: %s\n", fn, strerror(errno));
@@ -397,8 +403,9 @@ int open_file(const char *fn)
 
 void start_tests()
 {
-    g_outfd = open_file("/tmp/tmtest-outfile");
-    g_errfd = open_file("/tmp/tmtest-errfile");
+    g_outfd = open_file("/tmp/tmtest-outfile", 0);
+    g_errfd = open_file("/tmp/tmtest-errfile", 0);
+    g_statusfd = open_file("/tmp/tmtest-status", O_APPEND);
 }
 
 
@@ -406,6 +413,7 @@ void stop_tests()
 {
     close(g_outfd);
     close(g_errfd);
+    close(g_statusfd);
 }
 
 
