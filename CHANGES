@@ -31,6 +31,9 @@ TODO:
 - maybe implement a keyword header and search?  add keywords to tests?
 - maybe write a gui front-end
 
+0.89:
+- Now runs executable interpolation anywhere in command line, not just on first position.
+
 0.88:	3 Nov 2004		169/169 tests passed
 - Made interpolation support indirect args: $($(argname))
 - Turned off bare interpolation, added interpolate-bare header to re-enable.

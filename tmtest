@@ -76,7 +76,7 @@ my @signame;
 get_signals();
 
 Getopt::Long::Configure ("bundling");
-my $result = Getopt::Long::GetOptions(
+exit(1) unless Getopt::Long::GetOptions(
 	"dump|o"		=> \$dump_results,
 	"explode|e"		=> \$explode_file,
 	"diff|d"		=> \$diff_results,
@@ -89,7 +89,6 @@ my $result = Getopt::Long::GetOptions(
 	"help|h|?"		=> sub { print "$usage\n"; exit(0); },
 	"version|V"		=> sub { print "tmtest version $VERSION\n"; exit(0); },
 	);
-exit(1) unless $result;
 
 
 my $quiet = 0;
@@ -1414,15 +1413,9 @@ sub get_executable_command
 		# split the string as the shell would.  Then, the first word
 		# and the first word after each pipe char is the command.
 		my @words = subtle_shellwords($cmd);
-		my $is_cmd = 1;
 		for(@words) {
 			$str .= ' ' if length($str);
-			if($is_cmd) {
-				$str .= do_cmd_sub(\%sub, $_, $test->{header});
-			} else {
-				$str .= $_;
-			}
-			$is_cmd = ($_ eq '|');
+			$str .= do_cmd_sub(\%sub, $_, $test->{header});
 		}
 	} else {
 		$str = $cmd;
