@@ -1,0 +1,33 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-30'
+
+# Ensures that a test disabled by a config file doesn't run.
+
+MKDIR dir
+cd "$dir"
+
+cat > "vl'hurg.test" <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+cat > '12".test' <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+tmtest
+rm "vl'hurg.test" '12".test'
+
+
+MODIFY: s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
+STDOUT:
+
+Processing .
+
+0 tests run, 0 successes, 0 failures.
+STDERR:
+12".test was skipped because its file name contains a quote character.
+vl'hurg.test was skipped because its file name contains a quote character.

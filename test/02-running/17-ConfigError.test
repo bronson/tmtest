@@ -1,0 +1,45 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-30'
+
+# This is like 16-ConfigError except that it uses our default
+# config files which mark us pedantic.  This should preven the
+# tests from being run if there are config errors.
+
+MKDIR dir
+cd "$dir"
+
+cat > tmtest.conf <<-EOs
+	# make the config file pedantic.
+	set -e
+	dotheyspeakbocceonwhat
+EOs
+
+cat > t1.test <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+cat > t2.test <<-EOs
+	echo he
+	STDOUT:
+	he
+EOs
+
+tmtest
+rm tmtest.conf t1.test t2.test
+
+
+MODIFY:
+	s/^\/.*\/tmtest.conf/TMTEST.CONF/
+	s/ in \/.*\/tmtest.conf/ in TMTEST.CONF/
+STDOUT:
+
+Processing .
+ERR  t1.test                   error in TMTEST.CONF
+ERR  t2.test                   error in TMTEST.CONF
+
+2 tests run, 0 successes, 2 failures.
+STDERR:
+TMTEST.CONF: line 3: dotheyspeakbocceonwhat: command not found
+TMTEST.CONF: line 3: dotheyspeakbocceonwhat: command not found

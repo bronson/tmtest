@@ -34,10 +34,11 @@ cat > sub/sub.test <<-EOL
 	middir
 EOL
 
-cat > sub/sub.test <<-EOL
-	echo middir
+# This file should be ignored because its name doesn't end in ".test"
+cat > sub/test <<-EOL
+	echo no way
 	STDOUT:
-	middir
+	skip
 EOL
 
 tmtest mid.test sub/sub.test ../sup.test sub . ..

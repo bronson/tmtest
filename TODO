@@ -1,12 +1,3 @@
-Create tests:
-
-Naming a file that doesn't end in ".test" on the command line.
-Tests that fail before they're run (bad config files)
-Tests that fail to run (syntax error)
-Try running a testfile whose name contains a single quote.
-Disabling an entire directory using a config file.
-Test that both raw and modified work when stdout doesn't have a newline.
-
 2.0:
 - get rid of all the exit(10) calls in test.c.  We need a better way to abort the test.
   should get rid of a whole bunch in main.c as well.
@@ -15,6 +6,8 @@ Test that both raw and modified work when stdout doesn't have a newline.
 - Shouldn't run every test in a dir if the DISABLED directive is in a config file.
   Should discover what dir the DISABLED directive came from and refuse
   to run anything above that.
+- what do we do when stdout is missing a newline?
+  Test that both raw and modified work when stdout doesn't have a newline.
 
 2.2:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.

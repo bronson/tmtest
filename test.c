@@ -608,11 +608,14 @@ void scan_sections(struct test *test, scanstate *scanner,
 }
 
 
-static void print_reason(struct test *test, const char *name)
+static void print_reason(struct test *test, const char *name, const char *prep)
 {
 	printf("%s %-25s ", name, get_testfile_name(test));
 	if(!was_started(test->status)) {
-		printf("by %s", test->last_file_processed);
+		printf("%s %s", prep, test->last_file_processed);
+		if(test->status_reason) {
+			printf(": ");
+		}
 	}
 	if(test->status_reason) {
 		printf("%s", test->status_reason);
@@ -631,18 +634,18 @@ void test_results(struct test *test)
 	int stdo, stde, exno;	// true if there are differences.
 	
 	if(was_aborted(test->status)) {
-		print_reason(test, "ABRT");
+		print_reason(test, "ABRT", "by");
 		test_failures++;
 		return;
 	}
 
 	if(was_disabled(test->status)) {
-		print_reason(test, "dis ");
+		print_reason(test, "dis ", "by");
 		return;
 	}
 
     if(!was_started(test->status)) {
-        fprintf(stderr, "Error: %s was not started.  TODO: add more info\n", get_testfile_name(test));
+		print_reason(test, "ERR ", "error in");
         test_failures++;
         return;
     }
@@ -875,6 +878,9 @@ static void dump_reason(struct test *test, const char *name)
 	fprintf(stderr, "ERROR Test %s", name);
 	if(!was_started(test->status)) {
 		fprintf(stderr, " by %s", convert_testfile_name(test->last_file_processed));
+		if(test->status_reason) {
+			printf(": ");
+		}
 	}
 	if(test->status_reason) {
 		fprintf(stderr, ": %s", test->status_reason);
@@ -901,7 +907,8 @@ void dump_results(struct test *test)
 	}
 
     if(!was_started(test->status)) {
-        fprintf(stderr, "Error: %s was not started.  TODO: add more info\n", get_testfile_name(test));
+        fprintf(stderr, "Error: %s was not started due to errors in %s.\n",
+				get_testfile_name(test), test->last_file_processed);
         test_failures++;
         return;
     }

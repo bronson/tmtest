@@ -1,0 +1,37 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-30'
+
+# Ensures that a test disabled by a config file doesn't run.
+# Above & beyond 13-Disabled.test, this makes sure that the reason is printed.
+
+MKDIR dir
+cd "$dir"
+
+cat > tmtest.conf <<-EOs
+	DISABLED: this is the reason
+EOs
+
+cat > t1.test <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+cat > t2.test <<-EOs
+	echo he
+	STDOUT:
+	he
+EOs
+
+tmtest
+rm tmtest.conf t1.test t2.test
+
+
+MODIFY: s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
+STDOUT:
+
+Processing .
+dis  t1.test                   by TMTEST.CONF: this is the reason
+dis  t2.test                   by TMTEST.CONF: this is the reason
+
+2 tests run, 0 successes, 0 failures.

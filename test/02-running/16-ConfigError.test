@@ -1,0 +1,41 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-30'
+
+# Ensures that even if config files generate errors, tests will
+# still try to run.  Config file errors go to stderr.
+
+MKDIR dir
+cd "$dir"
+
+cat > tmtest.conf <<-EOs
+	# this will generate a command-not-found error
+	dotheyspeakbocceonwhat
+EOs
+
+cat > t1.test <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+cat > t2.test <<-EOs
+	echo he
+	STDOUT:
+	he
+EOs
+
+tmtest
+rm tmtest.conf t1.test t2.test
+
+
+MODIFY: s/^\/.*\/tmtest.conf/TMTEST.CONF/
+STDOUT:
+
+Processing .
+ok   t1.test 
+ok   t2.test 
+
+2 tests run, 2 successes, 0 failures.
+STDERR:
+TMTEST.CONF: line 2: dotheyspeakbocceonwhat: command not found
+TMTEST.CONF: line 2: dotheyspeakbocceonwhat: command not found

@@ -1,0 +1,66 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-30'
+
+# This is like 17-ConfigError in the running directory except
+# that it performs a diff.
+
+# BUG: notice that the diff IS STILL PRODUCED!  It just erases
+# all the sections.  This is bad, of course.  Unfortunately,
+# until we have dynamic status and can terminate the test
+# before the main file gets executed, we can't stop diff from
+# producing output.
+# Hopefully this gets fixed in 2.2.
+
+
+MKDIR dir
+cd "$dir"
+
+cat > tmtest.conf <<-EOs
+	# make the config file pedantic.
+	set -e
+	dotheyspeakbocceonwhat
+EOs
+
+cat > t1.test <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+cat > t2.test <<-EOs
+	echo he
+	STDOUT:
+	he
+EOs
+
+tmtest -d
+rm tmtest.conf t1.test t2.test
+
+
+MODIFY:
+	# blow away changing data in the erroneous diff
+	s/^\-\-\- t1.test.*/--- T1.TEST DATE TIME TZ/
+	s/^\-\-\- t2.test.*/--- T2.TEST DATE TIME TZ/
+	s/^\+\+\+.*/+++ - DATE TIME TZ/
+	# blow away filenames in the STDERR
+	s/^\/.*\/tmtest.conf/TMTEST.CONF/
+	s/ in \/.*\/tmtest.conf/ in TMTEST.CONF/
+
+STDOUT:
+--- T1.TEST DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,3 +1 @@
+ echo hi
+-STDOUT:
+-hi
+--- T2.TEST DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,3 +1 @@
+ echo he
+-STDOUT:
+-he
+STDERR:
+TMTEST.CONF: line 3: dotheyspeakbocceonwhat: command not found
+Error: t1.test was not started due to errors in TMTEST.CONF.
+TMTEST.CONF: line 3: dotheyspeakbocceonwhat: command not found
+Error: t2.test was not started due to errors in TMTEST.CONF.

@@ -1,0 +1,36 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-30'
+
+# Ensures that tests can be aborted by config files too.
+
+MKDIR dir
+cd "$dir"
+
+cat > tmtest.conf <<-EOs
+	ABORT bail from config
+EOs
+
+cat > t1.test <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+cat > t2.test <<-EOs
+	echo he
+	STDOUT:
+	he
+EOs
+
+tmtest
+rm tmtest.conf t1.test t2.test
+
+
+MODIFY: s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
+STDOUT:
+
+Processing .
+ABRT t1.test                   by TMTEST.CONF: bail from config
+ABRT t2.test                   by TMTEST.CONF: bail from config
+
+2 tests run, 0 successes, 2 failures.
