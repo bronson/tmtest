@@ -19,6 +19,10 @@
 // to get PATH_MAX:
 #include <dirent.h>
 
+// TODO: we call getcwd three different times.  we should just
+// call it once and cache the result.  but this file doesn't
+// know when a new test is starting...   fix this somehow.
+
 
 #define CONFIG_FILE "tmtest.conf"
 #define HOME_CONFIG_FILE ".tmtestrc"
@@ -53,11 +57,19 @@ static int var_testfile(struct test *test, FILE* fp, const char *var)
     return 0;
 }
 
-static int var_title(struct test *test, FILE* fp, const char *var)
+static int var_testdir(struct test *test, FILE* fp, const char *var)
 {
-    fputs(test->testfilename, fp);
+	char buf[PATH_MAX];
+
+    if(!getcwd(buf, sizeof(buf))) {
+        perror("Could not getcwd");
+        return 1;
+    }
+
+	fputs(buf, fp);
     return 0;
 }
+
 
 static int var_testexec(struct test *test, FILE* fp, const char *var)
 {
@@ -183,8 +195,8 @@ static void check_config(struct test *test, FILE *fp,
 	buf[len+1+namelen]='\0';
 
 	if(file_exists(buf)) {
-		fprintf(fp, "echo \'CONFIG: %s\' >&%d\n", buf, test->statusfd);
-		fprintf(fp, ". '%s'\n", buf);
+		fprintf(fp, "echo 'CONFIG: %s' >&%d\n", buf, test->statusfd);
+		fprintf(fp, "MYPATH='%.*s' MYFILE='%s' . '%s'\n", len, buf, buf, buf);
 	}
 }
 
@@ -243,7 +255,7 @@ int printvar(struct test *test, FILE *fp, const char *varname)
         { "STATUSFD",       var_statusfd },
         { "TESTFILE",       var_testfile },
         { "TESTEXEC",       var_testexec },
-		{ "TITLE",			var_title },
+        { "TESTDIR",        var_testdir },
     };
 
     for(i=0; i<sizeof(funcs)/sizeof(funcs[0]); i++) {

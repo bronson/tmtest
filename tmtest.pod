@@ -43,6 +43,15 @@ its way up to the current directory looking for files named "tmtest.conf"
 It executes the config files each time it runs a test.  If you're
 running 40 tests, your config file will get executed 40 times.
 
+Note that while config files are running, the current directory
+is set to the testfile's directory.  For convenience, in each
+config file, the MYFILE variable gives the full pathname to the config
+file, and MYPATH gives its dirname.
+
+Any output produced by the config files goes straight to the screen.
+It will not contaminate the test results.  tmtest only cares about
+the output produced by the testfile itself.
+
 =over 8
 
 =item ABORT
@@ -59,25 +68,6 @@ front of the $PATH variable.  Executables in this directory will be
 run in preference to identically-named executables installed elsewhere
 on the system.
 
-=item ATEXIT
-
-Specifies a command to be run after the test has finished, whether or
-not it completed successfully.  This often makes cleaning up a lot
-easier, especially if the test aborts.
-
-	ATEXIT xset +dpms
-
-You may specify any number of ATEXIT handlers.  They are executed in
-reverse order of registration.  So, for example,
-
-	ATEXIT echo one
-	ATEXIT echo two
-
-would output
-
-	two
-	one
-
 =item DISABLE
 =item DISABLED
 
@@ -87,39 +77,6 @@ that directory and all subdirectories disabled.
 You can supply a reason string too
 
    DISABLED: this test is just too lame.
-
-=item DOOM
-
-Dooms the given file or directory to deletion when the test is finished.
-Files and directories are deleted in the opposite order as they were registered.
-Directories will only be deleted if they are empty.  Otherwise a warning is printed.
-
-Note that you should never create files in /tmp with predictable file
-names.  This opens you up to the symlink attack.  Instead, use mktemp(1).
-(You may think now, "ah, but I'm the only user on my system.  I'm safe."
-But what about the guy running your test two years from now on a
-shared system?  Never use static filenames in /tmp.)  Also consider
-the tempfile(1) utility if mktemp doesn't offer what you need.
-
-	dir=`mktemp -d -t 02-XXXXXX` || ABORT can't mktemp.
-	DOOM $dir
-	cd $dir
-	etc...
-
-Or, more concisely:
-
-	cd `DOOM mktemp -d -t 02-XXXXX` || ABORT can't make temporary directory.
-	cd `DOOM mktemp -d` || ABORT can't make temporary directory.
-
-Because you can't nest backticks (who's the genius responsible for that?),
-DOOM checks to see if its first argument is 'mktemp'.  If it is, then it
-runs all its arguments as a mktemp command.  Otherwise, it interprets
-each argument as a filename that should be doomed.
-
-TODO: "DOOM" is a weird name.  It's better than "DAMN" though.
-Hopefully someone can think of something better.
-
-"DOOM file" is essentially the same as "ATEXIT rm file".
 
 =back
 
@@ -143,7 +100,12 @@ to add "set -v" or "set -x" to the top of the testfile.  This will
 show you line-by-line what is happening.  You can also put them in
 a config file if you're having configuration issues.
 
-=head1 TUTORIAL
+Never create files in /tmp with static or easily predictable file names.
+This opens you up to symlink attacks.  Instead, use mktemp(1)
+or tempfile(1).  Also check the examples directory for functions
+to make working with files easier.
+
+	file=`mktemp -t 02-XXXXXX` || ABORT can't mktemp.
 
 =head1 HISTORY
 
@@ -162,11 +124,11 @@ I rewrote the good parts in C.  This became tmtest 2.0.
 
 =head1 FILES
 
-L<tmtest-conf(5)>
+L<tmtest.conf(5)>
 
 =head1 SEE ALSO
 
-L<testfile(1)>, L<tmtest-conf(5)>
+L<testfile(1)>, L<tmtest.conf(5)>
 
 =head1 AUTHOR
 

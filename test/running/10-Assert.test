@@ -2,11 +2,10 @@ AUTHOR='Scott Bronson'
 DATE='2005-01-27'
 
 tmtest - <<-EOL
-	ATEXIT echo one
-	ATEXIT echo two
+	ASSERT 1 -eq 1
+	echo it ran
 	STDOUT:
-	two
-	one
+	it ran
 EOL
 STDOUT: 
 ok   (STDIN)

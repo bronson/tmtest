@@ -3,8 +3,6 @@ echo START >&%(STATUSFD)
 ABORT ()  { echo "ABORTED: $*" >&%(STATUSFD); exit 0; }
 ABORT: () { ABORT $*; }
 
-ADD_CWD_TO_PATH () { PATH="$(dirname ${BASH_SOURCE[1]}):$PATH"; }
-
 ATEXIT ()  { echo "ATEXIT: $*" >&%(STATUSFD); }
 ATEXIT: () { ATEXIT $*; }
 
@@ -13,8 +11,6 @@ DISABLED: () { DISABLED $*; }
 DISABLE   () { DISABLED $*; }
 DISABLE:  () { DISABLED $*; }
 
-TESTFILE='%(TESTFILE)'
-TITLE='%(TITLE)'
 AUTHOR='%(AUTHOR)'
 DATE='%(DATE)'
 
@@ -32,6 +28,7 @@ MODIFY () { exit 0; }
 MODIFY: () { exit 0; }
 
 echo 'RUNNING: %(TESTFILE)' >&%(STATUSFD)
+MYDIR='%(TESTDIR)' MYFILE='%(TESTFILE)'
 exec >&%(OUTFD) 2>&%(ERRFD)
 LINENO=0
 %(TESTEXEC)

@@ -1,6 +1,4 @@
 # assert.sh
-# 27 Jan 2004
-
 
 # If you include this file from either a config file or your
 # test file (". assert.sh" or "source assert.sh"),
@@ -12,7 +10,7 @@
 # 	assert 1 -eq 2				# false, so the test is aborted.
 
 
-assert ()
+ASSERT ()
 {
 	if [ ! $* ]; then
 		line=${BASH_LINENO[0]}

@@ -1,0 +1,18 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-27'
+
+tmtest - <<-EOL
+	ASSERT -1 -eq 1
+	echo it ran
+	STDOUT:
+	it ran
+EOL
+
+# This test displays the wrong line number (it's a bash3ism, see BUGS).
+# If we convert it to "LINE" then it will never trip us up.
+MODIFY: s/line \d+/line LINE/
+
+STDOUT:
+ABRT (STDIN)                   : assertion failed on line LINE: "-1 -eq 1"
+
+1 test run, 0 successes, 1 failure.
