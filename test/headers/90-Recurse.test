@@ -1,0 +1,32 @@
+# Ensures we recurse properly
+# author:Scott Bronson
+# date: 3 Dec 2004
+
+rm -rf /tmp/tmtest-recurse-test
+mkdir /tmp/tmtest-recurse-test
+cat > /tmp/tmtest-recurse-test/base.test <<-EOL
+    echo base!
+    ------ STDOUT: exit code 0
+    base!
+EOL
+
+mkdir /tmp/tmtest-recurse-test/dir
+cat > /tmp/tmtest-recurse-test/dir/dir.test <<-EOL
+    echo dir!
+    ------ STDOUT: exit code 0
+    dir!
+EOL
+
+# tmtest /tmp/tmtest-recurse-test
+(cd /tmp/tmtest-recurse-test && tmtest )
+rm -rf /tmp/tmtest-recurse-test
+
+------ STDOUT: exit code 0 - no error
+
+Processing ./
+ok   base.test
+
+Processing ./dir/
+ok   dir.test
+
+2 tests run, 2 successes, 0 failures
