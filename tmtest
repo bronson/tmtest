@@ -20,7 +20,7 @@ use File::Temp ();
 require 'shellwords.pl';
 
 use vars qw( $VERSION );
-$VERSION = "0.88";
+$VERSION = "0.885";
 
 my $diff = "/usr/bin/diff";		# full path to the diff program
 my $mv = "/bin/mv";				# the mv executable (used when exploding)
@@ -45,7 +45,8 @@ my $test_failures = 0;
 my $test_dumpstats = 0;
 my $explicit_config = undef;	# the test file if -f is specified
 
-my %configs;
+my %configs;    # keeps track of which config files we've looked at
+my %defines;    # contains all definitions given by -D on the cmdline.
 
 my $exit_value_hack = 0;		# todo: remove me
 
@@ -54,6 +55,7 @@ my $usage = <<EOL;
 usage: tmtest [opts] [test files or dirs...]
        -o: dump actual results rather than just go/nogo
        -d: diff actual results against expected results
+       -D: define a header as if it were defined in the testfile.
        -cNUM: extract the given command
        -hNUM: extract the given here document
        -e: extract all cmds and heredocs
@@ -79,6 +81,7 @@ Getopt::Long::Configure ("bundling");
 exit(1) unless Getopt::Long::GetOptions(
 	"dump|o"		=> \$dump_results,
 	"explode|e"		=> \$explode_file,
+    "define-header|D=s" => \%defines,
 	"diff|d"		=> \$diff_results,
 	"syntax|Z"		=> \$syntax_check,	# deprecated?
 	"heredoc=s"		=> \$extract_here,	# deprecated?
@@ -892,6 +895,11 @@ sub read_test
 			}
 		}
 	}
+
+    # override config files using options supplied by -D on cmdline.
+    for(keys %defines) {
+        $test->{header}->{$_} = {key => $_, value => $defines{$_}};
+    }
 	
 	# add the default headers
 	$test->{header}->{'curfile'} = { key => 'curfile', value => $filename };
@@ -1645,12 +1653,32 @@ sub check_results
 	my $test = shift;
 	my $results = shift;
 
-	# return 0 if they differ, 1 if the same
-	return 0 if
-		$test->{"stdout"} ne $results->{"stdout"} ||
-		$test->{"stderr"} ne $results->{"stderr"} ||
-		$test->{"exitvalue"} != $results->{"exitvalue"};
+	my $success = (
+		$test->{"stdout"} eq $results->{"stdout"} &&
+		$test->{"stderr"} eq $results->{"stderr"} &&
+		$test->{"exitvalue"} == $results->{"exitvalue"}
+		);
 
-	return 1;
+	if($debug) {
+		if($test->{"stdout"} ne $results->{"stdout"}) {
+			print "  -> stdout didn't match!\n";
+			print "  -> wanted <<<" . $test->{"stdout"} .
+				">>> but got <<<" . $results->{"stdout"} . ">>>\n";
+		}
+		if($test->{"stderr"} ne $results->{"stderr"}) {
+			print "  -> stderr didn't match!\n";
+			print "  -> wanted <<<" . $test->{"stderr"} .
+				">>> but got <<<" . $results->{"stderr"} . ">>>\n";
+		}
+		if($test->{"exitvalue"} != $results->{"exitvalue"}) {
+			print "  -> exitvalue didn't match!  got " .
+				$test->{"exitvalue"} . ", wanted " .
+				$results->{"exitvalue"} . ".\n";
+		}
+		print "  -> output matches expected output.\n" if $success;
+	}
+
+	# return undef if they differ, 1 if the same
+	return $success;
 }
 

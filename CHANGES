@@ -3,7 +3,6 @@ are marked with a '*'.
 
 TODO:
 - make patching work when you supply multiple files
-- define headers on cmdline using -Dheader=value or --define-header=header=value
 - allow headers or options to tell where to explode the file
 - make it read a global configuration from /etc
 - get rid of exit_value_hack
@@ -32,9 +31,11 @@ TODO:
 - maybe write a gui front-end
 
 0.89:
+- Added -D: define headers using -Dheader=value or --define-header=header=value
 - Now runs executable interpolation anywhere in command line, not just on first position.
+- now output the byte-for-byte stdout and stderr when --verbose is on.
 
-0.88:	3 Nov 2004		169/169 tests passed
+0.88:	3 Nov 2004		169/169 tests passed		r15
 - Made interpolation support indirect args: $($(argname))
 - Turned off bare interpolation, added interpolate-bare header to re-enable.
 - Turned off interpolation by default, added the interpolate header to re-enable.

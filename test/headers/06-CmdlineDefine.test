@@ -1,0 +1,14 @@
+# Define a header on the command line
+# author:Scott Bronson
+# date: 13 Nov 2004
+
+tmtest -o -D myhdr=myval - <<EOL
+echo $(myhdr)
+------ STDOUT: exit code 0 - no error
+myval
+EOL
+
+------ STDOUT: exit code 0 - no error
+echo $(myhdr)
+------ STDOUT: exit code 0 - no error
+myval

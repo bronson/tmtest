@@ -1,0 +1,15 @@
+# Define a header on the command line
+# author:Scott Bronson
+# date: 13 Nov 2004
+
+# Like CmdlineDefine, but doesn't have a value
+
+tmtest -o -D myhdr - <<EOL
+echo $(myhdr)
+------ STDOUT: exit code 0 - no error
+myval
+EOL
+
+------ STDERR:
+Option D, key "myhdr", requires a value
+------ STDOUT: exit code 1 - abort!
