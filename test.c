@@ -387,9 +387,9 @@ void test_results(struct test *test)
     }
 
     diffs = 0;
-    diffs |= (test->stdout_match ? 0 : 0x01);
-    diffs |= (test->stderr_match ? 0 : 0x02);
-    diffs |= (test->exitno_match ? 0 : 0x04);
+    diffs |= (test->stdout_match != match_yes ? 0x01 : 0);
+    diffs |= (test->stderr_match != match_yes ? 0x02 : 0);
+    diffs |= (test->exitno_match != match_yes ? 0x04 : 0);
 
     if(diffs == 0) {
         test_successes++;
@@ -404,69 +404,109 @@ void test_results(struct test *test)
 }
 
 
-/*
-void modify_cmdsection(struct test *test, int fd)
+static void write_exit_no(int fd, int exitno)
 {
-    if(test->cmdsection) {
-        // this test's command section has already been printed
-        // (probably because the user fed the test script over stdin).
-        
+    char buf[512];
+    int cnt;
+
+    cnt = snprintf(buf, sizeof(buf), "RESULT : %d\n", exitno);
+    write(fd, buf, cnt);
+}
+
+
+static void write_file(int outfd, const char *name, int infd)
+{
+    char buf[BUFSIZ];
+    int cnt;
+
+    // first rewind the input file
+    if(lseek(infd, 0, SEEK_SET) < 0) {
+        fprintf(stderr, "write_file lseek on %d: %s\n", infd, strerror(errno));
+        exit(10);   // todo: consolidate with error codes in main
     }
 
-    // now scan the rest of the testfile.
-    cb_scanner_attach(&ss);
+    // write the section header
+    write(outfd, name, strlen(name));
 
-    // now, if we see the token "CBRUNNING" in the token stream,
-    // it means that we attempted to start the test.  If not,
-    // then the test bailed early.
+    // then write the file.
     do {
-        tok = scan_token(&ss);
-        if(tok < 0) {
-            fprintf(stderr, "Error %d pulling status tokens: %s\n", 
-                    tok, strerror(errno));
-            exit(10);
+        do {
+            cnt = read(infd, buf, sizeof(buf));
+        } while(cnt < 0 && errno == EINTR);
+        if(cnt > 0) {
+            write(outfd, buf, cnt);
         }
-        if(tok == CBRUNNING) {
-            // it's ok to bail early since there's no memory to
-            // deallocate and no files that need closing.
-            return 1;
-        }
-    } while(!scan_finished(&ss));
-
-    // should add a short message to the user saying what happened.
-    strncpy(msgbuf, "todo: add a message here.", msgbufsiz);
+    } while(cnt);
 }
-*/
 
+
+void parse_section_output(struct test *test, int sec,
+        const char *datap, int len, void *refcon)
+{
+    assert(sec >= 0);
+
+    switch(sec) {
+        case 0:
+            // don't need to worry about eof
+            break;
+
+        case exSTDOUT|exNEW:
+            test->stdout_match = match_yes;
+            write_file(test->rewritefd, "STDOUT : \n", test->outfd);
+            break;
+        case exSTDOUT:
+            // ignore all data in the expected stdout.
+            break;
+
+        case exSTDERR|exNEW:
+            test->stderr_match = match_yes;
+            write_file(test->rewritefd, "STDERR : \n", test->errfd);
+        case exSTDERR:
+            // ignore all data in the expected stderr
+            break;
+
+        case exRESULT|exNEW:
+            test->exitno_match = match_yes;
+            write_exit_no(test->rewritefd, test->exitno);
+            break;
+
+        case exRESULT:
+            // allow random garbage in result section to pass
+        case exMODIFY|exNEW:
+        case exMODIFY:
+            // leave modify sections unchanged.
+        default:
+            write(test->rewritefd, datap, len);
+    }
+}
+
+
+/** Prints the actual result sections in the same order as they
+ * appear in the testfile.
+ */
 
 void dump_results(struct test *test)
 {
-    /*
-    print_command_section();
+    // The command section has already been dumped.  We just
+    // need to dump the result sections.  The trick is, though,
+    // that we need to dump them in the same order as they occur
+    // in the testfile otherwise the diff will be all screwed up.
 
     test->exitno_match = match_unknown;
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
-    scan_sections(test, parse_section_output);
-    */
+    scan_sections(test, &test->testfile, parse_section_output, NULL);
 
-    //     we have a routine that will generate a new test file based on the old.
-    //       output: it just dumps that new test file to stdout.
-}
-
-
-void diff_results(struct test *test)
-{
-    //       diff: it pipes that new file to a forked diff process
-    //          need to cd to orig dir before running diff so it has
-    //          the correct path to the file.  otherwise patch won't run.
-}
-
-
-void inc_test_runs(struct test *test)
-{
-    test_runs++;
+    if(test->exitno_match == match_unknown && test->exitno != 0) {
+        write_exit_no(test->rewritefd, test->exitno);
+    }
+    if(test->stderr_match == match_unknown && fd_has_data(test->errfd)) {
+        write_file(test->rewritefd, "STDERR : \n", test->errfd);
+    }
+    if(test->stdout_match == match_unknown && fd_has_data(test->outfd)) {
+        write_file(test->rewritefd, "STDOUT : \n", test->outfd);
+    }
 }
 
 
@@ -481,6 +521,7 @@ void print_test_summary()
 
 void test_init(struct test *test)
 {
+    test_runs++;
     memset(test, 0, sizeof(struct test));
     test->rewritefd = -1;
 }

@@ -185,6 +185,31 @@ int wait_for_child(int child)
 }
 
 
+/** Forks off a diff process and sets it up to receive the dumped test.
+ */
+
+int start_diff(struct test *test)
+{
+    assert(test->testfilename);
+    if(is_dash(test->testfilename)) {
+        fputs("Can't diff tests supplied on stdin.\n", stderr);
+        exit(argument_error);
+    }
+
+    assert(!"TODO");
+    return 0;
+}
+
+
+/** Waits for the forked diff process to finish.
+ */
+
+void finish_diff(struct test *test, int diffpid)
+{
+    assert(!"TODO");
+}
+
+
 /** Runs the named testfile.
  *
  * If warn_suffix is true and the ffilename doesn't end in ".test"
@@ -196,6 +221,10 @@ int wait_for_child(int child)
  * and stderr.  That way, the user sees any output while the test
  * is running (should help with debugging).  However, when the
  * test itself is running, its output is redirected into outfd/errfd.
+ *
+ * It may appear that outmode_dump mixes stdio and Unix I/O, but it
+ * doesn't really.  We only print to stdio when testing, and we only
+ * dump the file when dumping.  They cannot both happen simultaneously.
  */
 
 void run_test(const char *name, int warn_suffix)
@@ -204,6 +233,7 @@ void run_test(const char *name, int warn_suffix)
     char buf[BUFSIZ];   // scan buffer for the testfile
     int pipes[2];
     int child;
+    int diffpid;
     int fd = -1;
     FILE *tochild;
 
@@ -217,13 +247,26 @@ void run_test(const char *name, int warn_suffix)
         return;
     }
 
-    inc_test_runs(&test);
-
     test_init(&test);
     test.testfilename = name;
     test.outfd = g_outfd;
     test.errfd = g_errfd;
     test.statusfd = g_statusfd;
+
+    // initialize the test mode
+    switch(outmode) {
+        case outmode_test:
+            // nothing to do
+            break;
+        case outmode_dump:
+            test.rewritefd = STDOUT_FILENO;
+            break;
+        case outmode_diff:
+            diffpid = start_diff(&test);
+            break;
+        default:
+            assert(!"Unhandled outmode 1 in run_test()");
+    }
 
     // reset the stdout and stderr capture files.
     reset_fd(test.outfd, "stdout");
@@ -304,12 +347,11 @@ void run_test(const char *name, int warn_suffix)
             dump_results(&test);
             break;
         case outmode_diff:
-            diff_results(&test);
+            dump_results(&test);
+            finish_diff(&test, diffpid);
             break;
         default:
-            assert(0);
-            fprintf(stderr, "internal error 1\n");
-            exit(internal_error);
+            assert(!"Unhandled outmode 2 in run_test()");
     }
 
     // if we had to open the testfile to read it, we now close it.

@@ -33,9 +33,7 @@ void test_command_copy(struct test *test, FILE *fp);
 
 void test_results(struct test *test);
 void dump_results(struct test *test);
-void diff_results(struct test *test);
 
-void inc_test_runs(struct test *test);
 void print_test_summary();
 
 void test_init(struct test *test);

@@ -22,8 +22,11 @@ CHDR+=vars.h test.h compare.h status.h tfscan.h matchval.h
 # and produce code that isn't riddled with warnings...
 CSRC+=status1.o status2.o status3.o status4.o
 
+# make removes these files if we don't do this.  makes it hard to debug...
+INTERMEDIATES+=status1.c status2.c status3.c status4.c tfscan.c
 
-tmtest: $(CSRC) $(CHDR) tmpl.c Makefile
+
+tmtest: $(CSRC) $(CHDR) tmpl.c Makefile $(INTERMEDIATES)
 	$(CC) $(COPTS) $(CSRC) tmpl.c -o tmtest
 
 tmpl.c: tmpl.sh cstrfy Makefile
@@ -32,13 +35,10 @@ tmpl.c: tmpl.sh cstrfy Makefile
 status.c: status1.o status2.o status3.o status4.o
 	touch status.c
 
-# re2c scanners have the re suffix.
 %.c: %.re
 	re2c $(REOPTS) $< > $@
 	perl -pi -e 's/^\#line.*$$//' $@
 
-# C files that don't emit warnings are compiled in the tmtest rule.
-# The rest (unfixable because they're generated) get handled by this rule.
 %.o: %.c
 	$(CC) -g -c $< -o $@
 	
