@@ -91,7 +91,8 @@ by indenting the following line.
     author: jimmy james, joe parrot,
 	   joebob, jasper, and jed.
 
-If whitespace is significant, use a here document instead of indentation
+If whitespace within the header is significant, use a here document
+instead of indentation
 to continue the header.  The here document key must be the last item
 on the line.  "stdout: content <<EOL" and "stdout: <<EOL content" are
 considered errors.  Of course, the parameters passed to L</"Create Files">
@@ -102,9 +103,15 @@ are legal.
         sucess!!
     EOL
 
-If a header starts with "file=" or "execfile=", then it is treated
-as a create file instead of a regular textual header.  
-See L</"Create Files"> for more.
+Headers may also start with C<=> and C<+=>.  C<=> is exactly equivalent
+to C<:>, but C<+=> appends the new value to the current value.
+
+    files = one two
+    files = $(files) three
+    files += four       # exactly equivalent to the above line
+    # now files is "one two three four".
+
+Some headers have a little magic.  See L</"Create Files"> for more.
 
 =head2 Interpolation
 
