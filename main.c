@@ -41,8 +41,6 @@ enum {
 };
 
 int outmode;
-int verbose = 0;
-double timeout = 10.0;		// timeout in seconds
 
 #define TESTDIR "/tmp/tmtest-XXXXXX"
 char g_testdir[sizeof(TESTDIR)];
@@ -643,9 +641,6 @@ void usage()
 			"Usage: tmtest [OPTION]... [DLDIR]\n"
 			"  -o: output the test file with the new output.\n"
 			"  -d: output a diff between the expected and actual outputs.\n"
-            "  -D NAME=VAL: define a variable on the command line.\n"
-            "  -t --timeout: time in seconds before test is terminated.\n"
-			"  -v --verbose: increase verbosity.\n"
 			"  -V --version: print the version of this program.\n"
 			"  -h --help: prints this help text\n"
 			"Run tmtest with no arguments to run all tests in the current directory.\n"
@@ -663,11 +658,8 @@ void process_args(int argc, char **argv)
 		static struct option longopts[] = {
 			// name, has_arg (1=reqd,2=opt), flag, val
 			{"diff", 0, 0, 'd'},
-			{"define", 1, 0, 'D'},
 			{"help", 0, 0, 'h'},
 			{"output", 0, 0, 'o'},
-			{"timeout", 1, 0, 't'},
-			{"verbose", 0, 0, 'v'},
 			{"version", 0, 0, 'V'},
 			{0, 0, 0, 0},
 		};
@@ -702,14 +694,6 @@ void process_args(int argc, char **argv)
                 outmode = outmode_dump;
 				break;
 
-			case 't':
-				sscanf(optarg, "%lf", &timeout);
-				break;
-
-			case 'v':
-				verbose++;
-				break;
-
 			case 'V':
 				printf("tmtest version %s\n", stringify(VERSION));
 				exit(0);
@@ -723,23 +707,6 @@ void process_args(int argc, char **argv)
 			default:
 				exit(argument_error);
 		}
-	}
-
-	if(verbose) {
-        switch(outmode) {
-            case outmode_test:
-                printf("Running tests.\n");
-                break;
-            case outmode_dump:
-                printf("Dumping tests.\n");
-                break;
-            case outmode_diff:
-                printf("Diffing tests.\n");
-                break;
-            default:
-                assert(0);
-        }
-		printf("Timeout is %lf seconds\n", timeout);
 	}
 }
 

@@ -12,7 +12,6 @@ Disabling an entire directory using a config file.
 Test that both raw and modified work when stdout doesn't have a newline.
 
 2.0:
-- write a function to make it easy to create crfiles.
 - Make diff work in subdirs (need to cd back to superdir before
   forking, and use the proper partial path for the file)
 - Ensure that diffing works when running multiple tests in multiple dirs.
