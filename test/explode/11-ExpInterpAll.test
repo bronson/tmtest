@@ -89,7 +89,7 @@ tmtest -e - <<-EOL
 EOL
 
 echo
-find /tmp/tmtest | sort
+find /tmp/tmtest | sort -f
 echo
 /tmp/tmtest/RUN
 
@@ -120,7 +120,6 @@ Wrote /tmp/tmtest/cmd-18
 Wrote /tmp/tmtest/cmd-19 and /tmp/tmtest/here-19
 
 /tmp/tmtest
-/tmp/tmtest/RUN
 /tmp/tmtest/cmd-01
 /tmp/tmtest/cmd-02
 /tmp/tmtest/cmd-03
@@ -141,6 +140,7 @@ Wrote /tmp/tmtest/cmd-19 and /tmp/tmtest/here-19
 /tmp/tmtest/here-11_ff
 /tmp/tmtest/here-15_ef
 /tmp/tmtest/here-19
+/tmp/tmtest/RUN
 
 
 commands:

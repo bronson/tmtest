@@ -23,7 +23,7 @@ EOL
 
 echo
 
-find /tmp/tmtest | sort
+find /tmp/tmtest | sort -f
 
 echo
 
@@ -34,6 +34,6 @@ Exploding 1 cmd from STDIN...
   created /tmp/tmtest/here-1_ttf.ext
 
 /tmp/tmtest
-/tmp/tmtest/RUN
 /tmp/tmtest/here-1_ttf.ext
+/tmp/tmtest/RUN
 

@@ -21,7 +21,7 @@ EOL
 
 echo
 
-find /tmp/tmtest | sort
+find /tmp/tmtest | sort -f
 
 echo
 
@@ -32,7 +32,7 @@ Exploding 1 cmd from STDIN...
 Wrote /tmp/tmtest/cmd-1
 
 /tmp/tmtest
-/tmp/tmtest/RUN
 /tmp/tmtest/cmd-1
+/tmp/tmtest/RUN
 
 howdy!
