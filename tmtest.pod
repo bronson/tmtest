@@ -1,0 +1,77 @@
+=head1 NAME
+
+tmtest - run a battery of compliance tests
+
+=head1 SYNOPSIS
+
+B<tmtest> [B<-d>|B<-o>] [I<dir>|I<testfile>...]
+
+=head1 DESCRIPTION
+
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-d> B<--diff>
+
+Prints a diff of the expected results against the actual results.
+The expected results are the lines prefixed with a '-',
+and the actual results are prefixed with a '+'.
+In other words, the '+' lines are ones that the test erroneously added,
+and the '-' lines are ones that the test erroneously didn't print.
+
+You can pipe the output straight into the patch
+program to modify the test files.  This works when running tests
+in subdirectories too, but you need to invoke C<patch -p0> becaue
+the patch utility doesn't enter subdirectories by default.
+
+    tmtest -d | less        # view patch to ensure no bad changes
+    tmtest -d | patch -p0   # update every file (beware!)
+
+DANGER!!!  This is the perfect way to let subtle bugs slip
+into your test deck.  Make sure you know I<exactly> what is
+being changed, right down to the whitespace.
+
+=back
+
+=head1 CONFIGURATION
+
+tmtest frst reads its configuration from F</etc/tmtest.conf> and
+F<~/.tmtest.conf>.
+
+=head1 EXIT VALUE
+
+tmtest returns a nonzero error code only if one or more tests
+could not be run for some reason.  If all tests are successfully run,
+even if they all fail, tmtest returns 0.
+
+=head1 TUTORIAL
+
+=head1 HISTORY
+
+The original tmtest was written in June of 2000 when I got frustrated
+with the TrestleMail mail relay program.  TrestleMail had become quite
+large and complex but required some significant reorganization for version
+0.8.  I wrote tmtest as a quick one-off Perl hack to allow me to tear
+tmtest to pieces and have some hope of getting the pieces back together.
+
+tmtest worked worked so well that I adapted it to a few other projects.
+And after gluing on feature after feature over the years, tmtest finally
+reached 1.0 in late 2004.
+
+The Perl version had become far too large and complex.  So, in early 2005,
+I rewrote the good parts in C.  This became tmtest 2.0.
+
+=head1 FILES
+
+L<tmtest-conf(5)>
+
+=head1 SEE ALSO
+
+L<testfile(1)>, L<tmtest-conf(5)>
+
+=head1 AUTHOR
+
+Scott Bronson <S<bronson@rinspin.com>>
+

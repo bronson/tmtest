@@ -1,0 +1,29 @@
+# Diff
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+eachline:   s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/,
+            s/^\+\+\+.*/+++ - DATE TIME TZ/
+
+# tests tmtest -d
+
+tmtest -d - <<-EOL
+    # title:   Ensure the Echo Command Works
+    # author:  Sam the Tester
+    # date:    31 Mar 2004
+
+    echo "right output"
+
+    ------ STDOUT: exit code 0 - no error
+    wrong output
+EOL
+
+------ STDOUT: exit code 0 - no error
+--- /tmp/STDIN-pid.unique DATE TIME TZ
++++ - DATE TIME TZ
+@@ -5,4 +5,4 @@
+ echo "right output"
+ 
+ ------ STDOUT: exit code 0 - no error
+-wrong output
++right output

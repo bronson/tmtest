@@ -1,9 +1,12 @@
 AUTHOR='Scott Bronson'
 DATE='2004-12-31'
 
-echo Howdy
+tmtest - <<-EOL
+	echo Howdy
+	STDOUT :
+	Howdy
+EOL
+STDOUT : 
+ok   (STDIN)
 
-RESULT : 3
-MODIFY : s/blah blah//g
-STDOUT : tabbed
-Howdy
+1 test run, 1 success, 0 failures.

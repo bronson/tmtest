@@ -7,8 +7,8 @@ VERSION=0.91
 COPTS=-g -Wall -Werror
 
 # utilities:
-CSRC=qscandir.c qtempfile.c
-CHDR=qscandir.h qtempfile.h
+CSRC=qscandir.c qtempfile.c pcrs.c
+CHDR=qscandir.h qtempfile.h pcrs.h
 
 # scanner files
 CSRC+=r2read.c r2read-fd.c r2scan.c r2scan-dyn.c
@@ -27,7 +27,7 @@ INTERMEDIATES+=status1.c status2.c status3.c status4.c tfscan.c
 
 
 tmtest: $(CSRC) $(CHDR) tmpl.c Makefile $(INTERMEDIATES)
-	$(CC) $(COPTS) $(CSRC) tmpl.c -o tmtest
+	$(CC) $(COPTS) $(CSRC) -lpcre tmpl.c -o tmtest
 
 tmpl.c: tmpl.sh cstrfy Makefile
 	./cstrfy -n exec_template < tmpl.sh > tmpl.c
@@ -44,6 +44,12 @@ status.c: status1.o status2.o status3.o status4.o
 	
 test: tmtest
 	./tmtest
+
+install: tmtest
+	cp tmtest /usr/local/bin/tmtest
+
+bin: tmtest
+	cp tmtest ~/bin/tmtest
 
 clean:
 	rm -f tmtest tmpl.c status.c tfscan.c status[1-4].c *.o

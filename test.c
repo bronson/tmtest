@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
@@ -28,7 +29,7 @@ static int test_failures = 0;
 
 
 
-const char* get_test_filename(struct test *test)
+const char* get_testfile_name(struct test *test)
 {
     if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
         return "(STDIN)";
@@ -220,6 +221,53 @@ void compare_section_start(scanstate *cmpscan, int fd, matchval *mv,
 }
 
 
+/** Returns true if the given buffer contains non-whitespace characters,
+ * false if the buffer consists entirely of whitespace. */
+
+static int contains_nws(const char *cp, int len)
+{
+	const char *ce = cp + len;
+
+	while(cp < ce) {
+		if(!isspace(*cp)) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+
+/** Scans the given buffer for the exit value.
+ *
+ * Ignores everything except for the first digit and any digits that
+ * follow it.
+ *
+ * If digits are found, then it updates the test structure with
+ * whether the exit values match or not.
+ * If no digits are found, then this routine does nothing.
+ */
+
+void parse_exit_clause(struct test *test, const char *cp, int len)
+{
+	const char *ce = cp + len;
+	unsigned int num = 0;
+
+	// skip to the first digit in the buffer
+	while(!isdigit(*cp) && cp < ce) cp++;
+	if(cp >= ce) return;
+
+	// scan the number
+	while(isdigit(*cp)) {
+		num = 10*num + (*cp - '0');
+		cp++;
+	}
+
+	test->expected_exitno = num;
+	test->exitno_match = (test->exitno == num ? match_yes : match_no);
+}
+
+
 /** This routine parses the tokens returned by scan_sections() and
  * compares them against the actual test results.  It stores the
  * results in test->match_stdout, match_stderr, and match_result.
@@ -239,15 +287,13 @@ void parse_section_compare(struct test *test, int sec,
     int newsec = EX_TOKEN(sec);
 
     if(get_cur_state(cmpscan) == 0) {
-        // This is the first time this scanner has been used, so our
-        // current state has not been set yet.  Initialize it to the
-        // command state.
+        // This is the first time this scanner has been used.
         set_cur_state(cmpscan, exCOMMAND);
     }
 
     if(!is_section_token(newsec) && sec != 0) {
         // We only work with result section tokens.  Ignore all
-        // other tokens (except the eof token of course).
+        // non-section-tokens except the eof token.
         return;
     }
 
@@ -262,25 +308,25 @@ void parse_section_compare(struct test *test, int sec,
                 ;
         }
 
-        // fire up new section
+        // then fire up the new section
         set_cur_state(cmpscan, newsec);
         switch(get_cur_state(cmpscan)) {
             case exSTDOUT:
                 compare_section_start(cmpscan, test->outfd,
-                        &test->stdout_match, get_test_filename(test), "STDOUT");
+                        &test->stdout_match, get_testfile_name(test), "STDOUT");
                 break;
             case exSTDERR:
                 compare_section_start(cmpscan, test->errfd,
-                        &test->stderr_match, get_test_filename(test), "STDERR");
+                        &test->stderr_match, get_testfile_name(test), "STDERR");
                 break;
             case exRESULT:
-                // TODO parse exit code
+				parse_exit_clause(test, datap, len);
                 break;
             case exMODIFY:
                 // add data to modify clause.
                 break;
             case exCOMMAND:
-                assert(!"should never start a new garbage!");
+                assert(!"Well, this is impossible.  How did you start a new command section??");
                 break;
         }
     } else {
@@ -293,9 +339,11 @@ void parse_section_compare(struct test *test, int sec,
                 compare_continue(cmpscan, datap, len);
                 break;
             case exRESULT:
-                // ignore any lines after the start of a RESULT section.
-                // todo: might want to print a warning if any non-whitespace
-                // characters are found...
+				if(contains_nws(datap, len)) {
+					fprintf(stderr, "%s line %d Error: RESULT clause contains garbage.\n",
+							get_testfile_name(test), test->testfile.line);
+					//exit(10);
+				}
                 break;
             case exMODIFY:
                 // add line to modify clause.
@@ -310,8 +358,13 @@ void parse_section_compare(struct test *test, int sec,
 /** Scans the output sections of the test and calls the supplied parser
  * for each token.
  *
+ * Tokens are defined by the tfscan_start() routine.  Currently they're
+ * full lines.  If the line starts with a recognized section heading,
+ *
+ *
  * @param scanner: used to provide the section tokens.
  */
+
 void scan_sections(struct test *test, scanstate *scanner,
         void (*parseproc)(struct test *test, int sec, const char *datap,
                 int len, void *refcon), void *refcon)
@@ -352,10 +405,10 @@ void test_results(struct test *test)
 {
     scanstate *ref;
     char buf[120];
-    int diffs;
+	int stdo, stde, exno;	// true if there are differences.
 
     if(!test_ran(test, buf, sizeof(buf))) {
-        printf("ERR  %s: %s\n", get_test_filename(test), buf);
+        printf("ERR  %s: %s\n", get_testfile_name(test), buf);
         test_failures++;
         return;
     }
@@ -377,6 +430,7 @@ void test_results(struct test *test)
 
     // convert any unknowns into a solid yes/no
     if(test->exitno_match == match_unknown) {
+		test->expected_exitno = 0;
         test->exitno_match = (test->exitno == 0 ? match_yes : match_no);
     }
     if(test->stdout_match == match_unknown) {
@@ -386,18 +440,29 @@ void test_results(struct test *test)
         test->stderr_match = (fd_has_data(test->errfd) ? match_no : match_yes);
     }
 
-    diffs = 0;
-    diffs |= (test->stdout_match != match_yes ? 0x01 : 0);
-    diffs |= (test->stderr_match != match_yes ? 0x02 : 0);
-    diffs |= (test->exitno_match != match_yes ? 0x04 : 0);
+    stdo = (test->stdout_match != match_yes);
+    stde = (test->stderr_match != match_yes);
+    exno = (test->exitno_match != match_yes);
 
-    if(diffs == 0) {
+    if(!stdo && !stde && !exno) {
         test_successes++;
-        printf("ok   %s\n", get_test_filename(test));
+        printf("ok   %s\n", get_testfile_name(test));
     } else {
         test_failures++;
-        // TODO: improve the failure message
-        printf("FAIL %s: diffs=%d\n", get_test_filename(test), diffs);
+        printf("FAIL %-25s ", get_testfile_name(test));
+		printf("%c%c%c  ",
+				(stdo ? 'O' : '.'),
+				(stde ? 'E' : '.'),
+				(exno ? 'X' : '.'));
+		if(stdo || stde) {
+			if(stdo) printf("stdout ");
+			if(stdo && stde) printf("and ");
+			if(stde) printf("stderr ");
+			printf("differed");
+		}
+		if((stdo || stde) && exno) printf(", ");
+		if(exno) printf("result was %d not %d", test->exitno, test->expected_exitno);
+		printf("\n");
     }
 
     return;

@@ -3,7 +3,7 @@ DATE='2004-12-29'
 
 echo Howdy
 
-RESULT : 3
+RESULT : 0
 MODIFY : s/blah blah//g
 STDOUT : tabbed
 Howdy

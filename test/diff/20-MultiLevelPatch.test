@@ -1,0 +1,59 @@
+# MultiLevel Patch
+# author: Scott Bronson
+# date:   15 Nov 2004
+
+# This test uses unsafe directory and file creation.
+
+# tests tmtest -d dir1/test1 dir2/test2 | patch
+
+dir=/tmp/tmtest-tt-dir-20-MultiLevelPatch
+mkdir -p $(dir)/dir1 $(dir)/dir2
+
+$(dir)/dir1/1.test: file = <<-EOF
+    # title:   Ensure the Echo Command Works
+    # author:  Sam the Tester
+    # date:    31 Mar 2004
+
+    echo "test 1 right output"
+
+    ------ STDOUT: exit code 0 - no error
+    test 1 wrong output
+EOF
+
+$(dir)/dir2/2.test: file = <<-EOF
+    # title:   Ensure the Echo Command Works
+    # author:  Sam the Tester
+    # date:    31 Mar 2004
+
+    echo "test 2 right output"
+
+    ------ STDOUT: exit code 0 - no error
+    test 2 wrong output
+EOF
+
+
+(cd $(dir) && tmtest -d dir1/1.test dir2/2.test | patch -p0)
+cat $(dir)/dir1/1.test $(dir)/dir2/2.test
+# clean up...
+rm $(dir)/dir1/1.test $(dir)/dir2/2.test
+rmdir $(dir)/dir1 $(dir)/dir2 $(dir)
+
+------ STDOUT: exit code 0 - no error
+patching file dir1/1.test
+patching file dir2/2.test
+# title:   Ensure the Echo Command Works
+# author:  Sam the Tester
+# date:    31 Mar 2004
+
+echo "test 1 right output"
+
+------ STDOUT: exit code 0 - no error
+test 1 right output
+# title:   Ensure the Echo Command Works
+# author:  Sam the Tester
+# date:    31 Mar 2004
+
+echo "test 2 right output"
+
+------ STDOUT: exit code 0 - no error
+test 2 right output

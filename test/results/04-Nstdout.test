@@ -1,11 +1,21 @@
 #!/usr/bin/tmtest
 
+# This test ensures we fail a test whose stdout doesn't match.
+# there's an extra newline in the expected stdout.
+
+
 AUTHOR='Scott Bronson'
 DATE='2004-12-31'
 
-echo Howdy
+tmtest - <<-EOL
+	echo Howdy
 
-RESULT : 3
-MODIFY : s/blah blah//g
-STDOUT : tabbed
-Howd
+	STDOUT :
+	Howdy
+
+EOL
+STDOUT : 
+FAIL (STDIN)                   O..  stdout differed
+
+1 test run, 0 successes, 1 failure.
+RESULT : 0

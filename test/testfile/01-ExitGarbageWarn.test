@@ -1,0 +1,20 @@
+AUTHOR='Scott Bronson'
+DATE='2004-12-31'
+
+# Ensure we emit a warning if the user includes garbage in his
+# exit value section.
+
+tmtest - <<-EOL
+	echo Howdy
+	RESULT : 0
+	junque
+	STDOUT :
+	Howdy
+EOL
+STDERR : 
+(STDIN) line 3 Error: RESULT clause contains garbage.
+RESULT : 0
+STDOUT : 
+FAIL (STDIN)                   .E.  stderr differed
+
+1 test run, 0 successes, 1 failure.

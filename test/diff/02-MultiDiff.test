@@ -1,0 +1,52 @@
+# Diff
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+eachline:   s/^\-\-\-.*1\.test.*/--- \/tmp\/STDIN-pid.1.test DATE TIME TZ/,
+            s/^\-\-\-.*2\.test.*/--- \/tmp\/STDIN-pid.2.test DATE TIME TZ/,
+            s/^\+\+\+.*/+++ - DATE TIME TZ/
+
+# tests tmtest -d file1 file2
+
+1.test: file = <<-EOF
+    # title:   Ensure the Echo Command Works
+    # author:  Sam the Tester
+    # date:    31 Mar 2004
+
+    echo "test 1 right output"
+
+    ------ STDOUT: exit code 0 - no error
+    test 1 wrong output
+EOF
+
+2.test: file = <<-EOF
+    # title:   Ensure the Echo Command Works
+    # author:  Sam the Tester
+    # date:    31 Mar 2004
+
+    echo "test 2 right output"
+
+    ------ STDOUT: exit code 0 - no error
+    test 2 wrong output
+EOF
+
+tmtest -d $(1.test)
+tmtest -d $(2.test)
+
+------ STDOUT: exit code 0 - no error
+--- /tmp/STDIN-pid.1.test DATE TIME TZ
++++ - DATE TIME TZ
+@@ -5,4 +5,4 @@
+ echo "test 1 right output"
+ 
+ ------ STDOUT: exit code 0 - no error
+-test 1 wrong output
++test 1 right output
+--- /tmp/STDIN-pid.2.test DATE TIME TZ
++++ - DATE TIME TZ
+@@ -5,4 +5,4 @@
+ echo "test 2 right output"
+ 
+ ------ STDOUT: exit code 0 - no error
+-test 2 wrong output
++test 2 right output
