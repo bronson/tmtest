@@ -47,4 +47,5 @@ doc:
 	$(MAKE) graphs
 
 %.png: %.dot
-	dot -Tpng $< -o $>
+	dot -Tpng $< -o $@
+	qiv -t $@ &

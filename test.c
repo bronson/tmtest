@@ -13,7 +13,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
+
 #include "test.h"
+#include "r2read-fd.h"
+#include "scan.h"
 
 static int test_runs = 0;
 static int test_successes = 0;
@@ -35,49 +38,6 @@ int fd_has_data(int fd)
 }
 
 
-/** Backs up to the start of the given file and sends
- * all of the data to the supplied callback routine.
- * When it hits EOF it will give a final read of 0.
- * Otherwise, it's impossible to have a 0-length read.
- */
-/*  UNNEEDED?
-void read_file(struct test *test, int fd, void *refcon,
-        void (*cb)(struct test *test, char *buf, int num, void *refcon))
-{
-    char buf[10];   // TODO
-    int num;
-
-    if(lseek(test->statusfd, 0, SEEK_SET) < 0) {
-        fprintf(stderr, "read_file lseek for %d: %s\n",
-                fd, strerror(errno));
-        exit(10);   // todo: consolidate with error codes in main
-    }
-
-    do {
-        // ensure we get a full read
-        do {
-            num = read(test->statusfd, buf, sizeof(buf));
-        } while(num < 0 && errno == EINTR);
-
-        if(num < 0) {
-            perror("read in config_bailed");
-            exit(10);   // todo: consolidate with error codes in main
-        }
-
-        (*cb)(test, buf, num, refcon);
-    } while(num);
-    
-    return 0;
-}
-*/
-
-
-void config_bailed_readcb(struct test *test, char *buf, int num, void *refcon)
-{
-    
-}
-
-
 /** Returns true if the test was started, or false if we bailed before.
  *
  * If a configuration file causes the test shell to exit, we may never
@@ -93,6 +53,16 @@ void config_bailed_readcb(struct test *test, char *buf, int num, void *refcon)
 
 int config_bailed(struct test *test, char *msg, int msglen)
 {
+    // first rewind the status file
+    if(lseek(test->statusfd, 0, SEEK_SET) < 0) {
+        fprintf(stderr, "read_file lseek for status file: %s\n", strerror(errno));
+        exit(10);   // todo: consolidate with error codes in main
+    }
+
+    // now, if we see the token "CBRUNNING" in the status stream,
+    // it means that we attempted to start the test.
+
+
     return 0;
 }
 

@@ -28,6 +28,7 @@ ANYNDQ  = ANYN\["];
 ["] (ANYNDQ | "\\\"")+ ["] { ss->token++; ss->tokend = ss->cursor-1;
                              RETURN(); return CBFILE;
                            }
+[\000-\377]                { return GARBAGE; }
 */
 }
 
