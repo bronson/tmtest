@@ -1,7 +1,7 @@
 # author: Scott Bronson
 # date:   14 Nov 2004
 
-# Verifies what happens when a test is disabled and gives 
+# Verifies what happens when a test is aborted and gives 
 # only whitespace as a reason.
 
 # this is really weird...  I would expect the colon to be printed
@@ -11,7 +11,7 @@
 
 
 tmtest - <<-EOL
-	DISABLED: "   "
+	ABORT: "   "
 	echo "right output"
 	STDOUT:
 	wrong output
@@ -24,6 +24,6 @@ MODIFY:
 
 
 STDOUT:
-dis  (STDIN)                   
+ABRT (STDIN)                   
 
-1 test run, 0 successes, 0 failures.
+1 test run, 0 successes, 1 failure.

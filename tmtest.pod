@@ -40,6 +40,55 @@ being changed, right down to the whitespace.
 tmtest frst reads its configuration from F</etc/tmtest.conf> and
 F<~/.tmtest.conf>.
 
+=over 8
+
+=item ABORT
+
+Causes the test to abort immediately.  See the example in
+L</MKDIR>.
+
+=item ADD_CWD_TO_PATH
+
+This adds the directory containing the currently-running script to the
+front of the $PATH variable.  Executables in this directory will be
+run in preference to identically-named executables installed elsewhere
+on the system.
+
+=item DISABLE
+=item DISABLED
+
+Marks the test disabled.  If put in a config file, marks all tests in
+that directory and all subdirectories disabled.
+
+You can supply a reason string too
+
+   DISABLED: this test is just too lame.
+
+=item MKDIR
+
+Creates the named directory.
+This directory will be deleted when the script ends.
+If it still contains files, a warning is printed and the
+directory is not deleted.  Files and directories are deleted in
+the opposite order that they are created
+
+Note that you should never use static names in /tmp because it
+opens you up to symlink attacks.  Use the mktemp command to
+generate a unique name for your directory:
+
+	dir=`mktemp -t 02-XXXXXX` || ABORT can't mktemp.
+	MKDIR $dir
+	cd $dir
+	etc...
+
+=item MKFILE
+
+Creates the named file.  The file will be deleted when the test
+ends.  See the description for L</MKDIR> on why static file names
+should be avoided.  Here's an
+
+=back
+
 =head1 EXIT VALUE
 
 tmtest returns a nonzero error code only if one or more tests

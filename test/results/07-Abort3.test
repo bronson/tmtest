@@ -1,0 +1,24 @@
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+# Verifies what happens when a test is aborted but output is selected.
+
+
+tmtest -o - <<-EOL
+	ABORT This is the reason
+	echo "right output"
+	STDOUT:
+	wrong output
+EOL
+
+
+MODIFY:
+	s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
+	s/^\+\+\+.*/+++ - DATE TIME TZ/
+
+
+STDOUT:
+ABORT This is the reason
+echo "right output"
+STDERR:
+ERROR Test was aborted: This is the reason

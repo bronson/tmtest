@@ -1,0 +1,24 @@
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+# Verifies what happens when a test is aborted and gives a reason.
+
+
+tmtest - <<-EOL
+	ABORT: This is the reason
+	echo "right output"
+	STDOUT:
+	wrong output
+EOL
+
+
+MODIFY:
+	s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
+	s/^\+\+\+.*/+++ - DATE TIME TZ/
+
+
+STDERR:
+STDOUT:
+ABRT (STDIN)                   : This is the reason
+
+1 test run, 0 successes, 1 failure.

@@ -2,6 +2,8 @@
 # author: Scott Bronson
 # date:   15 Nov 2004
 
+DISABLED
+
 # This test uses unsafe directory and file creation.
 
 # tests tmtest -d dir1/test1 dir2/test2 | patch

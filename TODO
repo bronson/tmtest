@@ -9,6 +9,7 @@ Tests that fail before they're run (bad config files)
 Tests that fail to run (syntax error)
 Try running a testfile whose name contains a single quote.
 Disabling an entire directory using a config file.
+Test that both raw and modified work when stdout doesn't have a newline.
 
 2.0:
 - write a function to make it easy to create crfiles.
@@ -24,6 +25,9 @@ Disabling an entire directory using a config file.
 - Rewrite the test date and author if they aren't supplied.
 - should probably indent stdout and stderr clauses two spaces.  otherwise
   we might misinterpret STDOUT: and STDERR: in a stdout or stderr clause.
+- Shouldn't run every test if the DISABLED directive is in a config file.
+  Should discover what dir the DISABLED directive came from and refuse
+  to run anything above that.
 
 2.2:
 - Add the ability to run multiple tests from one testfile
@@ -39,15 +43,11 @@ Disabling an entire directory using a config file.
 - Provide some sort of XML output.
 - it's stupid to dup the str just to null-terminate it so it can be passed to pcrs.
   modify pcrs to compile buffers too.
+- There should be a way to repeatedly run a single test with only tiny
+  differences.  i.e. test all permeutations of DISABLE DISABLE:
+  DISABLED DISABLED:  Hopefully that will clean up 05-08-Disable/Abort.test
 
 
 - Wow, the pcrs error messages suck.  Is there any way to improve them?
   "(pcrs:) Syntax error while parsing command (-11)."
-
-
-Never:
-
-It's a shame that bash 3 can't print the correct line numbers when
-feeding the script on stdin.  Bash 2 works fine.  For no good reason
-bash3 no longer allows you to set LINENO.  Weird.
 

@@ -4,6 +4,8 @@
 
 # tests tmtest -d | patch
 
+DISABLED
+
 eachline: s/^patching .*/patching ((FILE))/
 
 

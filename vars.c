@@ -42,11 +42,22 @@
 
 static int var_testfile(struct test *test, FILE* fp, const char *var)
 {
-    assert(test->testfilename);
-    fputs(test->testfilename, fp);
+	char buf[PATH_MAX];
+
+    if(!getcwd(buf, sizeof(buf))) {
+        perror("Could not getcwd");
+        return 1;
+    }
+
+	fprintf(fp, "%s/%s", buf, test->testfilename);
     return 0;
 }
 
+static int var_title(struct test *test, FILE* fp, const char *var)
+{
+    fputs(test->testfilename, fp);
+    return 0;
+}
 
 static int var_testexec(struct test *test, FILE* fp, const char *var)
 {
@@ -85,7 +96,7 @@ static int var_date(struct test *test, FILE *fp, const char *var)
 
     time(&now);
     tm = localtime(&now);
-    fprintf(fp, "%d-%d-%d %d:%d:%d",
+    fprintf(fp, "%d-%02d-%02d %2d:%02d:%02d",
             tm->tm_year+1900, tm->tm_mon, tm->tm_mday,
             tm->tm_hour, tm->tm_min, tm->tm_sec);
 
@@ -192,24 +203,21 @@ static void check_config(struct test *test, FILE *fp,
 
 static int var_config_files(struct test *test, FILE *fp, const char *var)
 {
-    char *cwd;
+	char buf[PATH_MAX];
     char *cp;
 
 	check_config_str(test, fp, "/etc", CONFIG_FILE);
 	check_config_str(test, fp, get_home_dir(), HOME_CONFIG_FILE);
 
-    cwd = getcwd(NULL, 0);
-    if(!cwd) {
+    if(!getcwd(buf, sizeof(buf))) {
         perror("Could not getcwd");
         return 1;
     }
 
-    for(cp=cwd; (cp=strchr(cp,'/')); cp++) {
-		check_config(test, fp, cwd, cp-cwd, CONFIG_FILE);
+    for(cp=buf; (cp=strchr(cp,'/')); cp++) {
+		check_config(test, fp, buf, cp-buf, CONFIG_FILE);
     }
-	check_config_str(test, fp, cwd, CONFIG_FILE);
-
-    free(cwd);
+	check_config_str(test, fp, buf, CONFIG_FILE);
 
     return 0;
 }
@@ -235,6 +243,7 @@ int printvar(struct test *test, FILE *fp, const char *varname)
         { "STATUSFD",       var_statusfd },
         { "TESTFILE",       var_testfile },
         { "TESTEXEC",       var_testexec },
+		{ "TITLE",			var_title },
     };
 
     for(i=0; i<sizeof(funcs)/sizeof(funcs[0]); i++) {

@@ -10,6 +10,22 @@
 #include "re2c/scan.h"
 
 
+typedef enum {
+	test_pending=0,			///< still processing config files
+	config_was_aborted,		///< some config file called ABORT
+	config_was_disabled, 	///< some config file called DISABLED
+
+	test_was_started=16,	///< test was started but we haven't received an exit status yet.
+	test_was_completed,		///< test completed normally.  tests may abort prematurely but still consider it a successful run, so use test_was_started.  this status is largely useless.
+	test_was_aborted,		///< somebody called abort in the middle of the test.
+	test_was_disabled,		///< the test was disabled by somebody.
+} test_status;
+
+
+#define was_started(st)  ((st) >= test_was_started)
+#define was_aborted(st)  ((st) == config_was_aborted || (st) == test_was_aborted)
+#define was_disabled(st) ((st) == config_was_disabled || (st) == test_was_disabled)
+
 // all strings are malloc'd and need to be freed when the test is finished.
 
 struct test {
@@ -28,10 +44,10 @@ struct test {
 	char *diffname;			///< if we're diffing against stdin, this contains the name of the required tempfile.
 	int diff_fd;			///< if diffname is set, then this is the fd of the tempfile we're using to store stdin.
 
-	int test_was_started;	///< 0 if the test didn't run or we don't know.  1 if we have verified that configuration happened without error and the test was successfully started.  This does not imply that the test completed without errors of course.
-	int test_was_disabled;	///< 1 if the test was disabled.  The reason (if there was one) can be found in disable_reason.
-	char *disable_reason;	///< if the test was disabled, and the user gave a reason why, that reason is stored here.  must be freed.
-	int num_config_files;	///< the number of config files we started to process.  if test_was_started is true, then this is the number of config files we read.
+	test_status status;		///< Tells what happened with the test.
+	char *status_reason;	///< If the test was aborted or disabled, and the user gave a reason why, that reason is stored here.  Allocated dynamically -- free it when done.
+
+	int num_config_files;	///< the number of config files we started processing.  If the status is higher than test_was_started, then this gives the total number of config files processed.
 	char *last_file_processed; ///< if it could be discovered, this contains the name of the last file to be started.  must be freed.
 
 	int expected_exitno;	///< the test's expected exit value.  this is only valid when stderr_match != match_unknown.

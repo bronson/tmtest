@@ -174,41 +174,71 @@ void scan_status_file(struct test *test)
         } else if(tok == stGARBAGE) {
 			fprintf(stderr, "Garbage on line %d in the status file: '%.*s'\n",
 					ss.line, token_length(&ss)-1, token_start(&ss));
-		} else if(tok < state) {
-			fprintf(stderr, "Out-of-order token on line %d in the status file (token=%d, state=%d): '%.*s'\n",
-					ss.line, tok, state, token_length(&ss)-1, token_start(&ss));
 		} else {
 			state = tok;
 		}
 
 		switch(tok) {
+			case stSTART:
+				// nothing to do
+				break;
+
 			case stCONFIG:
-				test->num_config_files += 1;
-				if(copy_status_arg(token_start(&ss), token_end(&ss), lastfile, sizeof(lastfile))) {
-					lastfile_good = 1;
+				if(test->status == test_pending) {
+					test->num_config_files += 1;
+					if(copy_status_arg(token_start(&ss), token_end(&ss), lastfile, sizeof(lastfile))) {
+						lastfile_good = 1;
+					} else {
+						fprintf(stderr, "CONFIG needs arg on line %d of the status file: '%.*s'\n",
+								ss.line, token_length(&ss)-1, token_start(&ss));
+					}
 				} else {
-					fprintf(stderr, "CONFIG needs arg on line %d of the status file: '%.*s'\n",
-							ss.line, token_length(&ss)-1, token_start(&ss));
+					fprintf(stderr, "CONFIG but status (%d) wasn't pending on line %d of the status file: '%.*s'\n",
+							test->status, ss.line, token_length(&ss)-1, token_start(&ss));
 				}
+				break;
+
+			case stPREPARE:
+				// nothing to do
 				break;
 
 			case stRUNNING:
-				test->test_was_started = 1;
-				if(copy_status_arg(token_start(&ss), token_end(&ss), lastfile, sizeof(lastfile))) {
-					lastfile_good = 1;
+				if(test->status == test_pending) {
+					test->status = test_was_started;
+					if(copy_status_arg(token_start(&ss), token_end(&ss), lastfile, sizeof(lastfile))) {
+						lastfile_good = 1;
+					} else {
+						fprintf(stderr, "RUNNING needs arg on line %d of the status file: '%.*s'\n",
+								ss.line, token_length(&ss)-1, token_start(&ss));
+					}
 				} else {
-					fprintf(stderr, "RUNNING needs arg on line %d of the status file: '%.*s'\n",
-							ss.line, token_length(&ss)-1, token_start(&ss));
+					fprintf(stderr, "RUNNING but status (%d) wasn't pending on line %d of the status file: '%.*s'\n",
+							test->status, ss.line, token_length(&ss)-1, token_start(&ss));
+				}
+				break;
+
+			case stDONE:
+				if(test->status == test_was_started) {
+					test->status = test_was_completed;
+				} else {
+					fprintf(stderr, "DONE but status (%d) wasn't RUNNING on line %d of the status file: '%.*s'\n",
+							test->status, ss.line, token_length(&ss)-1, token_start(&ss));
 				}
 				break;
 			
-			case stDISABLED:
-				test->test_was_disabled = 1;
-				test->disable_reason = dup_status_arg(token_start(&ss), token_end(&ss));
+			case stABORTED:
+				test->status = (test->status >= test_was_started ? test_was_aborted : config_was_aborted);
+				test->status_reason = dup_status_arg(token_start(&ss), token_end(&ss));
 				break;
 
-			default: ;
-			// nothing to do
+			case stDISABLED:
+				test->status = (test->status >= test_was_started ? test_was_disabled : config_was_disabled);
+				test->status_reason = dup_status_arg(token_start(&ss), token_end(&ss));
+				break;
+
+			default:
+				fprintf(stderr, "Unknown token (%d) on line %d of the status file: '%.*s'\n",
+						tok, ss.line, token_length(&ss)-1, token_start(&ss));
 		}
     } while(!scan_finished(&ss));
 
@@ -578,6 +608,19 @@ void scan_sections(struct test *test, scanstate *scanner,
 }
 
 
+static void print_reason(struct test *test, const char *name)
+{
+	printf("%s %-25s ", name, get_testfile_name(test));
+	if(!was_started(test->status)) {
+		printf("by %s", test->last_file_processed);
+	}
+	if(test->status_reason) {
+		printf(": %s", test->status_reason);
+	}
+	printf("\n");
+}
+
+
 /** Checks the actual results against the expected results.
  */
 
@@ -587,24 +630,22 @@ void test_results(struct test *test)
     char scanbuf[MAX_LINE_LENGTH];
 	int stdo, stde, exno;	// true if there are differences.
 	
-	scan_status_file(test);
-    if(!test->test_was_started) {
+	if(was_aborted(test->status)) {
+		print_reason(test, "ABRT");
+		test_failures++;
+		return;
+	}
+
+	if(was_disabled(test->status)) {
+		print_reason(test, "dis ");
+		return;
+	}
+
+    if(!was_started(test->status)) {
         fprintf(stderr, "Error: %s was not started.  TODO: add more info\n", get_testfile_name(test));
         test_failures++;
         return;
     }
-
-	if(test->test_was_disabled) {
-		printf("dis  %-25s ", get_testfile_name(test));
-		if(0!=strcmp(test->testfilename, test->last_file_processed)) {
-			printf("by %s", test->last_file_processed);
-		}
-		if(test->disable_reason) {
-			printf(": %s", test->disable_reason);
-		}
-		printf("\n");
-		return;
-	}
 
     test->exitno_match = match_unknown;
     test->stdout_match = match_unknown;
@@ -829,29 +870,41 @@ void parse_section_output(struct test *test, int sec,
 }
 
 
+static void dump_reason(struct test *test, const char *name)
+{
+	fprintf(stderr, "ERROR Test %s", name);
+	if(!was_started(test->status)) {
+		fprintf(stderr, " by %s", convert_testfile_name(test->last_file_processed));
+	}
+	if(test->status_reason) {
+		fprintf(stderr, ": %s", test->status_reason);
+	}
+	fprintf(stderr, "\n");
+}
+
+
 /** Prints the actual result sections in the same order as they
  * appear in the testfile.
  */
 
 void dump_results(struct test *test)
 {
-    if(!test->test_was_started) {
+	if(was_aborted(test->status)) {
+		dump_reason(test, "was aborted");
+		return;
+	}
+
+	if(was_disabled(test->status)) {
+		dump_reason(test, "is disabled");
+		return;
+
+	}
+
+    if(!was_started(test->status)) {
         fprintf(stderr, "Error: %s was not started.  TODO: add more info\n", get_testfile_name(test));
         test_failures++;
         return;
     }
-
-	if(test->test_was_disabled) {
-		fprintf(stderr, "ERROR Test is disabled");
-		if(0!=strcmp(test->testfilename, test->last_file_processed)) {
-			fprintf(stderr, " by %s", convert_testfile_name(test->last_file_processed));
-		}
-		if(test->disable_reason) {
-			fprintf(stderr, ": %s", test->disable_reason);
-		}
-		fprintf(stderr, "\n");
-		return;
-	}
 
     // The command section has already been dumped.  We just
     // need to dump the result sections.  The trick is, though,
@@ -922,8 +975,8 @@ void test_free(struct test *test)
 		free(test->diffname);
 	}
 
-	if(test->disable_reason) {
-		free(test->disable_reason);
+	if(test->status_reason) {
+		free(test->status_reason);
 	}
 
 	if(test->last_file_processed) {

@@ -1,14 +1,21 @@
 echo START >&%(STATUSFD)
 
-set -e
+# set -e
 # PS4='TEST: '
 # set -x
 
 ADD_CWD_TO_PATH () { PATH="$(dirname ${BASH_SOURCE[1]}):$PATH"; }
-DISABLED () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
-DISABLED: () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
 
-TITLE='%(TESTFILE)'
+DISABLED  () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
+DISABLED: () { DISABLED $*; }
+DISABLE   () { DISABLED $*; }
+DISABLE:  () { DISABLED $*; }
+
+ABORT ()  { echo "ABORTED: $*" >&%(STATUSFD); exit 0; }
+ABORT: () { ABORT $*; }
+
+TESTFILE='%(TESTFILE)'
+TITLE='%(TITLE)'
 AUTHOR='%(AUTHOR)'
 DATE='%(DATE)'
 

@@ -2,6 +2,8 @@
 # author: Scott Bronson
 # date:   14 Nov 2004
 
+DISABLED
+
 eachline: s/^patching .*/patching ((FILE))/
 
 
