@@ -1,9 +1,16 @@
-AUTHOR='Scott Bronson'
-DATE='2004-12-29'
+cat <<-EOL
+	Cat fud. Fud.  FUD.  fUd.
+	Look at me!  I'm a cowboy.
+	Howdy howdy howdy.
+	And more cat Fud.  high.
+EOL
 
-echo Howdy
-
-RESULT : 0
-MODIFY : s/Howdy/HOWDY/
-STDOUT : tabbed
-HOWDY
+MODIFY :
+#	s/Howdy/HOWDY/i
+	#s/fud/FUD/gi
+	s/hi/HI/
+STDOUT :
+Cat FUD. FUD.  FUD.  FUD.
+Look at me!  I'm a cowboy.
+HOWDY howdy howdy.
+And more cat FUD.  HIgh.

@@ -303,6 +303,11 @@ void parse_modify_clause(struct test *test, const char *cp, const char *ce)
 		return;
 	}
 
+	// don't parse it if it's a comment
+	if(*cp == '#') {
+		return;
+	}
+
 	// it's retarded that I can't pass a buf/len combo to pcrs_compile_command.
 	string = malloc(ce-cp+1);
 	if(!string) {
@@ -551,8 +556,7 @@ static void write_exit_no(int fd, int exitno)
 }
 
 
-/*
-static void write_file(int outfd, const char *name, int infd)
+static void write_raw_file(int outfd, const char *name, int infd)
 {
     char buf[BUFSIZ];
     int rcnt, wcnt;
@@ -587,7 +591,6 @@ static void write_file(int outfd, const char *name, int infd)
         }
     } while(rcnt);
 }
-*/
 
 
 static void write_modified_file(int outfd, const char *name, int infd, pcrs_job *job)
@@ -652,6 +655,18 @@ static void write_modified_file(int outfd, const char *name, int infd, pcrs_job 
 }
 
 
+static void write_file(int outfd, const char *name, int infd, pcrs_job *job)
+{
+	if(!job) {
+		// use the simple, fast routine
+		write_raw_file(outfd, name, infd);
+	} else {
+		// use the line buffered routine
+		write_modified_file(outfd, name, infd, job);
+	}
+}
+
+
 /** Writes the actual results in place of the expected results.
  */
 
@@ -667,7 +682,7 @@ void parse_section_output(struct test *test, int sec,
 
         case exSTDOUT|exNEW:
             test->stdout_match = match_yes;
-            write_modified_file(test->rewritefd, "STDOUT:\n", test->outfd, test->eachline);
+            write_file(test->rewritefd, "STDOUT:\n", test->outfd, test->eachline);
             break;
         case exSTDOUT:
             // ignore all data in the expected stdout.
@@ -675,7 +690,7 @@ void parse_section_output(struct test *test, int sec,
 
         case exSTDERR|exNEW:
             test->stderr_match = match_yes;
-            write_modified_file(test->rewritefd, "STDERR:\n", test->errfd, test->eachline);
+            write_file(test->rewritefd, "STDERR:\n", test->errfd, test->eachline);
         case exSTDERR:
             // ignore all data in the expected stderr
             break;
@@ -734,10 +749,10 @@ void dump_results(struct test *test)
         write_exit_no(test->rewritefd, test->exitno);
     }
     if(test->stderr_match == match_unknown && fd_has_data(test->errfd)) {
-        write_modified_file(test->rewritefd, "STDERR:\n", test->errfd, test->eachline);
+        write_file(test->rewritefd, "STDERR:\n", test->errfd, test->eachline);
     }
     if(test->stdout_match == match_unknown && fd_has_data(test->outfd)) {
-        write_modified_file(test->rewritefd, "STDOUT:\n", test->outfd, test->eachline);
+        write_file(test->rewritefd, "STDOUT:\n", test->outfd, test->eachline);
     }
 }
 
