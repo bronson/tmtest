@@ -1,6 +1,6 @@
 # Trivial Test
 # author: Scott Bronson
-# date:   3 Dec 2001
+# date:   31 Mar 2004
 #
 # This is the complex example from the testfile(1) manpage.
 #
@@ -46,9 +46,6 @@ tmtest - <<-EOL
     a little more
     ... and even more output!
 EOL
-
-# Notice how there's no space before the "echo" below.
-# Earlier versions of tmtest would erroneously put a space there.
 
 ------ STDOUT: exit code 0 - no error
 ok   STDIN

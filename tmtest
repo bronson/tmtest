@@ -71,6 +71,7 @@ my $extract_cmd = undef;	# deprecated?
 my $custom_file = undef;
 my $debug = 0;
 my $editor = 0;
+my $test_is_from_stdin = 0; # 1 if "-" on cmdline so test is read from stdin.
 
 # Need to know if signal raised on child is sigint.
 my %signum;
@@ -119,9 +120,10 @@ if($editor) {
 
 if( @ARGV == 1 && $ARGV[0] eq "-" ) {
 	# One last argument is a dash?  Read from stdin.
+    $test_is_from_stdin = 1;
 	my @file = <STDIN>;
 	my $test = read_test(\@file, "STDIN", File::Spec->rel2abs(File::Spec->curdir()), 1);
-	process_test( $test );
+	process_test($test, \@file);
 } elsif(@ARGV) {
 	for(@ARGV) {
 		if( -f $_ ) {
@@ -515,6 +517,7 @@ sub clean_results
 sub process_test
 {
 	my $test = shift;
+    my $origfile = shift;
 
 	if($syntax_check) {
 		print_test($test);
@@ -583,7 +586,7 @@ sub process_test
 			}
 		} elsif($diff_results) {
 			if($results && !$test->{success}) {
-				diff_results($test, $results);
+				diff_results($test, $results, $origfile);
 			}
 		} else {
 			print("$outword " . $test->{file} . "\n");
@@ -1365,8 +1368,32 @@ sub diff_results
 {
 	my $test = shift;
 	my $results = shift;
+    # this argument is only passed when test_is_from_stdin==0
+    # and therefore $test->file doesn't actually point to a file.
+    my $origfile = shift;
 
-	open(FD, "|-", $diff, "-u", $test->{file}, "-")
+    my $unlink;
+    my $file = $test->{file};
+
+    # This is a bit of a hassle.  Since we're already using stdin
+    # to pass diff the test results, if tmtest was passed the testfile
+    # on stdin, it needs to dump it to a file.
+    if($test_is_from_stdin) {
+        die "Internal error!" unless defined $origfile;
+
+        my $fh;
+        ($fh, $file) = File::Temp::tempfile("STDIN-$$.XXXXXX",
+            DIR => File::Spec->tmpdir);
+        print $fh @$origfile;
+        close($fh);
+
+        $unlink = $file;
+    }
+
+    # quick sanity check before launching the diff command.
+    die "$file doesn't exist!\n" unless -f $file;
+
+	open(FD, "|-", $diff, "-u", $file, "-")
 		or die "Couldn't start $diff: $!\n";
 	my $oldfd = select(FD);
 	print_results($test, $results);
@@ -1377,6 +1404,10 @@ sub diff_results
 	# 1 if they're different, and 2 if there was an error.  So,
 	# we'll assume success if it returns 0 or 1 and didn't signal or core.
 	die "$diff returned $?: $!\n" unless $? == (0<<8) || $? == (1<<8);
+
+    if(defined $unlink) {
+        unlink($unlink) or die "Could not unlink $unlink: $!\n";
+    }
 }
 
 
