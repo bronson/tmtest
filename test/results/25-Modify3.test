@@ -22,7 +22,7 @@ tmtest - <<-EOL1
 	And more cat FUD.  HIgh.
 EOL1
 
-STDOUT : 
-ok   (STDIN)
+STDOUT:
+ok   (STDIN) 
 
 1 test run, 1 success, 0 failures.

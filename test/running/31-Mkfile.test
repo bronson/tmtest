@@ -1,0 +1,28 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-29'
+
+
+# Similar to 30-Mkfile.test, except that it tests the file generation
+# code.  Because it generates its own filename, the supertest cannot
+# verify that the subtest successfully deletes the file that it creates.
+
+
+tmtest - <<-EOL
+	MKFILE sfn <<-EOS
+		FileContents
+	EOS
+
+	echo start of contents
+	cat "\$sfn"
+	echo end of contents
+
+	STDOUT:
+	start of contents
+	FileContents
+	end of contents
+EOL
+
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

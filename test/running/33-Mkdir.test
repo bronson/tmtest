@@ -1,0 +1,38 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-29'
+
+
+# Like 30-Mkfile.test, except with directories.
+
+
+dn=`mktemp -d -t`
+
+tmtest - <<-EOL
+	MKDIR sdn '$dn'
+
+	echo start
+	cd '$dn' && echo Yep!
+	echo end
+
+	STDOUT:
+	start
+	Yep!
+	end
+EOL
+
+
+# Ensure that the directory was properly deleted by the subtest.
+echo
+if [ ! -d "$dn" ]; then
+	echo "Directory was successfully deleted."
+else
+	echo "DIR $dn STILL EXISTS!!!"
+fi
+
+
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.
+
+Directory was successfully deleted.

@@ -877,7 +877,7 @@ static void dump_reason(struct test *test, const char *name)
 		fprintf(stderr, " by %s", convert_testfile_name(test->last_file_processed));
 	}
 	if(test->status_reason) {
-		fprintf(stderr, " %s", test->status_reason);
+		fprintf(stderr, ": %s", test->status_reason);
 	}
 	fprintf(stderr, "\n");
 }

@@ -13,10 +13,10 @@ tmtest - <<-EOL
 	bogus!
 EOL
 
-STDERR : 
+STDERR:
 (STDIN) line 5 Error: duplicate STDERR section.  Ignored.
-RESULT : 0
-STDOUT : 
-ok   (STDIN)
+RESULT: 0
+STDOUT:
+ok   (STDIN) 
 
 1 test run, 1 success, 0 failures.

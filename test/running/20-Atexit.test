@@ -18,7 +18,7 @@ tmtest - <<-EOL
 EOL
 
 
-STDOUT: 
-ok   (STDIN)
+STDOUT:
+ok   (STDIN) 
 
 1 test run, 1 success, 0 failures.

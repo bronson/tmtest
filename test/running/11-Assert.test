@@ -16,6 +16,6 @@ EOL
 MODIFY: s/ on.*line \d+//
 
 STDOUT:
-ABRT (STDIN)                   : assertion failed: "-1 -eq 1"
+ABRT (STDIN)                   assertion failed: "-1 -eq 1"
 
 1 test run, 0 successes, 1 failure.

@@ -10,7 +10,7 @@ tmtest - <<-EOL
 	STDOUT :
 	HOWDY HODY Hi HODY
 EOL
-STDOUT : 
-ok   (STDIN)
+STDOUT:
+ok   (STDIN) 
 
 1 test run, 1 success, 0 failures.

@@ -1,0 +1,53 @@
+AUTHOR='Scott Bronson'
+DATE='2005-01-29'
+
+
+# Like 33-Mkdir.test, except ensures that the directory won't
+# be deleted if it is not empty.
+
+
+dn=`mktemp -d -t`
+
+tmtest - <<-EOL
+	MKDIR sdn '$dn'
+
+	echo start
+	cd '$dn'
+	touch obdurate && echo mid
+	echo end
+
+	STDOUT:
+	start
+	mid
+	end
+	MODIFY: s/rmdir:.*: /rmdir: DIRNAME: /
+	STDERR:
+	rmdir: DIRNAME: Directory not empty
+EOL
+
+
+# Ensure that the directory was properly deleted by the subtest.
+echo
+if [ -d "$dn" ]; then
+	echo "Dir still exists after test ran.  Good."
+else
+	echo "DIRECTORY WAS SUCCESSFULLY DELETED!!??"
+fi
+
+rm "$dn/obdurate"
+rmdir "$dn"
+
+if [ ! -d "$dn" ]; then
+	echo "Directory was successfully deleted."
+else
+	echo "DIR $dn STILL EXISTS!!!"
+fi
+
+
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.
+
+Dir still exists after test ran.  Good.
+Directory was successfully deleted.

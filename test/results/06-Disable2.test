@@ -19,6 +19,6 @@ MODIFY:
 
 STDERR:
 STDOUT:
-dis  (STDIN)                   : This is the reason
+dis  (STDIN)                   This is the reason
 
 1 test run, 0 successes, 0 failures.

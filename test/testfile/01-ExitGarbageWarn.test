@@ -15,6 +15,6 @@ EOL
 STDERR:
 (STDIN) line 3 Error: RESULT clause contains garbage.
 STDOUT:
-ok   (STDIN)
+ok   (STDIN) 
 
 1 test run, 1 success, 0 failures.

@@ -19,6 +19,6 @@ MODIFY:
 
 STDERR:
 STDOUT:
-ABRT (STDIN)                   : This is the reason
+ABRT (STDIN)                   This is the reason
 
 1 test run, 0 successes, 1 failure.
