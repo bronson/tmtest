@@ -21,3 +21,7 @@ print a warning if a result section is found with nonws chars (test_parse_sectio
 print a warning if a SECTION: is found (needs to be SECTION : , with a space)
 Provide some sort of XML output.
 
+
+It's a shame that bash can't print the correct line numbers when
+    feeding the script on stdin.
+

@@ -29,7 +29,7 @@ RUNNING = "running";
 RUNNING WS* ":" WS* { BEGINSUB(file); return CBRUNNING; }
 ANYNWS*          { return GARBAGE;                   }
 WS*              { return WHITESPACE;               }
-"\n"             { ss->line++; return NEWLINE;      }
+"\n"             { inc_line(ss); return NEWLINE;      }
 */
 }
 

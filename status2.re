@@ -34,7 +34,7 @@ CONFIG WS* ":" WS* { BEGINSUB(file); return CBCONFIG; }
 READY WS*          { BEGIN(running); return CBREADY; }
 ANYNWS*            { return GARBAGE;                  }
 WS*                { return WHITESPACE;             }
-"\n"               { ss->line++; return NEWLINE;    }
+"\n"               { inc_line(ss); return NEWLINE;    }
 
 */
 }

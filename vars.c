@@ -24,8 +24,23 @@
 
 static int var_testfile(struct test *test, FILE* fp, const char *var)
 {
-    assert(test->filename);
-    fprintf(fp, test->filename);
+    assert(test->testfilename);
+    fputs(test->testfilename, fp);
+    return 0;
+}
+
+
+static int var_testexec(struct test *test, FILE* fp, const char *var)
+{
+    // If the filename is a dash, it means we should feed the test
+    // from stdin.  Otherwise, just have the shell execute the testfile.
+
+    if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
+        test_command_copy(test, fp);
+    } else {
+        fprintf(fp, ". '%s'", test->testfilename);
+    }
+
     return 0;
 }
 
@@ -122,6 +137,7 @@ int printvar(struct test *test, FILE *fp, const char *varname)
         { "ERRFD",          var_errfd },
         { "STATUSFD",       var_statusfd },
         { "TESTFILE",       var_testfile },
+        { "TESTEXEC",       var_testexec },
     };
 
     for(i=0; i<sizeof(funcs)/sizeof(funcs[0]); i++) {

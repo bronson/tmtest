@@ -1,11 +1,12 @@
-/* expec.re
+/* tfscan.re
  * Scott Bronson
  * 30 Dec 2004
  *
+ * Scanner for test files.
  * This file needs to be processed by re2c, http://re2c.org
  */
 
-#include "expec.h"
+#include "tfscan.h"
 
 
 #define START(x) (ss->scanref=(void*)(x))
@@ -18,10 +19,10 @@
  * finds a new section, you get a exNEW+TOKEN of the new section.
  */
 
-int expec_scanner_start(scanstate *ss)
+int tfscan_start(scanstate *ss)
 {
     ss->token = ss->cursor;
-    ss->line++;
+    inc_line(ss);
 
 /*!re2c
 
@@ -39,12 +40,11 @@ ANYN* "\n"                  { return (int)ss->scanref; }
 }
 
 
-scanstate* expec_scanner_attach(scanstate *ss)
+scanstate* tfscan_attach(scanstate *ss)
 {
     if(ss) {
-        ss->line = 0;
-        START(exGARBAGE);
-        ss->state = expec_scanner_start;
+        START(exCOMMAND);
+        ss->state = tfscan_start;
     }
 
     return ss;

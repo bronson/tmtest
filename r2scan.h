@@ -136,7 +136,6 @@ typedef struct scanstate {
 
     // (these do a poor job of simulating capturing parens)
     const char *token;    ///< The start of the current token (manually updated by the scanner).
-    const char *tokend;   ///< The end of the current token
 
     const char *bufptr;   ///< The buffer currently in use
     int bufsiz;         ///< The maximum number of bytes that the buffer can hold
@@ -146,8 +145,13 @@ typedef struct scanstate {
 
     void *scanref;      ///< Data specific to the scanner
     scanproc state;     ///< some scanners are made up of multiple individual scan routines.  They store their state here.
-    int line;           ///< The scanner may or may not use this to tell the current line number.
-    int at_eof;         ///< true when the readproc realizes it has hit eof.
+
+    struct {
+        int new;        ///< The scanner may or may not use this to tell the current line number.  All operations on line must go through the macros.
+        int old;
+    } line;        
+
+    int at_eof;         ///< You almost certainly don't want to be reading this.  Use scan_finished() instead.  true when the readproc realizes it has hit eof.  by convention 1 means eof, 2 means at_eof is true but because of an unrecoverable read error.  This should probably be formalized.
 } scanstate;
 
 
@@ -174,7 +178,48 @@ void scanstate_reset(scanstate *ss);
 
 /** Fetches the next token in the stream from the scanner.
  */
+
 #define scan_token(ss) ((*((ss)->state))(ss))
+
+
+/** Returns the first character of the most recently scanned token.
+ */
+
+#define token_start(ss) ((ss)->token)
+
+/** Returns the length of the most recently scanned token.
+ */
+
+#define token_length(ss) ((ss)->cursor - (ss)->token)
+
+
+/** Pushes the current token back onto the stream
+ *
+ * Calling scan_pushback returns the scanner to the state it had
+ * just before returning the current token.  If you decide that
+ * you don't want to handle this token, you can push it back and
+ * it will be returned again the next time scan_token() is called.
+ *
+ * Note that this only works once.  You cannot push multiple tokens back.
+ * Also, the scanner may have internal state of its own that does not get
+ * reset.  You need to do some research before calling this routine.
+ */
+
+#define scan_pushback(ss) \
+    ((ss)->cursor = (ss)->token, \
+     (ss)->line.new = (ss)->line.old)
+
+
+/** Sets the current line number in the scanner to the given value.
+ */
+
+#define set_line(ss,n) ((ss)->line.old=(ss)->line.new, ss->line.new=(n));
+
+
+/** Increments the current line number by 1.
+ */
+
+#define inc_line(ss)   ((ss)->line.old=(ss)->line.new, ss->line.new++);
 
 
 #endif

@@ -7,12 +7,19 @@ VERSION=1.5
 COPTS=-g -Wall
 # -Werror
 
-CSRC=qscandir.c qtempfile.c vars.c test.c compare.c status.c expec.c main.c
-CHDR=qscandir.h qtempfile.h vars.h test.h compare.h status.h expec.h matchval.h
+# utilities:
+CSRC=qscandir.c qtempfile.c memfile.c
+CHDR=qscandir.h qtempfile.h memfile.h
 
+# scanner files
 CSRC+=r2read.c r2read-fd.c r2scan.c r2scan-dyn.c
 CHDR+=r2read.h r2read-fd.h r2scan.h r2scan-dyn.h
 
+# program files:
+CSRC+=vars.c test.c compare.c status.c tfscan.c main.c
+CHDR+=vars.h test.h compare.h status.h tfscan.h matchval.h
+
+# arg. re2c should allow multiple scanners per file.
 CSRC+=status1.c status2.c status3.c status4.c
 
 
@@ -41,15 +48,15 @@ status4.c: status4.re status.h r2scan.h Makefile
 	re2c $(REOPTS) status4.re > status4.c
 	perl -pi -e 's/^\#line.*$$//' status4.c
 
-expec.c: expec.re expec.h r2scan.h Makefile
-	re2c $(REOPTS) expec.re > expec.c
-	perl -pi -e 's/^\#line.*$$//' expec.c
+tfscan.c: tfscan.re tfscan.h r2scan.h Makefile
+	re2c $(REOPTS) tfscan.re > tfscan.c
+	perl -pi -e 's/^\#line.*$$//' tfscan.c
 
 test: tmtest
 	./tmtest
 
 clean:
-	rm -f tmtest tmpl.c status.c expec.c status[1-4].c
+	rm -f tmtest tmpl.c status.c tfscan.c status[1-4].c
 
 doc:
 	doxygen

@@ -22,7 +22,7 @@
 int cb_scanner_start(scanstate *ss)
 {
     ss->token = ss->cursor;
-    ss->line++;
+    inc_line(ss);
 
 /*!re2c
 WS      = [ \t];
@@ -38,7 +38,6 @@ ANYN* "\n"       { return GARBAGE; }
 scanstate* cb_scanner_attach(scanstate *ss)
 {
     if(ss) {
-        ss->line = 1;
         ss->state = cb_scanner_start;
     }
 

@@ -9,12 +9,12 @@
  * Simply returns its input argument.  It's legal to pass NULL.
  */
 
-scanstate* expec_scanner_attach(scanstate *ss);
+scanstate* tfscan_attach(scanstate *ss);
 
 
 // tokens for the config bail checker
 enum {
-    exGARBAGE = 1,
+    exCOMMAND = 1,
 
     exSTDOUT = 0x10,
     exSTDERR,

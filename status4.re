@@ -24,14 +24,12 @@
 int cb_scanner_file(scanstate *ss)
 {
     ss->token = ss->cursor;
-    ss->line++;
+    inc_line(ss);
 
 /*!re2c
 ANYN    = [\000-\377]\[\n];
 
-ANYN* "\n"    { ss->tokend = ss->cursor;
-                RETURN(); return CBFILE;
-              }
+ANYN* "\n"    { RETURN(); return CBFILE; }
 */
 }
 
