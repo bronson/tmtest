@@ -1,0 +1,5 @@
+Calling with unkown switches, both short and long.
+Not specifying values for switches that take values.
+Naming the test on the command line
+Naming a dir on the command line
+Naming a file that doesn't end in ".test" on the command line.

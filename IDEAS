@@ -1,3 +1,35 @@
+Problems:
+
+bash is really fast and loose with variables.  It's going to give
+us trouble when trying to specify the stdout and stderr.
+Using string expansion $'a\n\n' might help.
+
+tmtest will always strip a single leading and trailing newline from
+STDOUT and STDERR.  This is because this:
+
+    STDOUT='
+    first line
+    second line
+    third line
+    '
+
+is a lot more readable than this:
+
+    STDOUT='first line
+    second line
+    third line
+    '
+
+
+Our variables:
+TITLE
+AUTHOR
+DATE
+
+We reserve all variables beginning with _TM_.
+
+
+
 How it's going to work:
 
 The C program will assemble all the relevant files into a bash script:
@@ -28,17 +60,44 @@ to tell if a variable is defined:
 <twkm> exists
 <twkm> 2.05b$ unset var ; [[ ${var+exists} ]] && echo exists
 <twkm> 2.05b$
+
+maybe allow setting -v to show statements and -x
+to show expressions as the script runs.
     
     all tests must begin with begin_test()
     This just ensures the test isn't disabled before running it.
     and end with end_test().  not sure why yet.
+        NO WAY.  No begin_test().  But you do have to call a function
+        to disable a test.
+
+<SeaForth> #!/bin/bash
+<SeaForth> destdir=`pwd`
+<SeaForth> dir=/
+<SeaForth> i=2
+<SeaForth> while true ; do
+<SeaForth>         cd $dir
+<SeaForth>         echo $dir
+<SeaForth>         # do your thing here
+<SeaForth>         next=`echo $destdir | cut -f ${i} -d "/"`
+<SeaForth>         if [[ $next != "" ]] ; then
+<SeaForth>                 dir=$dir/$next
+<SeaForth>                 i=$((i + 1))
+<SeaForth>         else
+<SeaForth>                 exit
+<SeaForth>         fi
+<SeaForth> done
+
+<greycat> if you want all the stdout henceforth to go to a log file, exec >/my/log
+
+bar=foo;foo="Hello, World; echo ${!bar}
+
 
 -c: obsolete
 --config-dir: obsolete.
 -D: works.  adds the values to the input file after the last config file but before the start of the script.
 -d: works.  runs diff against expected vs. actual results.
 -e: unfortunate, must be removed.  maybe exploding can be added later.
--f: works.  adds the file after ~/.tmtestrc and before the files in the test directory.
+-f: obsolete
 -h: obsolete
 -l: obsolete
 -o: works.  replaces the expected stdout in the testfile with the given stdout

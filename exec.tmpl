@@ -1,0 +1,40 @@
+# TODO: write a function that allows you to disable the test.
+# TODO: write a function to make it easy to create crfiles.
+
+
+# set -a  # automatically export every variable to children
+# no need since we no longer fork any children!
+set -e  # exit at the very first command that returns nonzero
+
+TITLE=%(TITLE)
+AUTHOR=%(AUTHOR)
+DATE=%(DATE)
+
+_TM_ACTUAL_STDOUT=%(ACTUAL_STDOUT)
+_TM_ACTUAL_STDERR=%(ACTUAL_STDERR)
+_TM_OUT_OF_BAND=%(OUT_OF_BAND)
+_TM_OOB_SEPARATOR=%(OOB_SEPARATOR)
+
+
+for f in %(CONFIG_FILES)
+    /etc/tmtest.conf ~/.tmtestrc /tmtest.conf /home/tmtest.conf /home/bronson/tmtest.conf /home/bronson/projects/tmtest.conf /home/bronson/projects/tmtest2/tmtest.conf
+do
+    if [[ -f $f ]]; then
+        echo "reading config file: $f"
+        . $f
+    fi
+done
+
+
+set +e  # we want to finish the script no matter what the exit status.
+
+. t.test > "$TM_ACTUAL_STDOUT" 2> "$TM_ACTUAL_STDERR"
+
+rm -f $TM_OUT_OF_BAND
+for X in STDOUT STDERR EXITNO; do
+    if [[ ${!X+exists} ]]; then
+        echo "$TM_OOB_SEPARATOR" >> $TM_OUT_OF_BAND
+        echo "$X: ${!X}" >> $TM_OUT_OF_BAND
+    fi
+done
+

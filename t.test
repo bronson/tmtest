@@ -1,0 +1,9 @@
+AUTHOR=Scott Bronson
+DATE=2004-12-29
+
+echo Howdy
+
+EXITNO=0
+STDOUT='
+Howdy $a
+'

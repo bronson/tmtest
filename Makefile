@@ -10,8 +10,11 @@ CSRC=qscandir.c main.c
 CHDR=qscandir.h
 
 
-tmtest: $(CSRC) $(CHDR)
-	$(CC) $(COPTS) $(CSRC) -o tmtest
+tmtest: $(CSRC) $(CHDR) exec.c
+	$(CC) $(COPTS) $(CSRC) exec.c -o tmtest
+
+exec.c: exec.tmpl cstrfy
+	./cstrfy -n exec < exec.tmpl > exec.c
 
 clean:
 	rm -f tmtest
