@@ -1,0 +1,102 @@
+How it's going to work:
+
+The C program will assemble all the relevant files into a bash script:
+
+    TMTEST_SECTION_MARKER="-=- TMTEST SECTION MARKER -=- 12 Jan 2004 blah:blah:blah uniqid"
+    set -e      # bail if we hit any errors
+    source /etc/tmtest.conf
+    if $DISABLED; then echo $TMTEST_SECTION_MARKER; echo "disabled by /etc/tmtest.conf"; exit 0; fi
+    source ~/.tmtestrc
+    if $DISABLED; then echo $TMTEST_SECTION_MARKER; echo "disabled by /etc/tmtest.conf"; exit 0; fi
+    source ../../tmtest.conf
+    if $DISABLED; then echo $TMTEST_SECTION_MARKER; echo "disabled by /etc/tmtest.conf"; exit 0; fi
+    source tmtest.conf
+    if $DISABLED; then echo $TMTEST_SECTION_MARKER; echo "disabled by /etc/tmtest.conf"; exit 0; fi
+    source 09-bingo.test
+    # now the output is complete.  We need to discover what
+    # the result code, stdout, and stderr are.
+    echo TMTEST_SECTION_MARKER
+    echo $EXPECTED_EXIT_CODE
+    echo TMTEST_SECTION_MARKER
+    echo $EXPECTED_STDOUT
+    echo TMTEST_SECTION_MARKER
+    echo $EXPECTED_STDERR
+
+to tell if a variable is defined:
+<twkm> yes, use the + expansion
+<twkm> 2.05b$ var="" ; [[ ${var+exists} ]] && echo exists
+<twkm> exists
+<twkm> 2.05b$ unset var ; [[ ${var+exists} ]] && echo exists
+<twkm> 2.05b$
+    
+    all tests must begin with begin_test()
+    This just ensures the test isn't disabled before running it.
+    and end with end_test().  not sure why yet.
+
+-c: obsolete
+--config-dir: obsolete.
+-D: works.  adds the values to the input file after the last config file but before the start of the script.
+-d: works.  runs diff against expected vs. actual results.
+-e: unfortunate, must be removed.  maybe exploding can be added later.
+-f: works.  adds the file after ~/.tmtestrc and before the files in the test directory.
+-h: obsolete
+-l: obsolete
+-o: works.  replaces the expected stdout in the testfile with the given stdout
+-q: obsolete
+-t --timeout: tells how long to wait before terminating a stalled test.
+-v: works.
+-h -?: works.
+-V --version: works.
+
+Exit Value:
+    tmtest returns a nonzero error code only if one or more tests could not
+    be run for some reason.  If all tests run to completion, even if
+    they all fail to match the expected output, tmtest returns 0.
+
+Config Files:
+Configuration files are just bash scripts.  Any output produced is added
+to the test file's output (both stdout and stderr) so config files need
+to be very careful not to produce any output.  Except when they intend to.
+
+Test Files:
+Test files are just bash scripts.  They produce output on stdout and error
+on stderr, and contain what the expected stdout and stderr should be.
+tmtest ensures they're the same.  If not, the test fails.
+
+
+variables:
+title: obsolete.  Taken from the filename.
+author: automatically added -- user's login name if doesn't already exist.
+date: automatically added if doesn't exist in testfile.  defaults to today's date.
+curfile: obsolete.  replaced by BASH_SOURCE
+curpath: obsolete.  replaced by basename(BASH_SOURCE)
+include: obsolete.  replaced by "source" bash function.
+interpolate: obsolete.
+recurse: obsolete.
+require-tmtest: obsolete.
+executable: obsolete.  manipulate $PATH yourself.
+eachline: obsolete.  replaced by SUBSTITUTE_OUTPUT, SUBSTITUTE_STDOUT, and SUBSTITUTE_STDERR.
+sub_stdout, etc.:
+    ok.  try to program your test to produce the actual output
+    in the expected output variable.  If this is too difficult then you
+    can specify eachline as a PCRE substitution expression to be run
+    over each line of t
+explodedir: obsolete
+subtests: obsolete.  replaced by for loops.
+    we should offer a function to produce and process intermediate
+    results though.  that's every bit as good as subtests.
+
+maybe obsolete:
+desc/description: a description for this test
+doc: comprehensive documentation for this test
+
+
+CREATE FILES: obsolete.
+    Maybe we can add a function to make creating files easier though.
+
+Both bugs are fixed, and the code base is drasitcally reduced.
+
+
+
+main.c: processes cmdline args.
+find.c: directory recursing calls.
