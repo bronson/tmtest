@@ -1,13 +1,11 @@
-/* r2read-fd.c
+/* read-fd.c
  * Scott Bronson
  * 28 Dec 2004
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "read-fd.h"
 
@@ -16,7 +14,7 @@ static int readfd_read(scanstate *ss)
 {
     int n, avail;
 
-    if(ss->at_eof) {
+	if(ss->at_eof) {
 		// on some platforms, hammering on the eof can have bad consequences.
 		return 0;
 	}

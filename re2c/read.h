@@ -1,4 +1,4 @@
-/* r2read.h
+/* read.h
  * Scott Bronson
  * 27 Dec 2004
  *

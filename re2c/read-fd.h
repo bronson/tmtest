@@ -1,4 +1,4 @@
-/* r2read-fd.h
+/* read-fd.h
  * Scott Bronson
  * 30 Dec 2004
  *

@@ -56,3 +56,8 @@ doc:
 %.png: %.dot
 	dot -Tpng $< -o $@
 
+rediff:
+	diff ../oe/re2c/ re2c
+	
+reupdate:
+	ls re2c/*.[ch] | (ODIR=`pwd`; cd ../oe; xargs cp --target-directory $$ODIR/re2c)
