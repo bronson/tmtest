@@ -10,6 +10,7 @@
   Test that both raw and modified work when stdout doesn't have a newline.
 
 2.2:
+- Tighten up printing a folder name when there are no files in it.  No need for double spacing.
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
   Convert to using the async io library.  Don't use temporary files.
   This would allow us to recognize that the test is disabled before
