@@ -1,10 +1,37 @@
-License:
+
+						TMTEST README
+
+
+
+More on this project can be found at http://tmtest.berlios.de/
+
+
+LICENSE
+
 	LGPL.  See COPYING for more.
 
-Requires:
+
+REQUIRES
+
+	You need to install these libraries before building tmtest.
+
 	libpcre:  http://pcre.org/
 
-Also uses: (files are included with tmtest source)
+
+USES
+
+	These files are used in the development of tmtest, but are
+	do not need to be installed prior to compling it.
+
 	pcrs:     http://www.oesterhelt.org/pcrs/
 	re2c:     http://re2c.org/
+
+
+INSTALL
+
+	make
+	make install prefix=/usr/local
+
+	Defaults to installing in your home directory, ~/bin.  Use
+	"prefix" to tell the install script where to put the files.
 

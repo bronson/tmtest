@@ -7,6 +7,11 @@
 
 VERSION=0.91
 
+# override this when installing: "make install prefix=/usr/local"
+prefix=$(HOME)
+bindir=$(prefix)/bin
+
+
 COPTS=-g -Wall -Werror
 
 # utilities:
@@ -21,7 +26,7 @@ CHDR+=re2c/read.h re2c/read-fd.h re2c/scan.h
 CSRC+=vars.c test.c compare.c tfscan.o stscan.o main.c
 CHDR+=vars.h test.h compare.h tfscan.h stscan.h matchval.h
 
-# makes it rather hard to debug if Make deletes the intermediate files.
+# It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=tfscan.c stscan.c
 
 
@@ -42,7 +47,8 @@ test: tmtest
 	tmtest test
 
 install: tmtest
-	cp tmtest /usr/local/bin/tmtest
+	install -d -m755 $(bindir)
+	install tmtest $(bindir)
 
 bin: tmtest
 	cp tmtest ~/bin/tmtest
