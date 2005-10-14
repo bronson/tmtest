@@ -2,7 +2,7 @@
 # Scott Bronson
 # 28 Dec 2004
 
-VERSION=1.91
+VERSION=0.91
 
 COPTS=-g -Wall -Werror
 
