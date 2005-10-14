@@ -1,11 +1,11 @@
-/* r2scan.h
+/* scan.h
  * Scott Bronson
  * 27 Dec 2004
  *
  * This part of support code to make writing re2c scanners much easier.
  */
 
-/** @file r2scan.h
+/** @file scan.h
  *
  * This is the central file for the readers.  They provide data
  * for scanners.
@@ -161,7 +161,7 @@ typedef struct scanstate {
     void *scanref;      ///< Data specific to the scanner
     scanproc state;     ///< some scanners are made up of multiple individual scan routines.  They store their state here.
 
-    void *userref;      ///< Never touched by any r2 routines (except scanstate_init, which clears both fields).  This can be used to associate a parser with this scanner.
+    void *userref;      ///< Never touched by any of our routines (except scanstate_init, which clears both fields).  This can be used to associate a parser with this scanner.
     void *userproc;     ///< That's just a suggestion though.  These fields are totally under your control.
 } scanstate;
 

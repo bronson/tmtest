@@ -2,7 +2,9 @@
  * Scott Bronson
  * 27 Dec 2004
  *
- * This defines readers that read data into r2scanner buffers.
+ * This defines utilities that should be used by readers.
+ * (readers are responsible for filling scanner buffers with data from
+ * various locations -- files, sockets, memory buffers, generators, etc).
  */
 
 

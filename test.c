@@ -753,7 +753,7 @@ static void write_modified_file(int outfd, int infd, pcrs_job *job)
     char scanbuf[MAX_LINE_LENGTH];
     const char *p;
     char *new;
-    int newsize;
+    size_t newsize;
     int rcnt, wcnt;
 
     // first rewind the input file

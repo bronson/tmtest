@@ -109,7 +109,7 @@ static void compare_continue_bytes(scanstate *ss, const char *ptr, int len)
 }
 
 
-char* substitute_string(pcrs_job *job, const char *cp, const char *ce, int *newsize)
+char* substitute_string(pcrs_job *job, const char *cp, const char *ce, size_t *newsize)
 {
 	char *old, *new;
 	int nsubs;
@@ -153,12 +153,12 @@ char* substitute_string(pcrs_job *job, const char *cp, const char *ce, int *news
 // by the pcre library.
 
 static void compare_continue_lines(scanstate *ss, compare_state *cmp,
-		const char *ptr, int len)
+		const char *ptr, size_t len)
 {
 	int n;
 	const char *p;
     char *new;
-    int newsize;
+    size_t newsize;
 
 	while(len > 0) {
 		n = cmp->plimit - cmp->pcursor;
