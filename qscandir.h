@@ -1,3 +1,8 @@
+/* qscandir.h
+ * Scott Bronson
+ * 29 Dec 2004
+ */
+
 struct dirent;
 
 int qdirentcmp(char **d1, char **d2);

@@ -4,7 +4,9 @@
 # Scott Bronson
 # Copyright (c) 2003
 
-# This file is covered by the GNU GPL V2.
+# This file is distrubuted under the MIT License
+# See http://en.wikipedia.org/wiki/MIT_License for more.
+
 
 # cstrfy -n varname < file > varname.c
 #

@@ -1,10 +1,15 @@
 /* qscandir.c
+ * Scott Bronson
+ * 29 Dec 2004
+ *
+ * This file, like its predecessor, is in the public domain.
  *
  * libc's scandir is poorly standardized so I'll use a public domain version.
  * well... And modify it to return an argv rather than a dirent array.
  * The only field you can portably use in the dirent is the name anyway.
  * This uses a whole lot less memory than the original version.
  */
+
 
 /* Subject:	scandir, ftw REDUX
  * Date: 	1 Jan 88 00:47:01 GMT
@@ -23,6 +28,7 @@
  *                        Yours in filesystems,
  *                                /r$
  */
+
 
 #include <sys/types.h>
 #include <dirent.h>

@@ -1,10 +1,12 @@
 /* main.c
  * 28 Dec 2004
  * Copyright (C) 2004 Scott Bronson
- * This entire file is covered by the GNU GPL V2.
  * 
  * The main routine for tmtest.
+ *
+ * This software is distributed under the LGPL.  See COPYING for more.
  */
+
 
 #include <stdio.h>
 #include <stdlib.h>

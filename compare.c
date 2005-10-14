@@ -2,6 +2,9 @@
  * Scott Bronson
  * 31 Dec 2004
  *
+ * This software is distributed under the LGPL.  See COPYING for more.
+ *
+ *
  * File comparison.
  *
  * This uses all re2c's mechanisms for creating buffers and loading
@@ -20,6 +23,7 @@
  *
  * Well, the line buffering has utterly destroyed the simplicity
  * of this file.
+ *
  */
 
 #include <string.h>

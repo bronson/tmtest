@@ -32,5 +32,7 @@ blowing away all tabs wholesale!
 
 
 Why does &> redirect both stdout and stderr to a file, but &| doesn't
-redirect stdout and stderr to a pipe?
+redirect both stdout and stderr to a pipe?
+
 Why is the unset command totally unrelated to the set command?
+

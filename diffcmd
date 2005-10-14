@@ -1,8 +1,0 @@
-diff -urq -x .svn -x TODO -x Makefile -x main.c ~/projects/oe . | grep -v ^Only
-
-echo
-echo
-echo
-
-diff -ur -x .svn -x TODO -x Makefile -x main.c ~/projects/oe . | grep -v ^Only
-

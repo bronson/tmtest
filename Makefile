@@ -1,6 +1,9 @@
 # tmtest Makefile
 # Scott Bronson
 # 28 Dec 2004
+#
+# This software is distributed under the LGPL.  See COPYING for more.
+
 
 VERSION=0.91
 

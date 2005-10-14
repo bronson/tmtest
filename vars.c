@@ -1,7 +1,8 @@
 /* vars.c
+ * Scott Bronson
  * 29 Dec 2004
- * Copyright (C) 2004 Scott Bronson
- * This file is released under the MIT license.
+ *
+ * This software is distributed under the LGPL.  See COPYING for more.
  */
 
 #include <stdio.h>

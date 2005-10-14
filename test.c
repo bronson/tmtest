@@ -1,9 +1,10 @@
 /* test.c
  * 30 Dec 2004
  * Copyright (C) 2004 Scott Bronson
- * This entire file is covered by the GNU GPL V2.
  * 
  * Contains the routines to check/diff/etc test output.
+ *
+ * This software is distributed under the LGPL.  See COPYING for more.
  */
 
 

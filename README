@@ -1,7 +1,10 @@
+License:
+	LGPL.  See COPYING for more.
+
 Requires:
-	re2c:     http://re2c.org/
 	libpcre:  http://pcre.org/
 
-Uses (included in the source distribution):
+Also uses: (files are included with tmtest source)
 	pcrs:     http://www.oesterhelt.org/pcrs/
+	re2c:     http://re2c.org/
 

@@ -1,6 +1,8 @@
 /* stscan.re
  * Scott Bronson
  *
+ * This software is distributed under the LGPL.  See COPYING for more.
+ *
  * Scanner for status files files.
  * This file needs to be processed by re2c, http://re2c.org
  */
