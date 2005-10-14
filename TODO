@@ -1,4 +1,7 @@
 1.0:
+- It's silly to have the utilities all in separate files.
+  Should have a standard tmtest library that includes the most useful ones,
+  installed in /usr/share (or some other shared dir) by default.
 - stdin is all buggered up.  why is it that "cat" with no args will print
   the rest of the test script?  And why is it that if you fork, diff freezes?
   They're related problems I suspect.

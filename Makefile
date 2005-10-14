@@ -10,6 +10,7 @@ VERSION=0.91
 # override this when installing: "make install prefix=/usr/local"
 prefix=$(HOME)
 bindir=$(prefix)/bin
+libdir=$(prefix)/share/tmtest
 
 
 COPTS=-g -Wall -Werror
@@ -49,6 +50,8 @@ test: tmtest
 install: tmtest
 	install -d -m755 $(bindir)
 	install tmtest $(bindir)
+	install -d -m755 $(libdir)
+	install tmlib/* $(libdir)
 
 bin: tmtest
 	cp tmtest ~/bin/tmtest
