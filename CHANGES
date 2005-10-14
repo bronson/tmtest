@@ -1,6 +1,11 @@
 Changes that potentially break backward compatibility
 are marked with a '*'.
 
+
+NOTE: all development has moved to the C-based version.
+This Perl-based version has been put on ice.
+
+
 TODO:
 - make envvars work again.  maybe add an export header?
 - show results when running sub-tests.

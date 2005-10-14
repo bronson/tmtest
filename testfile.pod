@@ -734,6 +734,12 @@ the same physical line as the header.
     header: <<EOL		# works
     EOL
 
+=head1 LICENSE
+
+tmtest and its documentation (including this file)
+are distributed under the MIT License.  See the source code for
+details: L<http://tmtest.berlios.de/>
+
 =head1 SEE ALSO
 
 L<tmtest(1)>

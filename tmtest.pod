@@ -361,6 +361,12 @@ the years, tmtest became the beast it is today.
 The need for TrestleMail disappeared a few
 years ago but tmtest lives on.
 
+=head1 LICENSE
+
+tmtest and its documentation (including this file)
+are distributed under the MIT License.  See the source code for
+details: L<http://tmtest.berlios.de/>
+
 =head1 FILES
 
 L<tmtest-conf(5)>
