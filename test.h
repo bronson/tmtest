@@ -26,6 +26,12 @@ typedef enum {
 #define was_aborted(st)  ((st) == config_was_aborted || (st) == test_was_aborted)
 #define was_disabled(st) ((st) == config_was_disabled || (st) == test_was_disabled)
 
+
+// Nonzero if we want to be as silent as possible
+// (only print results, no statistics or other useful conversation).
+extern int quiet;
+
+
 // all strings are malloc'd and need to be freed when the test is finished.
 
 struct test {

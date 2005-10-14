@@ -8,7 +8,7 @@ DATE='2005-01-29'
 # TMPFILE environment variable, or if TMPFILE='/tmp'.  If you have
 # some other value in TMPFILE, you will have to modify this test.
 
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	pwd
 	STDOUT:
 	/tmp

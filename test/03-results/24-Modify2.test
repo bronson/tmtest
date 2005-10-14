@@ -1,7 +1,7 @@
 AUTHOR='Scott Bronson'
 DATE='2004-12-31'
 
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	echo hoWdY Hody Hi Hody
 	MODIFY :
 		s/Howdy/HOWDY/i

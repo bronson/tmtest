@@ -3,7 +3,7 @@ DATE='2004-12-31'
 
 # Ensures substitutions work on multiple lines.
 
-tmtest - <<-EOL1
+tmtest -q - <<-EOL1
 	cat <<-EOL2
 		Cat fud. Fud.  FUD.  fUd.
 		Look at me!  I'm a cowboy.

@@ -4,7 +4,7 @@
 # Verifies what happens when a test is disabled and gives a reason.
 
 
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	DISABLED: This is the reason
 	echo "right output"
 	STDOUT:

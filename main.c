@@ -43,6 +43,8 @@ enum {
 int outmode = outmode_test;
 int allfiles = 0;
 int dumpscript = 0;
+int quiet = 0;
+
 
 #define TESTDIR "/tmp/tmtest-XXXXXX"
 char g_testdir[sizeof(TESTDIR)];
@@ -785,6 +787,7 @@ void process_args(int argc, char **argv)
 		{"all-files", 0, &allfiles, 1},
 		{"dump-script", 0, &dumpscript, 1},
 		{"output", 0, 0, 'o'},
+		{"quiet", 0, 0, 'q'},
 		{"version", 0, 0, 'V'},
 		{0, 0, 0, 0},
 	};
@@ -816,6 +819,10 @@ void process_args(int argc, char **argv)
 
 			case 'o':
                 outmode = outmode_dump;
+				break;
+
+			case 'q':
+				quiet++;
 				break;
 
 			case 'V':

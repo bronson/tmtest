@@ -10,7 +10,7 @@
 # dis  (STDIN)                   :    
 
 
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	DISABLED: "   "
 	echo "right output"
 	STDOUT:

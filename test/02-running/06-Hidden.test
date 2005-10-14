@@ -13,7 +13,7 @@ cat > .hidden.test <<-EOL
 	hidden
 EOL
 
-tmtest
+tmtest -q
 rm .hidden.test
 
 

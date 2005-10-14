@@ -28,11 +28,17 @@ in subdirectories too, but you need to invoke C<patch -p0> becaue
 the patch utility doesn't enter subdirectories by default.
 
     tmtest -d | less        # view patch to ensure no bad changes
-    tmtest -d | patch -p0   # update every file (beware!)
+    tmtest -d | patch -p0   # update every testfile.  Beware!
 
 DANGER!!!  This is the perfect way to let subtle bugs slip
-into your test deck.  Make sure you know I<exactly> what is
-being changed, right down to the whitespace.
+into your test deck.  Make sure you know exactly what you
+changed, right down to the whitespace.
+
+=item B<-q> B<--quiet>
+
+Tells tmtest to be quiet while running tests.  tmtest only prints the
+test results, and a final passed/failed/disabled summary.  So, it's
+quieter than it normally is but it certainly isn't silent.
 
 =back
 
@@ -41,8 +47,10 @@ being changed, right down to the whitespace.
 tmtest reads its configuration first from F</etc/tmtest.conf> and
 F<~/.tmtest.conf>.  Then it starts at the root directory and works
 its way up to the current directory looking for files named "tmtest.conf"
-It executes the config files each time it runs a test.  If you're
-running 40 tests, your config file will get executed 40 times.
+Therefore, /home/test/a/b/tmtest.conf overrides /home/test/tmtest.conf
+(because the latter is read and executed before the former).
+It executes each config files every time it runs a test.  If you're
+running 40 tests, your config files will each get executed 40 times.
 
 Note that while config files are running, the current directory
 is set to the testfile's directory.  For convenience, in each

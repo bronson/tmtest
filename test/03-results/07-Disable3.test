@@ -4,7 +4,7 @@
 # Verifies what happens when a test is disabled but output is selected.
 
 
-tmtest -o - <<-EOL
+tmtest -q -o - <<-EOL
 	DISABLED This is the reason
 	echo "right output"
 	STDOUT:

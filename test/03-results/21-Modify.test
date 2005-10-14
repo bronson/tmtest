@@ -4,7 +4,7 @@ DATE='2005-01-26'
 # Ensures a simple substitution works, even when it's not
 # on the same line as the section name.
 
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	echo Howdy
 	MODIFY :
 		s/Howdy/HOWDY/

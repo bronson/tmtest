@@ -24,8 +24,8 @@ CSRC+=re2c/read.c re2c/read-fd.c re2c/scan.c
 CHDR+=re2c/read.h re2c/read-fd.h re2c/scan.h
 
 # program files:
-CSRC+=vars.c test.c compare.c tfscan.o stscan.o main.c
-CHDR+=vars.h test.h compare.h tfscan.h stscan.h matchval.h
+CSRC+=vars.c test.c compare.c rusage.c tfscan.o stscan.o main.c
+CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h matchval.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=tfscan.c stscan.c
@@ -44,17 +44,18 @@ tmpl.c: tmpl.sh cstrfy Makefile
 %.o: %.c
 	$(CC) -g -c $< -o $@
 	
+
 test: tmtest
 	tmtest test
+
+run: tmtest
+	./tmtest
 
 install: tmtest
 	install -d -m755 $(bindir)
 	install tmtest $(bindir)
 	install -d -m755 $(libdir)
 	install tmlib/* $(libdir)
-
-bin: tmtest
-	cp tmtest ~/bin/tmtest
 
 clean:
 	rm -f tmtest tmpl.c stscan.[co] tfscan.[co]

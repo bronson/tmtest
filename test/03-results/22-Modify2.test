@@ -3,7 +3,7 @@ DATE='2004-01-26'
 
 # Ensures all 3 substitutions work.
 
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	echo Howdy Hi Hody
 	MODIFY :
 		s/Howdy/HOWDY/

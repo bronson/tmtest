@@ -18,7 +18,7 @@ cat > '12".test' <<-EOs
 	hi
 EOs
 
-tmtest
+tmtest -q
 rm "vl'hurg.test" '12".test'
 
 

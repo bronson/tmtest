@@ -8,7 +8,7 @@ DATE='2005-01-29'
 
 
 cd "$TESTDIR"
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	MKFILE sfn <<-EOS
 		FileContents
 	EOS

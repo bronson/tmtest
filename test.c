@@ -25,6 +25,7 @@
 #include "stscan.h"
 #include "tfscan.h"
 #include "compare.h"
+#include "rusage.h"
 
 
 // This is the maximum line length for the eachline substitution.
@@ -949,7 +950,14 @@ void print_test_summary()
     printf("\n");
     printf("%d test%s run, ", test_runs, (test_runs != 1 ? "s" : ""));
     printf("%d success%s, ", test_successes, (test_successes != 1 ? "es" : ""));
-    printf("%d failure%s.\n", test_failures, (test_failures != 1 ? "s" : ""));
+    printf("%d failure%s.", test_failures, (test_failures != 1 ? "s" : ""));
+
+	if(!quiet) {
+		printf("    ");
+		print_rusage();
+	}
+	
+	printf("\n");
 }
 
 

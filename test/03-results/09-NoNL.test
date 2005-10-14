@@ -3,7 +3,7 @@ DATE='2004-12-31'
 
 DISABLED: need the STDOUT -n feature
 
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	echo -n Howdy
 	STDOUT: -n
 	Howdy

@@ -4,7 +4,7 @@ DATE='2005-01-30'
 # Ensures that a disabled test doesn't run.
 
 
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	DISABLED
 	echo it ran
 	STDOUT:

@@ -2,7 +2,7 @@ AUTHOR='Scott Bronson'
 DATE='2005-01-27'
 
 cd "$TESTDIR"
-tmtest - <<-EOL
+tmtest -q - <<-EOL
 	ASSERT -1 -eq 1
 	echo it ran
 	STDOUT:
