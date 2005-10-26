@@ -1,3 +1,4 @@
+- Added timing information to test summary.  Disable with new -q option.
 - Created tmlib, a "standard library" for tests.
 - We now stop running all tests if any test aborts.  DISABLE stops the current
   test but lets all other tests finish; ABORT stops testing altogether.
