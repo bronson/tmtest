@@ -7,7 +7,8 @@
  * This software is distributed under the LGPL.  See COPYING for more.
  *
  * Unfortunately this file got hacked to shreds when tmtest was
- * made to run with /tmp as the constant cwd...
+ * made to run with /tmp as the constant cwd.  It's pretty
+ * incomprehensible and in dire need of a rewrite.
  */
 
 #include <stdio.h>

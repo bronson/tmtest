@@ -8,7 +8,7 @@ DATE='2005-01-29'
 dn=`mktemp -d -t`
 
 cd "$TESTDIR"
-tmtest -q - <<-EOL
+tmtest $cfg -q - <<-EOL
 	MKDIR sdn '$dn'
 
 	echo start

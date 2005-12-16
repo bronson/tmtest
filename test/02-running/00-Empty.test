@@ -7,7 +7,7 @@ DATE='2005-01-29'
 # no stderr, and an exit code of 0.
 
 
-tmtest -q - <<-EOL
+tmtest $CFG -q - <<-EOL
 EOL
 
 

@@ -425,6 +425,10 @@ void parse_modify_clause(struct test *test, const char *cp, const char *ce)
 	char *string;
 	int err;
 
+	char buf[128];	// holds the pcrs command.  We will dynamically
+		// allocate a buffer if the entire substitution doesn't fit
+		// into this buffer.  The vast majority will be <30 chars.
+
 	// skip any leading whitespace
 	while(isspace(*cp) && cp < ce) cp++;
 
@@ -438,12 +442,20 @@ void parse_modify_clause(struct test *test, const char *cp, const char *ce)
 		return;
 	}
 
-	// it's retarded that I can't pass a buf/len combo to pcrs_compile_command.
-	string = malloc(ce-cp+1);
-	if(!string) {
-		perror("malloc in parse_modify_clause");
-		exit(10);
+	// It's retarded that I can't pass a buf/len combo to pcrs_compile_command.
+	// It's also retarded that pcrs won't tell me where it stopped parsing
+	// so that we can have multiple substitution clauses on line line.
+
+	if(ce-cp-1 < sizeof(buf)) {
+		string = buf;
+	} else {
+		string = malloc(ce-cp+1);
+		if(!string) {
+			perror("malloc in parse_modify_clause");
+			exit(10);
+		}
 	}
+
 	memcpy(string, cp, ce-cp);
 	string[ce-cp] = '\0';
 	job = pcrs_compile_command(string, &err);
@@ -452,8 +464,13 @@ void parse_modify_clause(struct test *test, const char *cp, const char *ce)
                 get_testfile_name(test), test->testfile.line,
                 pcrs_strerror(err), err);
 	}
-	memset(string, '1', ce-cp+1);
-	free(string);
+
+	if(ce-cp-1 < sizeof(buf)) {
+		// nothing to do; we used the static buffer
+	} else {
+		free(string);
+	}
+
 	if(job == NULL) {
 		return;
 	}

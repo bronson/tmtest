@@ -9,7 +9,7 @@ DATE='2005-01-27'
 # will read the config files.
 cd "$TESTDIR"
 
-tmtest -q - <<-EOL
+tmtest $CFG -q - <<-EOL
 	ASSERT 1 -eq 1
 	echo it ran
 	STDOUT:

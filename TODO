@@ -1,18 +1,30 @@
 1.0:
+- Make "make test" work.
+- write tests for nesting testfiles with --config.
+        // If the user specifies a config file, we only check directories
+        // not above the given config file.  i.e. if user specifies
+        // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
+        // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
+
+- Add STDOUT: trimws and STDERR: trimws - to trim whitespace from
+  the front of each output line.
 - It's silly to have the utilities all in separate files.
   Should have a standard tmtest library that includes the most useful ones,
   installed in /usr/share (or some other shared dir) by default.
+- get rid of all the exit(10) calls in test.c.  We need a better way to
+  abort the test.
+  should get rid of a whole bunch in main.c as well.
+  this should prevent us from dropping turds in /tmp all the time too.
+- what do we do when stdout is missing a newline at the end?
+  Test that both raw and modified work when stdout doesn't have a newline.
+  Check that diff works too.
+- Get rid of AUTHOR and DATE in all the test files and docs.
+  We'll purge it from the code in a year if it looks like a good idea.
+
+1.2:
 - stdin is all buggered up.  why is it that "cat" with no args will print
   the rest of the test script?  And why is it that if you fork, diff freezes?
   They're related problems I suspect.
-- get rid of all the exit(10) calls in test.c.  We need a better way to abort the test.
-  should get rid of a whole bunch in main.c as well.
-  this should prevent us from dropping turds in /tmp all the time too.
-- what do we do when stdout is missing a newline?
-  Test that both raw and modified work when stdout doesn't have a newline.
-  Check that diff works too.
-
-1.2:
 - Could take tests from tarfiles.  We would decompress the tarfile into
   a temporary directory, run the test, and delete the tarfile.  This will
   make it easier to maintain tests that all need to be run in a certain

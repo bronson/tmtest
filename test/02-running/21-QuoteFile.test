@@ -18,7 +18,7 @@ cat > '12".test' <<-EOs
 	hi
 EOs
 
-tmtest -q
+tmtest $CFG -q
 rm "vl'hurg.test" '12".test'
 
 

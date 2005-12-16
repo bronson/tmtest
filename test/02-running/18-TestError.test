@@ -4,7 +4,7 @@ DATE='2005-01-27'
 # Sees what happens when we're in pedantic mode and there's an error
 # in the test file.
 
-tmtest -o - <<-EOL
+tmtest $args -o - <<-EOL
 	set -e
 	iusedtobullseyewompratsinmypants
 	echo it ran
@@ -14,7 +14,7 @@ EOL
 
 # stupid bash3 won't allow LINENO=0 to set the proper lineno.
 MODIFY: s/: line \d+:/: line BLAH:/
-MODIFY: s/^/  /
+MODIFY: s/^(\S)/  $1/
 
 STDOUT:
   set -e
@@ -24,4 +24,3 @@ STDOUT:
   RESULT: 127
   STDERR:
   /bin/bash: line BLAH: iusedtobullseyewompratsinmypants: command not found
-  

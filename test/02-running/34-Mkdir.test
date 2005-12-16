@@ -10,7 +10,7 @@ DATE='2005-01-29'
 dn=`mktemp -d -t`
 
 cd "$TESTDIR"
-tmtest -q - <<-EOL
+tmtest $cfg -q - <<-EOL
 
 	# normally we run tests in pedantic mode, where any single error
 	# will cause the test to bail and return a nonzero result code.

@@ -28,6 +28,7 @@
 #include "qscandir.h"
 #include "vars.h"
 #include "tfscan.h"
+#include "rel2abs.h"
 
 
 #define DIFFPROG "/usr/bin/diff"
@@ -44,6 +45,8 @@ int outmode = outmode_test;
 int allfiles = 0;
 int dumpscript = 0;
 int quiet = 0;
+char *config_file;	// absolute path to the user-specified config file
+					// null if user didn't specify a config file.
 
 
 #define TESTDIR "/tmp/tmtest-XXXXXX"
@@ -761,6 +764,32 @@ void start_tests()
 }
 
 
+void set_config_file(const char *cfg)
+{
+	char cwd[PATH_MAX];
+	char out[PATH_MAX];
+	char *path;
+
+	if(!getcwd(cwd, PATH_MAX)) {
+		perror("Couldn't get current working directory");
+		exit(runtime_error);
+	}
+
+	path = rel2abs(cfg, cwd, out, PATH_MAX);
+	if(!path) {
+		fprintf(stderr, "Got %d figuring out absolute path for \"%s\": %s",
+				errno, cfg, strerror(errno));
+		exit(runtime_error);
+	}
+
+	config_file = strdup(out);
+	if(!config_file) {
+		perror("strdup");
+		exit(runtime_error);
+	}
+}
+
+
 void usage()
 {
 	printf(
@@ -782,10 +811,11 @@ void process_args(int argc, char **argv)
 	optidx = 0;
 	static struct option longopts[] = {
 		// name, has_arg (1=reqd,2=opt), flag, val
-		{"diff", 0, 0, 'd'},
-		{"help", 0, 0, 'h'},
 		{"all-files", 0, &allfiles, 1},
+		{"config", 1, 0, 'c'},
+		{"diff", 0, 0, 'd'},
 		{"dump-script", 0, &dumpscript, 1},
+		{"help", 0, 0, 'h'},
 		{"output", 0, 0, 'o'},
 		{"quiet", 0, 0, 'q'},
 		{"version", 0, 0, 'V'},
@@ -809,6 +839,10 @@ void process_args(int argc, char **argv)
 		if(c == -1) break;
 
 		switch(c) {
+			case 'c':
+				set_config_file(optarg);
+				break;
+
             case 'd':
                 outmode = outmode_diff;
                 break;

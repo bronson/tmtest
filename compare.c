@@ -21,8 +21,8 @@
  *   file.
  * - Read the final result from the matchval.
  *
- * Well, the line buffering has utterly destroyed the simplicity
- * of this file.
+ * Well, the line buffering for the pcrs library has utterly destroyed
+ * the simplicity of this file.
  *
  */
 

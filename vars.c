@@ -59,6 +59,9 @@ static int var_testexec(struct test *test, FILE* fp, const char *var)
     // from stdin.  Otherwise, just have the shell execute the testfile.
 
     if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
+		// bash doesn't support setting LINENO any more but,
+		// what the hell, it's worth a shot.
+		fprintf(fp, "LINENO=0\n");
         test_command_copy(test, fp);
     } else {
         test_command_copy(test, NULL);
@@ -158,6 +161,12 @@ int file_exists(char *path)
 /** Checks to see if the file exists and, if it does, then it
  *  outputs the appropriate commands.
  *
+ *  @param base The path.
+ *  @param len The number of characters from base to use.
+ *  @param name The filename.  It will be concatenated with a '/'
+ *  onto the end of base.  Optional: if name is null then base will
+ *  be used directly.  This is a 0-terminated string.
+ *
  *  @see var_config_files()
  */
 
@@ -165,16 +174,27 @@ static void check_config(struct test *test, FILE *fp,
 		const char *base, int len, const char *name)
 {
 	char buf[PATH_MAX];
-	int namelen = strlen(name);
 	
 	// if the buffer isn't big enough then don't even try.
-	if(len + namelen + 2 > sizeof(buf)) return;
+	if(len+(name?strlen(name):0)+2 > sizeof(buf)) return;
 
 	// assemble the file name
 	memcpy(buf, base, len);
-	buf[len] = '/';
-	memcpy(buf+len+1, name, namelen);
-	buf[len+1+namelen]='\0';
+	buf[len]='\0';
+
+	// append the filename if supplied
+	if(name) {
+		buf[len] = '/';
+		buf[len+1] = 0;
+		strcat(buf+len+1, name);
+	}
+
+	if(config_file && strcmp(buf,config_file) == 0) {
+		// If buf == config_file then it means the user must have
+		// specified a config file within the current search path.
+		// This ensures that we don't include it twice.
+		return;
+	}
 
 	if(file_exists(buf)) {
 		fprintf(fp, "echo 'CONFIG: %s' >&%d\n", buf, test->statusfd);
@@ -199,13 +219,36 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
 {
 	char buf[PATH_MAX];
     char *cp;
+	int confbaselen;
 
-	check_config_str(test, fp, "/etc", CONFIG_FILE);
-	check_config_str(test, fp, "/etc/tmtest", CONFIG_FILE);
-	check_config_str(test, fp, get_home_dir(), HOME_CONFIG_FILE);
+	// check global configuration files
+	if(config_file) {
+		// Need to obliterate config_file, otherwise it will think that
+		// it has included config_file twice and refuse to include it.
+		char *oldcfg = config_file;
+		config_file = NULL;
+		check_config_str(test, fp, oldcfg, NULL);
+		config_file = oldcfg;
+	} else {
+		check_config_str(test, fp, "/etc", CONFIG_FILE);
+		check_config_str(test, fp, "/etc/tmtest", CONFIG_FILE);
+		check_config_str(test, fp, get_home_dir(), HOME_CONFIG_FILE);
+	}
 
+	// check config files in the current hierarchy
 	strncpy(buf, curabsolute(), sizeof(buf));
+	if(config_file) {
+		confbaselen = strrchr(config_file, '/') - config_file;
+	}
     for(cp=buf; (cp=strchr(cp,'/')); cp++) {
+		// If the user specifies a config file, we only check directories
+		// not above the given config file.  i.e. if user specifies
+		// "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
+		// in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
+		if(config_file && cp-buf <= confbaselen &&
+				memcmp(buf, config_file, cp-buf)==0) {
+			continue;
+		}
 		check_config(test, fp, buf, cp-buf, CONFIG_FILE);
     }
 	check_config_str(test, fp, buf, CONFIG_FILE);

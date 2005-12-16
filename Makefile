@@ -5,24 +5,33 @@
 # This software is distributed under the LGPL.  See COPYING for more.
 
 
-VERSION=0.91
+VERSION=0.92
 
 # override this when installing: "make install prefix=/usr/local"
+#prefix=/usr
 prefix=$(HOME)
+
 bindir=$(prefix)/bin
 libdir=$(prefix)/share/tmtest
+stdlib=$(libdir)/tmlib.sh
+
+ifeq ($(prefix), $(HOME))
+	global_conf=$(HOME)/.tmtestrc
+	conf_file=tmtestrc
+else
+	global_conf=/etc/tmtest.conf
+	conf_file=tmtestetc
+endif
 
 
 COPTS=-g -Wall -Werror
 
 # utilities:
-CSRC=curdir.c qscandir.c pcrs.c
-CHDR=curdir.h qscandir.h pcrs.h
-
+CSRC+=curdir.c qscandir.c pcrs.c rel2abs.c
+CHDR+=curdir.h qscandir.h pcrs.h rel2abs.h
 # scanner files
 CSRC+=re2c/read.c re2c/read-fd.c re2c/scan.c
 CHDR+=re2c/read.h re2c/read-fd.h re2c/scan.h
-
 # program files:
 CSRC+=vars.c test.c compare.c rusage.c tfscan.o stscan.o main.c
 CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h matchval.h
@@ -31,11 +40,11 @@ CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h matchval.h
 INTERMED=tfscan.c stscan.c
 
 
-tmtest: $(CSRC) $(CHDR) tmpl.c Makefile $(INTERMED)
-	$(CC) $(COPTS) $(CSRC) -lpcre tmpl.c -o tmtest "-DVERSION=$(VERSION)"
+tmtest: $(CSRC) $(CHDR) template.c Makefile $(INTERMED)
+	$(CC) $(COPTS) $(CSRC) -lpcre template.c -o tmtest "-DVERSION=$(VERSION)"
 
-tmpl.c: tmpl.sh cstrfy Makefile
-	./cstrfy -n exec_template < tmpl.sh > tmpl.c
+template.c: template.sh cstrfy Makefile
+	./cstrfy -n exec_template < template.sh > template.c
 
 %.c: %.re
 	re2c $(REOPTS) $< > $@
@@ -43,10 +52,10 @@ tmpl.c: tmpl.sh cstrfy Makefile
 
 %.o: %.c
 	$(CC) -g -c $< -o $@
-	
+
 
 test: tmtest
-	tmtest test
+	tmtest --config=./tmtest.conf test
 
 run: tmtest
 	./tmtest
@@ -55,10 +64,28 @@ install: tmtest
 	install -d -m755 $(bindir)
 	install tmtest $(bindir)
 	install -d -m755 $(libdir)
-	install tmlib/* $(libdir)
+	install tmlib.sh $(libdir)
+	install $(conf_file) $(global_conf)
+	perl -pi -e 's/USER/$(shell whoami)/g' $(global_conf)
+	perl -pi -e 's:STDLIB:$(stdlib):g' $(global_conf)
+
+uninstall: tmtest
+	rm $(bindir)/tmtest
+	rm $(stdlib)
+ifeq ($(prefix), $(HOME))
+	rm $(HOME)/.tmtestrc
+else
+	rm /etc/tmtest.conf
+endif
 
 clean:
-	rm -f tmtest tmpl.c stscan.[co] tfscan.[co]
+	rm -f tmtest template.c
+
+# Ensure re2c is installed to regenerate the scanners before making distclean
+distclean: clean
+	rm -f stscan.[co] tfscan.[co] tags
+
+dist: stscan.c tfscan.c
 
 doc:
 	doxygen

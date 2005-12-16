@@ -16,7 +16,7 @@ fn=`mktemp -t`
 # fill it with data (technically, the empty file was created by the
 # mktemp(1) call above)
 cd "$TESTDIR"
-tmtest -q - <<-EOL
+tmtest $CFG -q - <<-EOL
 	MKFILE sfn '$fn' <<-EOS
 		FileContents
 	EOS

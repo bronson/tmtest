@@ -14,6 +14,13 @@ B<tmtest> [B<-d>|B<-o>] [I<dir>|I<testfile>...]
 
 =over 8
 
+=item B<-c> B<--config>
+
+Specifies the config file to be read before running the test file.
+Prevents the standard config files (/etc/tmtest.conf, /etc/tmtest/tmtest.conf,
+~/.tmtestrc) from being read.  Also doesn't read config files unless they
+are below the directory that contains the specified file.
+
 =item B<-d> B<--diff>
 
 Prints a diff of the expected results against the actual results.
@@ -39,6 +46,25 @@ changed, right down to the whitespace.
 Tells tmtest to be quiet while running tests.  tmtest only prints the
 test results, and a final passed/failed/disabled summary.  So, it's
 quieter than it normally is but it certainly isn't silent.
+
+=back
+
+=head1 TESTFILE
+
+=over 8
+
+=item MODIFY
+
+Specifies a perl-compatible substitution command to be executed
+on each line of the program's output.  For instance,
+the following modify clause will replace DATE='2005-10-02' with
+DATE='DATE DATE'.
+
+	MODIFY: s/DATE='.*'/DATE='DATE DATE'/
+
+Due to a pcrs limitation, you may only specify one substitution
+command per MODIFY clause.  ("MODIFY: s/1/one/ s/2/two/" will not
+work.
 
 =back
 
@@ -71,13 +97,6 @@ Causes the test to abort immediately.  You can optionally specify
 a message.  See the example in L</MKDIR>.
 
     ABORT: too bad this test won't live
-
-=item ADD_CWD_TO_PATH
-
-This adds the directory containing the currently-running script to the
-front of the $PATH variable.  Executables in this directory will be
-run in preference to identically-named executables installed elsewhere
-on the system.
 
 =item DISABLE
 =item DISABLED
@@ -117,6 +136,25 @@ or tempfile(1).  Also check the examples directory for functions
 to make working with files easier.
 
 	file=`mktemp -t 02-XXXXXX` || ABORT can't mktemp.
+
+=head1 FAQ
+
+How do I indent my stdout section?  My test prints the word "STDOUT" at
+the beginning of the line, causing tmtest to choke on the multiple STDOUT
+sections.
+
+A: Yes, tmtest is pedantic about finding sections in a file.  This is
+because it can be easy to get confused about what line applies where.
+Easiest just to ensure that there is a single section.
+
+But what to do if your test's output would contain a section break?
+Simply indent every line of your test's output by some number of spaces:
+
+	MODIFY : s/^(.)/   $1/
+
+The complex expression is because some versions of pcrs mistakenly
+add two spaces after tine final newline.  This ensures that the line
+actually contains a character before indenting it.
 
 =head1 HISTORY
 

@@ -3,7 +3,7 @@ DATE='2005-01-29'
 
 # Verifies that we correctly report unknown short switches
 
-tmtest --huh - <<-EOL
+tmtest $args --huh - <<-EOL
 	echo Howdy
 	STDOUT:
 	Howdy

@@ -26,7 +26,7 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-tmtest -q
+tmtest $CFG -q
 rm tmtest.conf t1.test t2.test
 
 
