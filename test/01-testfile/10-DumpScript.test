@@ -1,0 +1,63 @@
+AUTHOR='Scott Bronson'
+DATE='2005-12-14'
+
+# Ensures that the dumpscript is what we expect.
+# This is just so we don't surprise ourselves...  Any time you modify
+# template.sh, you should expect test to fial.
+
+tmtest $args --dump-script - <<-EOL
+THE-SCRIPT THE-SCRIPT THE-SCRIPT 1
+THE-SCRIPT THE-SCRIPT THE-SCRIPT 2
+THE-SCRIPT THE-SCRIPT THE-SCRIPT 3
+THE-SCRIPT THE-SCRIPT THE-SCRIPT 4
+EOL
+
+MODIFY: s/DATE='.*'/Date='BLAH BLAH'/
+        s/^(.)/	$1/
+
+STDOUT:
+	echo START >&7
+
+	ABORT ()  { echo "ABORTED: $*" >&7; exit 0; }
+	ABORT: () { ABORT $*; }
+
+	ATEXIT ()  { echo "ATEXIT: $*" >&7; }
+	ATEXIT: () { ATEXIT $*; }
+
+	DISABLED  () { echo "DISABLED: $*" >&7; exit 0; }
+	DISABLED: () { DISABLED $*; }
+	DISABLE   () { DISABLED $*; }
+	DISABLE:  () { DISABLED $*; }
+
+	AUTHOR='UNKNOWN'
+	Date='BLAH BLAH'
+	TESTDIR='/tmp'
+	TESTFILE='/tmp/-'
+
+
+
+	echo PREPARE >&7
+
+	STDOUT () { exit 0; }
+	STDOUT: () { exit 0; }
+	STDERR () { exit 0; }
+	STDERR: () { exit 0; }
+	RESULT () { exit 0; }
+	RESULT: () { exit 0; }
+	MODIFY () { exit 0; }
+	MODIFY: () { exit 0; }
+
+	echo 'RUNNING: /tmp/-' >&7
+	MYDIR='/tmp'
+	MYFILE='/tmp/-'
+	exec >&3 2>&5
+	exec 3>&-
+	exec 5>&-
+	LINENO=0
+	THE-SCRIPT THE-SCRIPT THE-SCRIPT 1
+	THE-SCRIPT THE-SCRIPT THE-SCRIPT 2
+	THE-SCRIPT THE-SCRIPT THE-SCRIPT 3
+	THE-SCRIPT THE-SCRIPT THE-SCRIPT 4
+
+
+	echo DONE >&7

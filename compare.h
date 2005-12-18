@@ -2,7 +2,9 @@
  * Scott Bronson
  * 31 Dec 2004
  *
- * File comparison.
+ * File comparison prototypes.
+ *
+ * See compare.c for license.
  */
 
 #include "pcrs.h"

@@ -1,10 +1,11 @@
 /* curdir.c
  * 29 Jan 2005
  * Copyright (C) 2005 Scott Bronson
- * 
- * Some simple path handling routines
  *
- * This software is distributed under the LGPL.  See COPYING for more.
+ * This file is distrubuted under the MIT License
+ * See http://en.wikipedia.org/wiki/MIT_License for more.
+ *
+ * Some simple path handling routines
  *
  * Unfortunately this file got hacked to shreds when tmtest was
  * made to run with /tmp as the constant cwd.  It's pretty

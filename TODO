@@ -6,6 +6,7 @@
         // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
         // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
 
+- merge tmtestlib and tmtestrc.  They're now basically the same file.
 - Add STDOUT: trimws and STDERR: trimws - to trim whitespace from
   the front of each output line.
 - It's silly to have the utilities all in separate files.

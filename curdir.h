@@ -2,7 +2,8 @@
  * 29 Jan 2005
  * Copyright (C) 2005 Scott Bronson
  * 
- * Some simple path handling routines
+ * Some simple path handling routines.
+ * See curdir.c for license.
  */
 
 

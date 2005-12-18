@@ -1,6 +1,8 @@
 # tmlib.sh
 
-# This file contains utilities useful for writing testfiles.
+# Utilities useful for writing tmtest testfiles.
+# This file is covered by the MIT License.
+
 
 # TODO: should these routines be prefixed by "TM"?
 

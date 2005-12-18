@@ -3,6 +3,7 @@
  * 29 Dec 2004
  *
  * All the data needed to run a test and print the results.
+ * This file is covered by the MIT License.
  */
 
 #include "pcrs.h"

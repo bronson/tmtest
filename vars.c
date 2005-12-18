@@ -2,7 +2,8 @@
  * Scott Bronson
  * 29 Dec 2004
  *
- * This software is distributed under the LGPL.  See COPYING for more.
+ * Interpolates $(VARS) in the test template (template.sh).
+ * This file is covered by the MIT License.
  */
 
 #include <stdio.h>

@@ -4,7 +4,7 @@
  * 
  * Contains the routines to check/diff/etc test output.
  *
- * This software is distributed under the LGPL.  See COPYING for more.
+ * This file is covered by the MIT license.
  */
 
 

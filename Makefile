@@ -11,16 +11,20 @@ VERSION=0.92
 #prefix=/usr
 prefix=$(HOME)
 
+
 bindir=$(prefix)/bin
-libdir=$(prefix)/share/tmtest
-stdlib=$(libdir)/tmlib.sh
+lib_src=tmlib.sh
 
 ifeq ($(prefix), $(HOME))
-	global_conf=$(HOME)/.tmtestrc
-	conf_file=tmtestrc
+	libdir=$(prefix)
+	stdlib=$(libdir)/.tmlib.sh
+	conf_src=tmtestrc
+	conf_dst=$(HOME)/.tmtestrc
 else
-	global_conf=/etc/tmtest.conf
-	conf_file=tmtestetc
+	libdir=$(prefix)/share/tmtest
+	stdlib=$(libdir)/tmlib.sh
+	conf_src=tmtestetc
+	conf_dst=/etc/tmtest.conf
 endif
 
 
@@ -64,10 +68,10 @@ install: tmtest
 	install -d -m755 $(bindir)
 	install tmtest $(bindir)
 	install -d -m755 $(libdir)
-	install tmlib.sh $(libdir)
-	install $(conf_file) $(global_conf)
-	perl -pi -e 's/USER/$(shell whoami)/g' $(global_conf)
-	perl -pi -e 's:STDLIB:$(stdlib):g' $(global_conf)
+	install tmlib.sh $(stdlib)
+	install $(conf_src) $(conf_dst)
+	perl -pi -e 's/USER/$(shell whoami)/g' $(conf_dst)
+	perl -pi -e 's:STDLIB:$(stdlib):g' $(conf_dst)
 
 uninstall: tmtest
 	rm $(bindir)/tmtest

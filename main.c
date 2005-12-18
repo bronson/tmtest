@@ -4,7 +4,8 @@
  * 
  * The main routine for tmtest.
  *
- * This software is distributed under the LGPL.  See COPYING for more.
+ * This file is distrubuted under the MIT License
+ * See http://en.wikipedia.org/wiki/MIT_License for more.
  */
 
 

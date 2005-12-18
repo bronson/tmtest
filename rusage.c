@@ -1,3 +1,14 @@
+/* rusage.c
+ * Scott Bronson
+ * 2005
+ *
+ * This file is covered by the MIT License.
+ *
+ * This function is split off from test.c because it includes
+ * some fairly non-portable calls.  test.c should be totally
+ * portable.
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>

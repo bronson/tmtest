@@ -1,6 +1,8 @@
 /* qscandir.h
  * Scott Bronson
  * 29 Dec 2004
+ *
+ * This file is in the public domain.
  */
 
 struct dirent;

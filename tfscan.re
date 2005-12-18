@@ -5,7 +5,7 @@
  * Scanner for test files.
  * This file needs to be processed by re2c, http://re2c.org
  *
- * This software is distributed under the LGPL.  See COPYING for more.
+ * This file is covered by the MIT License.
  */
 
 #include "tfscan.h"
