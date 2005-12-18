@@ -69,10 +69,18 @@ install: tmtest
 	install tmtest $(bindir)
 	install -d -m755 $(libdir)
 	install tmlib.sh $(stdlib)
+ifeq ($(wildcard $(conf_dst)),$(conf_dst))
+	# configuration already exists, don't overwrite it.
+	@echo "---> Not installing new config file over '$(conf_dst).'"
+	@echo "---> Please merge changes in '$(conf_src)' by hand or run 'make uninstall' first."
+else
+	# global configuration file doesn't exist so install it
 	install $(conf_src) $(conf_dst)
-	perl -pi -e 's/USER/$(shell whoami)/g' $(conf_dst)
-	perl -pi -e 's:STDLIB:$(stdlib):g' $(conf_dst)
+	@perl -pi -e 's/USER/$(shell whoami)/g' $(conf_dst)
+	@perl -pi -e 's:STDLIB:$(stdlib):g' $(conf_dst)
+endif
 
+# NOTE: This will remove the configuration file too!
 uninstall: tmtest
 	rm $(bindir)/tmtest
 	rm $(stdlib)
