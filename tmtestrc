@@ -1,9 +1,0 @@
-# Because you installed tmtest local to USER, no system-wide configuration
-# files were installed.  Instead, tmtest will read all its settings out of
-# this file (of course, if you create an /etc/tmtest.conf file, tmtest will
-# use that file as well).
-
-
-# include some standard tmtest utility functions
-. STDLIB
-

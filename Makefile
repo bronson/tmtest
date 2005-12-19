@@ -18,12 +18,10 @@ lib_src=tmlib.sh
 ifeq ($(prefix), $(HOME))
 	libdir=$(prefix)
 	stdlib=$(libdir)/.tmlib.sh
-	conf_src=tmtestrc
 	conf_dst=$(HOME)/.tmtestrc
 else
 	libdir=$(prefix)/share/tmtest
 	stdlib=$(libdir)/tmlib.sh
-	conf_src=tmtestetc
 	conf_dst=/etc/tmtest.conf
 endif
 
@@ -72,10 +70,10 @@ install: tmtest
 ifeq ($(wildcard $(conf_dst)),$(conf_dst))
 	# configuration already exists, don't overwrite it.
 	@echo "---> Not installing new config file over '$(conf_dst).'"
-	@echo "---> Please merge changes in '$(conf_src)' by hand or run 'make uninstall' first."
+	@echo "---> Please merge changes in 'sample.conf' by hand or run 'make uninstall' first."
 else
 	# global configuration file doesn't exist so install it
-	install $(conf_src) $(conf_dst)
+	install sample.conf $(conf_dst)
 	@perl -pi -e 's/USER/$(shell whoami)/g' $(conf_dst)
 	@perl -pi -e 's:STDLIB:$(stdlib):g' $(conf_dst)
 endif

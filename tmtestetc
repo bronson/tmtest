@@ -1,7 +1,0 @@
-# This is the system-wide configuration file for tmtest.
-# Settings in ~/.tmtestrc and tmtest.conf files in the test
-# directories override any settings in this file.
-
-# include the standard utility functions
-. STDLIB
-
