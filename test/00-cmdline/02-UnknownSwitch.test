@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-29'
-
 # Verifies that we correctly report unknown short switches
 
 tmtest $args --huh - <<-EOL

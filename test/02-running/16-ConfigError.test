@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-30'
-
 # Ensures that even if config files generate errors, tests will
 # still try to run.  Config file errors go to stderr.
 

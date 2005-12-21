@@ -10,14 +10,6 @@
  * This is the central file for the readers.  They provide data
  * for scanners.
  *
- * NOTES
- *
- * All charptrs in the scanstate structure are declared const to help
- * ensure that you don't
- * accidentally end up modifying the buffer as it's being scanned.
- * This means that your read routine must cast them to be mutable
- * (char*) before read them.
- *
  * TERMINOLOGY
  *
  * allocate: scanstates can be dynamically (dynamicscan_create()) or
@@ -65,7 +57,7 @@
 // otherwise we might end up scanning garbage waaay off the end of
 // the buffer.  We ignore n because there can be cases where there
 // are less than n bytes left in the file, but it's perfectly valid
-// data and one or more tokens will match.  n is useless.
+// data and one or more tokens will match.  n is useless (right?).
 // We also don't want to return prematurely.  If there's still data
 // in the buffer, even if the read returned 0, we'll continue parsing.
 // But, if read is at eof and there's no data left in the buffer, then

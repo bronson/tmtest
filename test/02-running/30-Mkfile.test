@@ -1,7 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-29'
-
-
 # Ensures that we can call MKFILE to create a file
 # and that it will be deleted when the test is finished.
 

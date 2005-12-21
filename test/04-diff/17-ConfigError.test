@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-30'
-
 # This is like 17-ConfigError in the running directory except
 # that it performs a diff.
 

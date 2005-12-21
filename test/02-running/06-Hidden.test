@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-29'
-
 # Ensures that we don't run hidden tests.
 
 

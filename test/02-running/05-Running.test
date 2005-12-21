@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-29'
-
 # Ensures that we can run tests specified:
 #    - as a filename in the current dir on the command line
 #    - as a filename in a child dir on the command line

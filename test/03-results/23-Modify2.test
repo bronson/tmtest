@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2004-01-26'
-
 # Ensures multiple substitutions work with multiple options.
 
 tmtest -q - <<-EOL

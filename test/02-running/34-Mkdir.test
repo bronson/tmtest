@@ -1,7 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-29'
-
-
 # Like 33-Mkdir.test, except ensures that the directory won't
 # be deleted if it is not empty.
 

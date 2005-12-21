@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-12-14'
-
 # Ensures that the dumpscript is what we expect.
 # This is just so we don't surprise ourselves...  Any time you modify
 # template.sh, you should expect test to fial.
@@ -29,8 +26,6 @@ STDOUT:
 	DISABLE   () { DISABLED $*; }
 	DISABLE:  () { DISABLED $*; }
 
-	AUTHOR='UNKNOWN'
-	Date='BLAH BLAH'
 	TESTDIR='/tmp'
 	TESTFILE='/tmp/-'
 

@@ -1,3 +1,4 @@
+- Get rid of all AUTHOR and DATE automation.  Too heavyhanded.
 - Standardized licensing: everything under my control is MIT, package is LGPL.
 - When installing locally, it's ~/.tmlib.sh instead of ~/share/tmtest/tmlib.sh
 - Bump to 0.92

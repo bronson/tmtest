@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2004-12-31'
-
 tmtest -q - <<-EOL
 	echo hoWdY Hody Hi Hody
 	MODIFY :

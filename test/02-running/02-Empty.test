@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-29'
-
 # What happens when we diff an empty test file?
 
 # Diff should produce no data since nothing differs from the default.

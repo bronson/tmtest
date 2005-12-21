@@ -73,35 +73,6 @@ static int var_testexec(struct test *test, FILE* fp, const char *var)
 }
 
 
-static int var_author(struct test *test, FILE *fp, const char *var)
-{
-    char *u = getlogin();
-    if(u) {
-        fputs(u, fp);
-    } else {
-        // probably not using a login shell...?
-        fputs("UNKNOWN", fp);
-    }
-
-    return 0;
-}
-
-
-static int var_date(struct test *test, FILE *fp, const char *var)
-{
-    time_t now;
-    struct tm* tm;
-
-    time(&now);
-    tm = localtime(&now);
-    fprintf(fp, "%d-%02d-%02d %2d:%02d:%02d",
-            tm->tm_year+1900, tm->tm_mon, tm->tm_mday,
-            tm->tm_hour, tm->tm_min, tm->tm_sec);
-
-    return 0;
-}
-
-
 static int var_outfd(struct test *test, FILE *fp, const char *var)
 {
     fprintf(fp, "%d", test->outfd);
@@ -270,9 +241,7 @@ int printvar(struct test *test, FILE *fp, const char *varname)
         char *name;
         int (*func)(struct test *test, FILE *fp, const char *var);
     } funcs[] = {
-        { "AUTHOR",         var_author },
         { "CONFIG_FILES",   var_config_files },
-        { "DATE",           var_date },
         { "OUTFD",          var_outfd },
         { "ERRFD",          var_errfd },
         { "STATUSFD",       var_statusfd },

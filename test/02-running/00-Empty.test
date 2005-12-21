@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-29'
-
 # What happens when we run an empty test file?
 
 # It should succeed since all the defaults are met: no stdout,

@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2004-12-31'
-
 # Ensure we emit a warning if the user includes multiple stderr sections.
 # This test succeeds because the second stderr section is ignored.
 

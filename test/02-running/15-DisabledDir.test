@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-30'
-
 # Ensures that a test disabled by a config file doesn't run.
 # Above & beyond 13-Disabled.test, this makes sure that the reason is printed.
 

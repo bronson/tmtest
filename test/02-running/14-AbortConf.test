@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-30'
-
 # Ensures that tests can be aborted by config files too.
 # Also ensures that if a test is aborted, tmtest quits running
 # tests altogether.  We have two tests here, but when the first

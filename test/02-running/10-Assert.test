@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-27'
-
 # Verifies that the assert command works.
 
 # Normally tmtest runs from /tmp, so no config files are read.

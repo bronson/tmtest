@@ -1,6 +1,3 @@
-AUTHOR='Scott Bronson'
-DATE='2005-01-27'
-
 # Sees what happens when we're in pedantic mode and there's an error
 # in the test file.
 

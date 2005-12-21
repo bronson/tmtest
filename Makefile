@@ -35,11 +35,11 @@ CHDR+=curdir.h qscandir.h pcrs.h rel2abs.h
 CSRC+=re2c/read.c re2c/read-fd.c re2c/scan.c
 CHDR+=re2c/read.h re2c/read-fd.h re2c/scan.h
 # program files:
-CSRC+=vars.c test.c compare.c rusage.c tfscan.o stscan.o main.c
+CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c
 CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h matchval.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
-INTERMED=tfscan.c stscan.c
+INTERMED=stscan.c
 
 
 tmtest: $(CSRC) $(CHDR) template.c Makefile $(INTERMED)
@@ -89,13 +89,14 @@ else
 endif
 
 clean:
-	rm -f tmtest template.c
+	rm -f tmtest template.c tags
 
 # Ensure re2c is installed to regenerate the scanners before making distclean
 distclean: clean
-	rm -f stscan.[co] tfscan.[co] tags
+	rm -f stscan.[co]
 
-dist: stscan.c tfscan.c
+tags: $(CSRC) $(CHDR) $(INTERMED)
+	ctags -R
 
 doc:
 	doxygen

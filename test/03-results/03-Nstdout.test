@@ -4,9 +4,6 @@
 # there's an extra space after the Howdy in the stdout.
 
 
-AUTHOR='Scott Bronson'
-DATE='2004-12-31'
-
 tmtest -q - <<-EOL
 	echo Howdy
 

@@ -4,9 +4,6 @@
 # there's an extra newline in the expected stdout.
 
 
-AUTHOR='Scott Bronson'
-DATE='2004-12-31'
-
 tmtest -q - <<-EOL
 	echo Howdy
 
