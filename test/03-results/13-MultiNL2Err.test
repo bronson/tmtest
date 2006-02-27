@@ -1,0 +1,16 @@
+# This is like MultiNL.test except that we include 3 newlines!
+# Since the test is only expecting a single newline, and only
+# one will be suppressed, this test will fail.
+
+tmtest -q - <<-EOL
+	echo Howdy 1>&2
+	STDERR: -n
+	Howdy
+
+
+EOL
+
+STDOUT:
+FAIL (STDIN)                   .E.  stderr differed
+
+1 test run, 0 successes, 1 failure.

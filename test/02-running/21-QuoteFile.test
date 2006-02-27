@@ -19,7 +19,8 @@ tmtest $CFG -q
 rm "vl'hurg.test" '12".test'
 
 
-MODIFY: s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
+MODIFY:
+  s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
 STDOUT:
 
 Processing .

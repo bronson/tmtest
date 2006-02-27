@@ -36,7 +36,8 @@ INDENT < "$tt2"
 echo
 INDENT < "$tt3"
 
-MODIFY: s/^patching .*/patching FILE/
+MODIFY:
+  s/^patching .*/patching FILE/
 
 STDOUT:
 patching FILE

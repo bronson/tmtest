@@ -1,0 +1,27 @@
+# Scott Bronson
+# 26 Feb 2006
+#
+# Ensures that a test's stdout need not end in "\n" for the test
+# to pass (see --no-trailing-newline in testfile(5).  This adds a
+# modify clause because, alas, using a modify clause changes the
+# code path for the comparison.  This is one reason why modify
+# clauses are evil...
+#
+# Also see: 09-NoNL.test
+#
+# (back when we were parsing tests using re2c, lines needed to be
+# less than BUFSIZ and the results always had to end in a newline).
+
+DISABLED "MODIFY won't work here."
+
+tmtest -q - <<-EOL
+    echo -n Howdy
+    MODIFY:
+      s/How/Wen/
+    STDOUT: -n
+    Wendy
+EOL
+STDOUT: 
+ok   (STDIN)
+
+1 test run, 1 success, 0 failures.

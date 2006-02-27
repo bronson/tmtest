@@ -1,0 +1,14 @@
+# If you specify -n, we only suppress ONE newline.  Therefore, if the
+# test produces one newline, and the expected results end in two newlines,
+# one of the two newlines will match and the test will succeed.
+
+tmtest -q - <<-EOL
+	echo Howdy
+	STDOUT: -n
+	Howdy
+
+EOL
+STDOUT: 
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

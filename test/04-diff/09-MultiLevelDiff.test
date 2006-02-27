@@ -59,8 +59,9 @@ tmtest --all-files -d
 rm -rf t.test one two
 
 
-MODIFY:   s/^\-\-\- .*/--- TESTFILE DATE TIME TZ/,
-          s/^\+\+\+.*/+++ - DATE TIME TZ/
+MODIFY:
+  s/^\-\-\- .*/--- TESTFILE DATE TIME TZ/,
+  s/^\+\+\+.*/+++ - DATE TIME TZ/
 
 STDOUT:
 --- TESTFILE DATE TIME TZ

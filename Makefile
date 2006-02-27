@@ -55,9 +55,9 @@ template.c: template.sh cstrfy Makefile
 %.o: %.c
 	$(CC) -g -c $< -o $@
 
-
+.PHONY: test
 test: tmtest
-	tmtest --config=./tmtest.conf test
+	./tmtest test
 
 run: tmtest
 	./tmtest

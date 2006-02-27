@@ -1,4 +1,4 @@
-# What happens when we run an empty test file?
+# What happens when we run an empty (totally blank) test file?
 
 # It should succeed since all the defaults are met: no stdout,
 # no stderr, and an exit code of 0.

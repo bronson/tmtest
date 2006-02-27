@@ -1,6 +1,6 @@
 # Ensures that the dumpscript is what we expect.
 # This is just so we don't surprise ourselves...  Any time you modify
-# template.sh, you should expect test to fial.
+# template.sh, you should expect test to fail.
 
 tmtest $args --dump-script - <<-EOL
 THE-SCRIPT THE-SCRIPT THE-SCRIPT 1
@@ -9,8 +9,9 @@ THE-SCRIPT THE-SCRIPT THE-SCRIPT 3
 THE-SCRIPT THE-SCRIPT THE-SCRIPT 4
 EOL
 
-MODIFY: s/DATE='.*'/Date='BLAH BLAH'/
-        s/^(.)/	$1/
+MODIFY:
+  s/DATE='.*'/Date='BLAH BLAH'/
+  s/^(.)/	$1/
 
 STDOUT:
 	echo START >&7

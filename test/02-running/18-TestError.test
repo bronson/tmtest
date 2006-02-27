@@ -10,8 +10,9 @@ tmtest $args -o - <<-EOL
 EOL
 
 # stupid bash3 won't allow LINENO=0 to set the proper lineno.
-MODIFY: s/: line \d+:/: line BLAH:/
-MODIFY: s/^(\S)/  $1/
+MODIFY:
+  s/: line \d+:/: line BLAH:/
+  s/^(\S)/  $1/
 
 STDOUT:
   set -e

@@ -1,0 +1,16 @@
+#!/usr/bin/tmtest
+
+# This test ensures we fail a test whose stderr doesn't match.
+# (Howdy vs. howdy).
+
+
+tmtest -q - <<-EOL
+	echo Howdy 1>&2
+	STDERR:
+	howdy
+EOL
+STDOUT:
+FAIL (STDIN)                   .E.  stderr differed
+
+1 test run, 0 successes, 1 failure.
+RESULT: 0

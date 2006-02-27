@@ -1,0 +1,16 @@
+# Ensure that we can use head to trim the final newline from
+# the testfile.
+
+DISABLED
+
+head -c -1 <<-EOL
+    echo -n Howdy
+    STDOUT:
+    Howdy
+
+EOL
+
+STDOUT:
+echo -n Howdy
+STDOUT:
+Howdy

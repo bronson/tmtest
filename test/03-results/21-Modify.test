@@ -3,9 +3,9 @@
 
 tmtest -q - <<-EOL
 	echo Howdy
-	MODIFY :
+	MODIFY:
 		s/Howdy/HOWDY/
-	STDOUT :
+	STDOUT:
 	HOWDY
 EOL
 STDOUT:

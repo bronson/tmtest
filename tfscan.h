@@ -1,4 +1,4 @@
-/* tfscan.h
+/* tfscan.h (testfile scanner)
  * Scott Bronson
  */
 
@@ -33,7 +33,7 @@ enum {
 
 #define EX_TOKEN(x) ((x)&0xFF)
 #define EX_ISNEW(x) ((x)&exNEW)
-#define is_command_token(x) (EX_TOKEN(x)>=exCOMMAND && EX_TOKEN(x)<ex_COMMAND_TOKEN_END)
+#define is_command_token(x) (EX_TOKEN(x)>=exCOMMAND && EX_TOKEN(x)<exCOMMAND_TOKEN_END)
 #define is_section_token(x) (EX_TOKEN(x)>=exSTDOUT && EX_TOKEN(x)<exRESULT_TOKEN_END)
 
 scanstate* tfscan_attach(scanstate *ss);

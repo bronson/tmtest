@@ -1,0 +1,30 @@
+NOTE: If you are looking for examples of testfiles, this is NOT the
+directory for you!  Due to the recursive nature of tmtest testing
+itself, many of these testfiles are very difficult to understand.
+
+See the examples directory instead.
+
+
+These are the test subcategories:
+
+00-cmdline: tests parsing command-line arguments
+    Mostly tests illegal command-line arguments.
+
+01-testfile: tests the parsing of test files.
+    Mostly tests illegal testfiles and ensures proper errors are printed.
+
+02-running: tests running the actual tests
+    Ensures that the test environment is set up properly.
+    For instance, checks that disabled tests are not run, the tmlib
+    calls are performed properly, etc.
+
+03-results: tests the results
+    Ensures that we compare the test results properly.
+    For instance, verifies that we handle results that don't
+    end in newlines, binary characters, etc. properly.
+
+04-diff: ensures diffing and patching works
+
+09-docs: tests that appear in our documentation.
+    This ensures that tmtest behaves exactly like our docs say it will.
+

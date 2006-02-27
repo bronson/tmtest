@@ -1,29 +1,13 @@
-1.0:
-- Add to faq: limitation on line length when using MODIFY clause.
-  (MODIFY is memory-based, so a single line must fit into memory).
-  If you're working with big testfiles, don't use MODIFY.
-  - No, we fucking line buffer everything thanks to the scanner.
-  - I'd say it's time to hand-code the scanners so they don't
-    have to be line-buffered.  There's nothing we can do about MODIFY
-	of course.
-- Why is compare_continue not called??
-	Somehow we abandon the newline on the input buffer.
-	The problem is that the scanner REQUIRES a newline on the end.
-	    Shit, I wonder if it's time to just junk the scanner entirely.
-- what do we do when stdout is missing a newline at the end?
-  Test that both raw and modified work when stdout doesn't have a newline.
-  Check that diff works too.
-- Make "make test" work.
+0.94:
+- An empty test with a STDOUT clause should fail without the -n right?
+  I mean, there's no newline in the actual output, but there is in the
+  expected...
+- Add tests for binary transparency.
 - write tests for nesting testfiles with --config.
         // If the user specifies a config file, we only check directories
         // not above the given config file.  i.e. if user specifies
         // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
         // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
-- merge tmtestlib and tmtestrc.  They're now basically the same file.
-- get rid of all the exit(10) calls in test.c.  We need a better way to
-  abort the test.
-  should get rid of a whole bunch in main.c as well.
-  this should prevent us from dropping turds in /tmp all the time too.
 - Add the ability to specify test arguments on the command line.
   I'm picturing something where VAR=val on the command line would be
   inserted without change into the template.  That way you can use the
@@ -31,64 +15,73 @@
   - This would allow us to test almost every test to ensure it
     supports the --config argument (make them DISABLED or something).
 
-1.2:
+0.96:
 - stdin is all buggered up.  why is it that "cat" with no args will print
   the rest of the test script?  And why is it that if you fork, diff freezes?
   They're related problems I suspect.
-- Could take tests from tarfiles.  We would decompress the tarfile into
-  a temporary directory, run the test, and delete the tarfile.  This will
-  make it easier to maintain tests that all need to be run in a certain
-  directory hierarchy.
+    Is it because I'm forgetting to close all open filehandles before forking?
 - Tighten up printing a folder name when there are no testfiles in it.
   No need for double spacing.
-- Change the I/O scheme to be event based.  Get rid of the tempfiles.
-  Convert to using the async io library.  Don't use temporary files.
-  This would allow us to recognize that the test is disabled before
-  producing a partial diff, blowing away output sections.
-  - I'd say it's time to hand-code the scanners so they don't
-    have to be line-buffered.  There's nothing we can do about MODIFY
-	of course.  But don't line-buffer if we don't have to.  Should
-	simplify things quite a bit to get rid of re2c.
 - Add the ability to run multiple tests from one testfile.
   See tmtest 0.8 for a potential implementation of this.
   All we'd need to add is a framework to notify the user that multiple
   tests are in progress; bash can take care of the rest.
-- add the ability to run valgrind over each test and print success/failure
-  of that.  (gives deep valgrind coverage)
-  - One problem with this will be all the false warnings.
-- add gcov support so you can see what sort of coverage your tests provide.
 - Shouldn't run every test in a dir if the DISABLED directive is in a config
   file.
   Should discover what dir the DISABLED directive came from and refuse
   to run anything below that.
   - Yes, if a config file returns DISABLED, then that folder and all its
-    subfolders are skipped.  Just make the test itself return the DISABLED
+    subfolders are skipped.  Just make the test itself call the DISABLED
 	command if you want testing to continue in that subfolder.
 
+0.98:
+- Change the I/O scheme to be event based.  Get rid of the tempfiles.
+  Convert to using the async io library.  Don't use temporary files.
+  This would allow us to recognize that the test is disabled before
+  producing a partial diff, blowing away output sections.
+- Use i/o lib for everything.  No need for temp files.
+  This means that we stream everything EXCEPT stderr, which we memory
+  buffer.  If your stderr is more than 100K or so in size, just redirect
+  it to stdout.
+
+2.0:
+- get rid of all the exit(10) calls in test.c.  We need a better way to
+  abort the test.
+  should get rid of a whole bunch in main.c as well.
+  this should prevent us from dropping turds in /tmp all the time too.
+- Get rid of MODIFY clauses.  It's unnecessary complexity.
+  And it's a LOT.  First remove it from the tests, then from the code.
+
 ?:
-- should probably indent stdout and stderr clauses two spaces.  otherwise
-  we might misinterpret STDOUT: and STDERR: in a stdout or stderr clause.
-  - True, but this is easy enough to mock with a MODIFY clause.  The
-    downside to this is that 
-- Provide some sort of automatable XML output.
+- add gcov support so you can see what sort of coverage your tests provide.
+- Provide some sort of automatable XML output?
+- Could take tests from tarfiles.  We would decompress the tarfile into
+  a temporary directory, run the test, and delete the tarfile.  This will
+  make it easier to maintain tests that all need to be run in a certain
+  directory hierarchy.
+- add the ability to run valgrind over each test and print success/failure
+  of that.  (gives deep valgrind coverage)
+  - One problem with this will be all the false warnings.
+
+No longer a problem when we dump pcrs:
 - allow multiple s/// expressions on a single line.  will probably require
   modifications to pcrs_compile_command, so make it support buf/len at the
   same time.  These might be non-trivial changes...
 - it's stupid to dup the str just to null-terminate it so it can be passed
   to pcrs.  Modify pcrs to compile buffers too.
+- Unify the line modifier in compare.c and test.c.  It's hackish now.
+- Wow, the pcrs error messages truly suck.  Is there any way to improve them?
+  "(pcrs:) Syntax error while parsing command (-11)."
+- add a CLEAR_EACHLINE or CLEAR_MODIFY option to to turn off all substitutions.
+  It would be easy to do.  I'm just not convinced that anyone would find it
+  useful.
 
 ????:
-- Unify the line modifier in compare.c and test.c.  It's hackish now.
 - There should be a way to repeatedly run a single test with only tiny
   differences.  i.e. test all permeutations of DISABLE DISABLE:
   DISABLED DISABLED:  Hopefully that will clean up 05-08-Disable/Abort.test
-- Add a timeout that will terminate stalled tests.  You can set the timeout in the config file.
-
-
-
-- Wow, the pcrs error messages suck.  Is there any way to improve them?
-  "(pcrs:) Syntax error while parsing command (-11)."
-
+- Add a timeout that will terminate stalled tests.  You can set the timeout
+  in the config file or the test itself.
 
 maybe never:
 - Add STDOUT: trimws and STDERR: trimws - to trim whitespace from
@@ -98,6 +91,8 @@ maybe never:
   realize that this problem is pretty much solved from the other direction.
   Instead of removing indentation from the heredoc, simply add indentation
   using a MODIFY section (as detailed in the FAQ).
-- add a CLEAR_EACHLINE or CLEAR_MODIFY option to to turn off all substitutions.
-  It would be easy to do.  I'm just not convinced that anyone would find it useful.
-
+- Add a "FAILURE-OK" flag for when failure IS an option.  This would print
+  that the test failed, but would not highlight it, and would not count
+  either positively or negatively toward the test results.  That way you
+  can include experimental tests in a production test stack (say you're
+  developing a test and want to know if it's a good idea...)

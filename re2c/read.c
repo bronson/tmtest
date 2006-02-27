@@ -22,6 +22,17 @@
  * Returns the number of bytes available to read in the buffer.
  */
 
+/* TODO: could optimize for the fast case (no data that needs
+ * to be shifted).  However, there's no burning need -- it wouldn't
+ * offer much speedup  Bigger buffers would help a lot more.
+ * NOTE: the middle line of this macro is incomplete!  Don't use!
+
+#define read_shiftbuf(ss) (ss->token == ss->limit ? \
+    (ss->token = ss->cursor = ss->bufptr, 0) : \
+    _read_shiftbuf(ss)) 
+
+ */
+
 int read_shiftbuf(scanstate *ss)
 {
     int cnt = ss->token - ss->bufptr;

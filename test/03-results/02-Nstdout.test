@@ -6,7 +6,6 @@
 
 tmtest -q - <<-EOL
 	echo Howdy
-
 	STDOUT :
 	howdy
 EOL

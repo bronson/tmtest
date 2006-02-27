@@ -22,7 +22,7 @@
 int stscan_start(scanstate *ss)
 {
     scanner_enter(ss);
-    inc_line(ss);
+    scan_inc_line(ss);
 
 /*!re2c
 

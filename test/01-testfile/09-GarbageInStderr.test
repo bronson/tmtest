@@ -1,0 +1,18 @@
+# Scott Bronson
+# 26 Feb 2006
+#
+# Ensures that we recognize when the stdout clause contains garbage.
+
+tmtest -q - <<-EOL
+    echo crapola
+    echo crapola
+    echo crapola
+	STDERR: crapola
+    crapola
+EOL
+STDERR:
+(STDIN) line 4: unknown arguments "crapola"
+STDOUT:
+FAIL (STDIN)                   OE.  stdout and stderr differed
+
+1 test run, 0 successes, 1 failure.

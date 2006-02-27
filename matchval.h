@@ -9,7 +9,7 @@
 
 
 /**
- * Simply a tristate that tells whether something
+ * a tristate that tells whether something
  *    - matches
  *    - doesn't match
  *    - hasn't been checked yet.

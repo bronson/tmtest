@@ -69,7 +69,8 @@ INDENT < two/one/t.test
 rm -rf t.test one two
 
 
-MODIFY: s/^patching .*/patching FILE/
+MODIFY:
+  s/^patching .*/patching FILE/
 
 STDOUT:
 patching FILE

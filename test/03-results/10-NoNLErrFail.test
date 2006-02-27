@@ -1,0 +1,17 @@
+# Scott Bronson
+# 26 Feb 2006
+#
+# Ensures that if we specify -n in the STDERR section, but the test
+# DOES produce a trailing newline on its stderr, we fail the test.
+#
+# Also see: 09-NoNL.test
+
+tmtest -q - <<-EOL
+	echo Howdy 1>&2
+	STDERR: -n
+	Howdy
+EOL
+STDOUT : 
+FAIL (STDIN)                   .E.  stderr differed
+
+1 test run, 0 successes, 1 failure.

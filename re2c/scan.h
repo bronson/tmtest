@@ -3,6 +3,12 @@
  * 27 Dec 2004
  *
  * This part of support code to make writing re2c scanners much easier.
+ *
+ * TODO: probably want to split the re2c-specific code from the general
+ * code.  This file is overall very useful, but it's got a few limitations
+ * imposed by re2c that should probably be placed in its own layer.
+ * That way, future versions of re2c won't have to suffer the same
+ * limitations.
  */
 
 /** @file scan.h
@@ -53,21 +59,32 @@
 #define YYLIMIT     (ss->limit)
 #define YYMARKER    (ss->marker)
 
-// This routine needs to force a return if 0 bytes were read because
-// otherwise we might end up scanning garbage waaay off the end of
-// the buffer.  We ignore n because there can be cases where there
-// are less than n bytes left in the file, but it's perfectly valid
-// data and one or more tokens will match.  n is useless (right?).
-// We also don't want to return prematurely.  If there's still data
-// in the buffer, even if the read returned 0, we'll continue parsing.
-// But, if read is at eof and there's no data left in the buffer, then
-// there's nothing to do BUT return 0.
+/** Fills the scan buffer with more data.
+ *
+ * This routine needs to force a return if 0 bytes were read because
+ * otherwise the re2c scanner will end up scanning garbage way off
+ * the end of the buffer.  There's no (good) way to tell the scanner
+ * "the file is at eof so just finish the token that you're on" (right?).
+ * It will always lose the token at the end of the file unless the file
+ * ends in a token delimiter (usually a newline).
+ *
+ * We ignore n because there can be less than n bytes left in the file,
+ * yet one or more tokens will still match.  Therefore, we should always
+ * read as much data as we can, and we should return success even if we
+ * have less than n bytes in the buffer.  N is totally useless.
+ *
+ * The last line is the limitation.  If it weren't there, YYFILL would
+ * return with an empty buffer so re2c would know it's at EOF and
+ * shut down gracefully.  But re2c can't handle that.
+ *
+ * If you're using the re2c lib but writing your own re2c scanners,
+ * call ss->read directly.
+ */
 
 #define YYFILL(n)   do { \
 		int r = (*ss->read)(ss); \
-		if(r <= 0 && (ss)->cursor >= (ss)->limit) { \
-			return r; \
-		} \
+		if(r < 0) return r; \
+		if((ss)->cursor >= (ss)->limit) return 0; \
 	} while(0);
 
 
@@ -83,6 +100,14 @@ struct scanstate;
  * first shift the pointers in ss to make room (see read_shiftbuffer())
  * then load new data into the unused bytes at the end of the buffer.
  *
+ * I chose the shift technique over a ringbuffer because we should rarely
+ * have to shift data.  If you find that your file has gigantic tokens
+ * and you're burning a lot of cpu shifting partial tokens from the end
+ * of the buffer to the start, you might want to use a ring buffer instead
+ * of a shift buffer.  However, re2c itself can't handle ringbuffers or
+ * split tokens (nor can most scanners that I'm aware of), so shift
+ * buffers are the best we can do.
+ *
  * This routine returns 0 when there's no more data (EOF).
  * If it returns a value less than 0, that value will be returned
  * to the caller instead of a token.  This can indicate an error
@@ -97,8 +122,17 @@ struct scanstate;
  * ensure that you don't
  * accidentally end up modifying the buffer as it's being scanned.
  * This means that your read routine must cast them to be mutable
- * (char*) before reading them.  Only the readproc may modify the
+ * (char*) before reading them.  Only the readproc should modify the
  * data that's in the scan buffer.
+ *
+ * The caller assumes that the read routine will always fill the buffer
+ * up as much as possible.  Therefore, if the buffer isn't entirely full,
+ * then it knows that the EOF is probably at the end of the data.  This
+ * is a fine assumption for files but not so good for pipes, network
+ * sockets, anything that is packetized or works in realtime.  It would
+ * take a rewrite of re2c to remove this limitation. So, yes, your
+ * scanner can assume that the read routine will always fill the buffer
+ * up as much as it possibly can.
  */
 
 typedef int (*readproc)(struct scanstate *ss);
@@ -134,7 +168,7 @@ typedef int (*scanproc)(struct scanstate *ss);
  * to cast the pointers to be nonconst.
  */
 
-typedef struct scanstate {
+struct scanstate {
     const char *cursor; ///< The current character being looked at by the scanner
     const char *limit;  ///< The last valid character in the current buffer.  If the previous read was short, then this will not point to the end of the actual buffer (bufptr + bufsiz).
     const char *marker; ///< Used internally by re2c engine to handle backtracking.
@@ -151,11 +185,12 @@ typedef struct scanstate {
     readproc read;      ///< The routine the scanner calls when the buffer needs to be reread.
 
     void *scanref;      ///< Data specific to the scanner
-    scanproc state;     ///< some scanners are made up of multiple individual scan routines.  They store their state here.
+    scanproc state;     ///< The entrypoint for the scanning routine.  The name is now anachronistic but might still fit (some scanners are made up of multiple individual scan routines -- they store their state here).
 
     void *userref;      ///< Never touched by any of our routines (except scanstate_init, which clears both fields).  This can be used to associate a parser with this scanner.
     void *userproc;     ///< That's just a suggestion though.  These fields are totally under your control.
-} scanstate;
+};
+typedef struct scanstate scanstate;
 
 
 void scanstate_init(scanstate *ss, const char *bufptr, int bufsiz);
@@ -166,11 +201,11 @@ void scanstate_reset(scanstate *ss);
  *
  * How what this macro does:
  *
- * If the reader has already marked the stream at eof, then we're finished.
- * Otherwise, if there's still more data in the buffer, then we're not
- * finished.  Finally, if there's no data in the buffer but we're not at
- * eof, then we need te execute a read to determine.  If the read doesn't
- * return any data, then we're finished.
+ * If there's still more data in the buffer, then we're not finished.
+ * If there's no data in the buffer and we're at EOF, then we're finished.
+ * If there's no data in the buffer but we're not at eof, then we need
+ * to execute a read to see if there's more data available.  If so, we're
+ * not finished.  Otherwise, we're all done.
  */
 
 #define scan_finished(ss) \
@@ -183,6 +218,7 @@ void scanstate_reset(scanstate *ss);
  */
 
 #define scan_token(ss) ((*((ss)->state))(ss))
+#define scan_next_token(ss) ((*((ss)->state))(ss))
 
 
 /** Returns a pointer to the first character of the
@@ -190,6 +226,7 @@ void scanstate_reset(scanstate *ss);
  */
 
 #define token_start(ss) ((ss)->token)
+#define current_token_start(ss) ((ss)->token)
 
 /** Returns a pointer to one past the last character of the
  *  most recently scanned token.
@@ -198,11 +235,20 @@ void scanstate_reset(scanstate *ss);
  */
 
 #define token_end(ss) ((ss)->cursor)
+#define current_token_end(ss) ((ss)->cursor)
 
 /** Returns the length of the most recently scanned token.
  */
 
 #define token_length(ss) ((ss)->cursor - (ss)->token)
+#define current_token_length(ss) ((ss)->cursor - (ss)->token)
+
+/** Returns the current token in a malloc'd buffer.
+ * (just calls strdup(3) internally).
+ */
+
+#define token_dup(ss) strndup(token_start(ss), token_length(ss))
+#define current_token_dup(ss) token_dup(ss)
 
 
 /** Pushes the current token back onto the stream
@@ -215,15 +261,28 @@ void scanstate_reset(scanstate *ss);
  * Note that this only works once.  You cannot push multiple tokens back
  * into the scanner.  Also, the scanner may have internal state of its
  * own that does not get reset.  If so, the scanner may or may not provide
- * a routine to back its state up as well.
+ * a routine to back its internal state up as well.  Beware!!
  *
  * Finally, this doesn't back the line number up.  If you're pushing
  * a token back and you care about having the correct line nubmer,
- * then you'll have to restore the line number to what it was before
- * you scanned the token that you're pushing back.
+ * then you'll have to manually restore the line number to what it
+ * was before you scanned the token that you're pushing back.
  *
- * Yes, it takes some pretty serious research to call this function safely.
- * However, when you need to, it can be amazingly useful.
+ * i.e.
+ *
+ *     // First ensure that the scanner you're using doesn't
+ *     // have internal state that will be screwed up if you
+ *     // re-scan the current token!
+ *
+ *     oldline = ss->line;
+ *     tok = scan_token(ss);
+ *     if(tok == push_me_back) {
+ *         scan_pushback(ss);
+ *         ss->line = oldline;
+ *     }
+ *
+ * Yes, it takes some effort to call this function safely.
+ * But it can be worth it when you need it.
  */
 
 #define scan_pushback(ss) ((ss)->cursor = (ss)->token)
@@ -232,18 +291,18 @@ void scanstate_reset(scanstate *ss);
 /** Sets the current line number in the scanner to the given value.
  */
 
-#define set_line(ss,n) (ss->line=(n));
+#define scan_set_line(ss,n) (ss->line=(n));
 
 
 /** Increments the current line number by 1.
  */
 
-#define inc_line(ss)   (ss->line++);
+#define scan_inc_line(ss)   (ss->line++);
 
 
-/** This should be called by ever scanproc
- *
- * This prepares the scanstate to scan a new token.
+/**
+ * Prepares the scanner to scan a new token.
+ * This should be called at the beginning of every scanproc.
  */
 
 #define scanner_enter(ss) ((ss)->token = (ss)->cursor)

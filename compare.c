@@ -41,6 +41,8 @@ typedef struct {
 	const char *pbuf;
 	int pcursor;
 	int plimit;
+    int no_trailing_newline;
+    int nl_suppressed;
 } compare_state;
 
 
@@ -60,7 +62,7 @@ static void compare_halt(scanstate *ss, matchval newval)
 }
 
 
-void compare_attach(scanstate *ss, matchval *mv, pcrs_job *jobs)
+void compare_attach(scanstate *ss, matchval *mv, pcrs_job *jobs, int nonl)
 {
 	compare_state *cmp = malloc(sizeof(compare_state));
 	if(cmp == NULL) {
@@ -73,8 +75,11 @@ void compare_attach(scanstate *ss, matchval *mv, pcrs_job *jobs)
 
 	cmp->output = mv;
 	cmp->jobs = jobs;
-	ss->scanref = cmp;
+    cmp->no_trailing_newline = nonl;
+    cmp->nl_suppressed = 0;;
+    ss->scanref = cmp;
 }
+
 
 
 static void compare_continue_bytes(scanstate *ss, const char *ptr, int len)
@@ -92,7 +97,6 @@ static void compare_continue_bytes(scanstate *ss, const char *ptr, int len)
                 exit(10);
             }
             if(n == 0) {
-				// there's more input data but we're at eof.
                 compare_halt(ss, match_no);
                 return;
             }
@@ -195,9 +199,8 @@ static void compare_continue_lines(scanstate *ss, compare_state *cmp,
 				exit(10);
 			}
 			if(n == 0) {
-				// there's more input data but we're at eof.
-				compare_halt(ss, match_no);
-				return;
+                compare_halt(ss, match_no);
+                return;
 			}
 
 			p = memchr(ss->cursor, '\n', ss->limit - ss->cursor);
@@ -237,6 +240,25 @@ void compare_continue(scanstate *ss, const char *ptr, int len)
         return;
     }
 
+    assert(len >= 0);
+
+    if(cmp->no_trailing_newline) {
+        // If the incoming buffer ends in a nl, we need to suppress it
+        // for the comparison.  Note that this won't work well for
+        // MODIFY clauses but I don't care because MODIFY will never
+        // work with -n and, anyway, MODIFY is about to disappear.
+
+        if(cmp->nl_suppressed) {
+            compare_continue_bytes(ss, "\n", 1);
+            cmp->nl_suppressed = 0;
+        }
+
+        if(ptr[len-1] == '\n') {
+            cmp->nl_suppressed = 1;
+            len -= 1;
+        }
+    }
+
 	if(cmp->jobs) {
 		compare_continue_lines(ss, cmp, ptr, len);
 	} else {
@@ -267,7 +289,7 @@ void compare_end(scanstate *ss)
 	}
 
 	// if we have no data left in the scan buffer
-	if(ss->limit - ss->cursor == 0) {
+	if(ss->cursor == ss->limit) {
 		// and our input file is at eof
 		if(compare_fill(ss) == 0) {
 			// then the two data streams match

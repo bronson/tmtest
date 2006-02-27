@@ -26,7 +26,8 @@ tmtest $CFG -q
 rm tmtest.conf t1.test t2.test
 
 
-MODIFY: s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
+MODIFY:
+  s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
 STDOUT:
 
 Processing .

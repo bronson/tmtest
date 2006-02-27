@@ -21,8 +21,9 @@ EOF
 tmtest --all-files -d "$t1" "$t2"
 
 
-MODIFY:   s/^\-\-\-.*\/tmp\/tmtest.*/--- \/tmp\/testfile DATE TIME TZ/,
-          s/^\+\+\+.*/+++ - DATE TIME TZ/
+MODIFY:
+  s/^\-\-\-.*\/tmp\/tmtest.*/--- \/tmp\/testfile DATE TIME TZ/,
+  s/^\+\+\+.*/+++ - DATE TIME TZ/
 
 STDOUT:
 --- /tmp/testfile DATE TIME TZ

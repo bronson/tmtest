@@ -1,0 +1,14 @@
+# This is kind of an interesting test...  There are two newlines after
+# Howdy.  The test clearly only produces one.  However, because we
+# suppress one, the test succeeds.
+
+tmtest -q - <<-EOL
+	echo Howdy
+	STDOUT: -n
+	Howdy
+
+EOL
+STDOUT : 
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

@@ -1,0 +1,23 @@
+# This test verifies that if we specify -n AND the file doesn't end in a
+# newline that the test will still succeed.
+
+# This file does not end in a newline!  If there's a newline at the end of
+# this file then some editor or version control program messed it up.
+
+# NOTE: it is unfortunate that we're testing the currently installed
+# tmtest, not the tmtest that we SHOULD be testing.
+
+# Uses the head command to trim the final \r from the testfile.
+
+DISABLED
+
+head -c -1 <<-EOL | tmtest -d -q -
+    echo -n Howdy
+    STDOUT:
+    Howdy
+EOL
+
+STDOUT:
+FAIL (STDIN)                   O..  stdout differed
+
+1 test run, 0 successes, 1 failure.

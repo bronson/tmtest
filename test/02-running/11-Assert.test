@@ -11,7 +11,8 @@ EOL
 # Furthermore, the filename and line are never even displayed
 # on bash2.  Therefore, just wipe the filename and line nuber out
 # completely and this test should pass everywhere.
-MODIFY: s/ on.*line \d+//
+MODIFY:
+  s/ on.*line \d+//
 
 STDOUT:
 ABRT (STDIN)                   assertion failed: "-1 -eq 1"

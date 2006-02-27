@@ -2,16 +2,18 @@ If you run tmtest -d on a disabled test, it produces a tiny diff with the
 word "Disabled" in its stderr.  If you blindly pipe this diff to patch,
 it will destroy the output section of your test file.  This is easy enough
 to fix -- just re-enable the test and patch it again.  This will be
-fixed in tmtest 2.2 when we parse the status file asynchronously.
+fixed in tmtest 1.2 when we parse the status file asynchronously.  We
+will notice that the test is disabled and refuse to produce the diff.
 
 
-Bash Bugs:
+Bash Gotchas:
+
 
 Bash3 has removed the ability to set LINENO, so you may see the
-wrong line number be printed if there's an error.  The workaround
-suggested by the Bash author is far too large and complex.
-Downgrading to Bash2 works much better.  I don't understand why
-this functionality was removed in the first place!
+wrong line number be printed if there's an error.  If you want to
+see the correct line numbers, use Bash2.  It's an unfortunate
+regression but since it only affects tests scripts being piped
+on stdin it won't affect many people.
 
 
 The <<-EOL operator strips ALL tabs from the front of each line.
@@ -24,12 +26,15 @@ This is bad because it means you can't nest heredocs:
 	EOL
 
 The first heredoc flattens everything and then the EOLs get mixed up.
-What bash SHOULD do is discover the whitespace sequence indenting the
-first line of a heredoc, then remove that sequence from all subsequent
-lines.  If a line doesn't begin with exactly that sequence, then
-it is unchanged.  This would be much safer and more useful than just
-blowing away all tabs wholesale!
+What bash *SHOULD* do (and what tmtest did before it was integrated
+with Bash) is discover the whitespace sequence indenting the
+first line of a heredoc, then remove exactly that sequence from all
+subsequent lines.  If a line doesn't begin with that sequence, then
+it is unchanged.  This is safer and more useful than just blowing away
+all tabs wholesale!
 
+
+Bashisms:
 
 Why does &> redirect both stdout and stderr to a file, but &| doesn't
 redirect both stdout and stderr to a pipe?

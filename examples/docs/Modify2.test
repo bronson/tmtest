@@ -1,0 +1,7 @@
+# This is from http://tmtest.berlios.de/wiki/index.php/MODIFY
+
+echo RESULT
+MODIFY:
+   s/^RESULT/xRESULT/
+STDOUT:
+xRESULT

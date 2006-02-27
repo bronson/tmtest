@@ -1,20 +1,21 @@
 # Scott Bronson
 # 26 Feb 2006
 #
-# Ensures that a test's stdout need not end in "\n" for the test
-# to pass (see --no-trailing-newline in testfile(5).
+# Ensures that if we specify -n in the STDOUT section, but the test
+# DOES produce a trailing newline on its stderr, we fail the test.
 #
 # Also see: 09-NoNL.test
 #
 # (back when we were parsing tests using re2c, lines needed to be
 # less than BUFSIZ and the results always had to end in a newline).
 
+
 tmtest -q - <<-EOL
-	echo -n Howdy
+	echo Howdy
 	STDOUT: -n
 	Howdy
 EOL
 STDOUT : 
-ok   (STDIN) 
+FAIL (STDIN)                   O..  stdout differed
 
-1 test run, 1 success, 0 failures.
+1 test run, 0 successes, 1 failure.
