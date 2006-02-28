@@ -33,6 +33,9 @@
   - Yes, if a config file returns DISABLED, then that folder and all its
     subfolders are skipped.  Just make the test itself call the DISABLED
 	command if you want testing to continue in that subfolder.
+- Print a warning if we notice that an output section doesn't end in
+  a newline, but the testfile hasn't marked that section with a "-n".
+  See 22-PatchNoNL2.test for more.  Make sure a test for this is in 03 too.
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.

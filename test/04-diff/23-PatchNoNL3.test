@@ -1,0 +1,36 @@
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+# Ensures that patch can handle diffs that remove the trailing newline.
+# In this case, patch adds a newline to a section that erroneously
+# didn't have one.
+
+# By the time we get to the end of the STDOUT section, it's too late to
+# remove the "-n".  Therefore, we just add another newline.  If the
+# section has two newlines but suppresses one, it matches the output's
+# single newline exactly.
+
+
+MKFILE tt <<-EOL
+	echo "right output"
+	STDOUT: -n
+	right output
+EOL
+
+
+# This is a little exotic...  Patch needs the CWD to be the directory
+# containing the file to patch.  "dirname $(tt.test)" gives that dir.
+
+tmtest --all-files -d "$tt" | (cd `dirname "$tt"` && patch | FIX_PATCH)
+echo "And the patched file:"
+INDENT < "$tt"
+echo "<<DONE>>"
+
+STDOUT:
+patching FILE
+And the patched file:
+  echo "right output"
+  STDOUT: -n
+  right output
+  
+<<DONE>>

@@ -1,0 +1,33 @@
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+# Ensures that patch can handle diffs that remove the trailing newline.
+# 
+# If ONLY this test fails, then chances are the patch utility installed
+# on this system is buggy.  You'll probably want to update it to the
+# latest Gnu Patch, http://www.gnu.org/software/patch/
+
+
+MKFILE tt <<-EOL
+	echo -n "right output"
+	STDOUT:
+	right output
+EOL
+
+
+# This is a little exotic...  Patch needs the CWD to be the directory
+# containing the file to patch.  "dirname $(tt.test)" gives that dir.
+
+tmtest --all-files -d "$tt" | (cd `dirname "$tt"` && patch | FIX_PATCH)
+echo "And the patched file:"
+INDENT < "$tt"
+echo "<<DONE>>"
+echo "(since there's no trailing newline, DONE should appear on the prevous line)"
+
+STDOUT:
+patching FILE
+And the patched file:
+  echo -n "right output"
+  STDOUT:
+  right output<<DONE>>
+(since there's no trailing newline, DONE should appear on the prevous line)

@@ -1,4 +1,3 @@
-- write some tests to ensure diff works with files that don't end in CR.
 - write some tests to ensure binary transparency of stdout and stderr.
   (especially hit the newlines hard)
 - Release next version.

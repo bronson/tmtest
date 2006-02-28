@@ -1,0 +1,31 @@
+# DiffNoNL
+# author: Scott Bronson
+# date:   28 Feb 2006
+
+
+# If this test fails but PatchNoNL doesn't then you're probably using a
+# non-Gnu diff and patch programs.  As long as 21 works, you're in good
+# shape.  Please send me the output of 'tmtest -o 20-DiffNoNL.test' so
+# I can update this test.
+#
+# If both DiffNoNL and PatchNoNL fail, your diff and patch programs are
+# buggy and you should probably update them.
+
+
+tmtest -d - <<-EOL | FIX_DIFF
+    echo -n "right output"
+    STDOUT:
+    right output
+EOL
+
+
+STDOUT:
+--- /tmp/FILE DATE TIME TZ
++++ - DATE TIME TZ
+@@ -1,3 +1,5 @@
+     echo -n "right output"
+     STDOUT:
+     right output
++STDOUT:
++right output
+\ No newline at end of file

@@ -14,6 +14,20 @@ B<tmtest> [B<-d>|B<-o>] [I<dir>|I<testfile>...]
 
 =over 8
 
+=item B<--all-files>
+
+Causes tmtest to ignore the name of the testfile while running tests.
+
+Normally tmtest only runs files with names that end in ".test".
+While this is often a very good thing (you wouldn't want tmtest
+to try to run just any old random file as a test), sometimes it
+gets in the way.  For instance, MKFILE offers no control over the
+name of the file generated.  If you used MKFILE to create a
+testfile, run tmtest with --all-files and name the testfile explicitly
+on the command line.
+
+See 10-Patch.test for an example.  (TODO: cobble together a better example)
+
 =item B<-c> B<--config>
 
 Specifies the config file to be read before running the test file.
