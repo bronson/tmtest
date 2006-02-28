@@ -1,0 +1,24 @@
+# Ensures that a testfile can contain 4 NULLs and comparison will
+# still work.  This tests what happens if the comparison fails.
+
+# We need to create the testfile by hand in the /tmp directory
+# because Bash will screw up the binary if we use a heredoc.
+
+MKFILE tt <<-EOL
+	echo -e "\\0\\0\\0\\0"
+	STDOUT:
+EOL
+
+# Add the expected results to the testfile.  NOTE: there is one
+# to few NULs here.  This will cause the test to fail.
+echo -e "\\0\\0\\0" >> "$tt"
+
+# and run the test
+tmtest --all-files -q "$tt" | REPLACE "$tt" /tmp/FILE
+
+STDOUT:
+
+Processing /tmp/FILE
+FAIL /tmp/FILE        O..  stdout differed
+
+1 test run, 0 successes, 1 failure.

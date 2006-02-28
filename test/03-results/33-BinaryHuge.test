@@ -1,0 +1,27 @@
+# Ensures that a testfile can contain some arbitrary binary
+# data and the test will still work.  We use every permeutation
+# of 2 1-byte values (64K of data).
+
+# We need to manually create the testfile because Bash will screw 
+# things up if we use a heredoc.
+
+
+MKFILE tt <<-'EOL'
+    perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}'
+    # stdout will be filled in below
+	STDOUT:
+EOL
+
+
+# Add the expected results to the testfile.
+perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}' >> "$tt"
+
+# and run the test
+tmtest --all-files -q "$tt" | REPLACE "$tt" /tmp/FILE
+
+STDOUT:
+
+Processing /tmp/FILE
+ok   /tmp/FILE 
+
+1 test run, 1 success, 0 failures.

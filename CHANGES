@@ -1,5 +1,3 @@
-- write some tests to ensure binary transparency of stdout and stderr.
-  (especially hit the newlines hard)
 - Release next version.
 ----
 - Now reports in the test results if child was terminated by a signal.

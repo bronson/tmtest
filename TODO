@@ -2,7 +2,6 @@
 - An empty test with a STDOUT clause should fail without the -n right?
   I mean, there's no newline in the actual output, but there is in the
   expected...
-- Add tests for binary transparency.
 - write tests for nesting testfiles with --config.
         // If the user specifies a config file, we only check directories
         // not above the given config file.  i.e. if user specifies
@@ -16,6 +15,14 @@
     supports the --config argument (make them DISABLED or something).
 
 0.96:
+- Change the I/O scheme to be event based.  Get rid of the tempfiles.
+  Convert to using the async io library.  Don't use temporary files.
+  This would allow us to recognize that the test is disabled before
+  producing a partial diff, blowing away output sections.
+- Use i/o lib for everything.  No need for temp files.
+  This means that we stream everything EXCEPT stderr, which we memory
+  buffer.  If your stderr is more than 100K or so in size, just redirect
+  it to stdout.
 - stdin is all buggered up.  why is it that "cat" with no args will print
   the rest of the test script?  And why is it that if you fork, diff freezes?
   They're related problems I suspect.
@@ -38,22 +45,14 @@
   See 22-PatchNoNL2.test for more.  Make sure a test for this is in 03 too.
 
 0.98:
-- Change the I/O scheme to be event based.  Get rid of the tempfiles.
-  Convert to using the async io library.  Don't use temporary files.
-  This would allow us to recognize that the test is disabled before
-  producing a partial diff, blowing away output sections.
-- Use i/o lib for everything.  No need for temp files.
-  This means that we stream everything EXCEPT stderr, which we memory
-  buffer.  If your stderr is more than 100K or so in size, just redirect
-  it to stdout.
-
-2.0:
 - get rid of all the exit(10) calls in test.c.  We need a better way to
   abort the test.
   should get rid of a whole bunch in main.c as well.
   this should prevent us from dropping turds in /tmp all the time too.
 - Get rid of MODIFY clauses.  It's unnecessary complexity.
   And it's a LOT.  First remove it from the tests, then from the code.
+
+1.0:
 
 ?:
 - add gcov support so you can see what sort of coverage your tests provide.

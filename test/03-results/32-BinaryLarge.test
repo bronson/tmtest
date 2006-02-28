@@ -1,0 +1,35 @@
+# Ensures that a testfile can contain some arbitrary binary
+# data and the test will still work.  This just tests control chars.
+
+# We need to manuall create the testfile because Bash will screw 
+# things up if we use a heredoc.
+
+MKFILE tt <<-'EOL'
+    for i in `seq 1 20`; do
+        echo -e "\\0\\0\\0\\0\\r\\n\\0\\0\\0\\0\\a\\e\\b\\f\\t\\v\\'"
+        echo -e "\\000\\001\\002\\003\\004\\005\\006\\007"
+        echo -e "\\010\\011\\012\\013\\014\\015\\016\\017"
+        echo -e "\\020\\021\\022\\023\\024\\025\\026\\027"
+        echo -e "\\030\\031\\032\\033\\034\\035\\036\\037"
+    done
+	STDOUT:
+EOL
+
+# Add the expected results to the testfile.
+for i in `seq 1 20`; do
+    echo -e "\\0\\0\\0\\0\\r\\n\\0\\0\\0\\0\\a\\e\\b\\f\\t\\v\\'"
+    echo -e "\\000\\001\\002\\003\\004\\005\\006\\007"
+    echo -e "\\010\\011\\012\\013\\014\\015\\016\\017"
+    echo -e "\\020\\021\\022\\023\\024\\025\\026\\027"
+    echo -e "\\030\\031\\032\\033\\034\\035\\036\\037"
+done >> "$tt"
+
+# and run the test
+tmtest --all-files -q "$tt" | REPLACE "$tt" /tmp/FILE
+
+STDOUT:
+
+Processing /tmp/FILE
+ok   /tmp/FILE 
+
+1 test run, 1 success, 0 failures.

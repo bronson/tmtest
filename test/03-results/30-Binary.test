@@ -1,0 +1,24 @@
+# Ensures that a testfile can contain 4 NULLs and comparison will
+# still work.
+
+# We need to create the testfile in its own file because Bash will
+# screw things up if we use a heredoc.
+
+MKFILE tt <<-EOL
+	echo -e "\\0\\0\\0\\0"
+    # stdout will be filled in below
+	STDOUT:
+EOL
+
+# Add the expected results to the testfile.
+echo -e "\\0\\0\\0\\0" >> "$tt"
+
+# and run the test
+tmtest --all-files -q "$tt" | REPLACE "$tt" /tmp/FILE
+
+STDOUT:
+
+Processing /tmp/FILE
+ok   /tmp/FILE 
+
+1 test run, 1 success, 0 failures.
