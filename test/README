@@ -15,8 +15,8 @@ These are the test subcategories:
 
 02-running: tests running the actual tests
     Ensures that the test environment is set up properly.
-    For instance, checks that disabled tests are not run, the tmlib
-    calls are performed properly, etc.
+    For instance, checks that disabled tests are not run,
+    tmlib functions behave correctly, etc.
 
 03-results: tests the results
     Ensures that we compare the test results properly.

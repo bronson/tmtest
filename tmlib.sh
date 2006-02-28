@@ -18,6 +18,7 @@
 # MKFILE:   Creates a temporary file with the given contents.
 # MKDIR:    create a temporary directory
 # INDENT:   indent some output.
+# REPLACE:  replaces literal text with other literal text (no regexes).
 
 
 
@@ -217,3 +218,44 @@ INDENT ()
     #	done
 }
 
+
+# 
+# REPLACE
+#
+# Replaces all occurrences of the first argument with the second
+# argument.  Both should be regex-safe.  Use sed if you want to
+# replace with regexes.  NOTE: replace does not work if a newline
+# is embedded in either argument.
+#
+# Three layers of escaping!  (bash, perlvar, perlre)  This is insane.
+# I wish sed or awk would work with raw strings instead of regexes.
+# Why isn't a replace utility a part of Gnu coreutils?
+#
+
+REPLACE()
+{
+    # unfortunately bash can't handle this substitution because it
+    # must work on ' and \ simultaneously.  So, send it to perl for
+    # processing.  Until ' and \ have been escaped, Perl can't 
+    
+
+#    echo "got: '$1' '${1//[\'\\]/\'}'"
+#    perl -e "print \"in: \" . quotemeta('${1//\'/\'}') . \"\\n\";"
+
+#     (echo "$1"; echo "$2"; cat) | cat
+#     (echo "$1"; echo "$2"; cat) | perl -e "my \$in = <>; chomp \$in; my \$out = <>; chomp \$out; print '  in: <<' . \$in . \">>\n out: <<\" . \$out . \">>\n\"; while(<>) { print \"DATA: \$_\" }"
+#     (echo "$1"; echo "$2"; cat) | perl -e "my \$in = <>; chomp \$in; \$in=quotemeta(\$in); my \$out = <>; chomp \$out; print '  in: <<' . \$in . \">>\n out: <<\" . \$out . \">>\n\"; while(<>) { print \"DATA: \$_\" }"
+
+     (echo "$1"; echo "$2"; cat) | perl -e "my \$in = <>; chomp \$in; \$in=quotemeta(\$in); my \$out = <>; chomp \$out; while(<>) { s/\$in/\$out/g; print or die \"Could not print: \$!\\\\n\"; }"
+
+
+# this scheme also works but it's much better to feed the vars on stdin
+# along with the data.  Less process overhead, simpler script.  This
+# does mean that REPLACE won't work with embedded newlines though.
+#
+#    local in=$(perl -p -e "s/([\\'\\\\])/\\\\\$1/g" <<< $1);
+#    local out=$(perl -p -e "s/([\\'\\\\])/\\\\\$1/g" <<< $2);
+#
+#     perl -e "<>; my \$in = quotemeta(chomp); <>; my \$out = chomp; while(<>) { s/\$in/\$out/g; print or die \"Could not print: \$!\\\\n\"; }"
+#    perl -e "my \$in = quotemeta('${1//\'/\'}'); my \$out = '${2//\'/\'}'; while(<>) { s/\$in/\$out/g; print or die \"Could not print: \$!\\\\n\"; }"
+}
