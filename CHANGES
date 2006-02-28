@@ -1,6 +1,9 @@
 - write some tests to ensure diff works with files that don't end in CR.
-- move INDENT from 04-diff into the stdlib.  Add to docs.
+- write some tests to ensure binary transparency of stdout and stderr.
+  (especially hit the newlines hard)
+- Release next version.
 ----
+- Added the INDENT function to tmlib.
 - Bash3 has made it so that the RE can no longer appear on the same line as
   the MODIFY command.  I updated all tests and accelerated MODIFY deprecation.
 - Added -n (--no-trailing-newline) capability to STDOUT and STDERR sections.
@@ -8,6 +11,7 @@
 - Got rid of all AUTHOR and DATE automation.  Too heavyhanded.
 - Standardized licensing: everything under my control is MIT, package is LGPL.
 - When installing locally, it's ~/.tmlib.sh instead of ~/share/tmtest/tmlib.sh
+
 - Bump to 0.92
 - install now installs config files too.
 - Added the --config option to override default config files.

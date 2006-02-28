@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# make-dist (for tmtest)
+# Scott Bronson
+# 30 May 2000
+
+
+name=tmtest
+version=$(perl -ne '/VERSION=([0-9]+\.[0-9A-Za-z_.-]+)/ && print $1' Makefile)
+
+if [ ! "$version" ] ; then echo "Could not figure out version." ; exit 1 ; fi
+
+grep -w $version CHANGES 2>&1 >/dev/null
+if [ "$?" != "0" ]; then echo "Add $version to CHANGES!"; exit 1; fi
+
+pushd . 2>&1 > /dev/null
+
+# Ensure tree is ready to go
+make distclean > /dev/null || exit 1
+make dist > /dev/null || exit 1
+
+# get rid of possible old files
+rm -rf /tmp/$name-$version
+rm -rf /tmp/$name-$version.tar.gz
+
+# make a working copy in /tmp
+cp -r . /tmp/$name-$version
+
+# remove unneeded files
+cd /tmp/$name-$version
+find . -name .svn | xargs rm -rf
+rm -f Makefile.old
+rm make-dist
+
+# check for any invisible files
+find . | grep /\\. && echo "BAD FILES!  Won't finish." && exit 1
+
+# show a list of files so we can see questionable stuff
+find .
+
+# tar it up
+cd ..
+tar zcf $name-$version.tar.gz $name-$version
+
+# we're done
+echo "New dist is in /tmp/$name-$version.tar.gz, enjoy!"
+popd 2>&1 > /dev/null
+

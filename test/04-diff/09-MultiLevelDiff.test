@@ -11,9 +11,6 @@
 # tt/two/one/t.test
 
 
-. "$MYDIR/indent.sh"
-
-
 MKDIR tt
 cd "$tt" || ABORT "Could not cd to $tt"
 

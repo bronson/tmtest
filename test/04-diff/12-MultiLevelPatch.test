@@ -11,9 +11,6 @@
 # tt/two/one/t.test
 
 
-. "$MYDIR/indent.sh"
-
-
 MKDIR tt
 cd "$tt" || ABORT "Could not cd to $tt"
 
@@ -56,15 +53,15 @@ EOL
 
 tmtest --all-files -d | patch -p0
 echo
-INDENT < t.test
+INDENT "\t" < t.test
 echo
-INDENT < one/t.test
+INDENT "\t" < one/t.test
 echo
-INDENT < two/t1.test
+INDENT "\t" < two/t1.test
 echo
-INDENT < two/t2.test
+INDENT "\t" < two/t2.test
 echo
-INDENT < two/one/t.test
+INDENT "\t" < two/one/t.test
 
 rm -rf t.test one two
 

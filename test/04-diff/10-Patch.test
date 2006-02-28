@@ -4,8 +4,6 @@
 # tests tmtest -d | patch
 # Updated for tmtest 2.0 on 29 Jan 2005
 
-. "$MYDIR/indent.sh"
-
 
 MKFILE tt <<-EOL
 	echo "right output"
@@ -20,7 +18,7 @@ EOL
 tmtest --all-files -d "$tt" | (cd `dirname "$tt"` && patch)
 echo "And the patched file:"
 echo
-INDENT < "$tt"
+INDENT "\t" < "$tt"
 
 MODIFY:
   s/^patching .*/patching FILE/

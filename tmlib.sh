@@ -5,13 +5,19 @@
 
 
 # TODO: should these routines be prefixed by "TM"?
+# TODO: is there any way to get rid of MKFILE_EMPTY?  Can't MKFILE notice
+#       if read would block and, if so, just create an empty file.?
 
 
-# Current functions:
-# ASSERT: Stop a test if a condition fails
-# ATEXIT: Ensure something gets cleaned up even if the test fails.
-# MKFILE MKFILE_EMPTY: create temporary files
-# MKDIR: create a temporary directory
+# tmlib functions:
+#
+# ASSERT:   Stop a test if a condition fails
+# TRAP:     Execute a command when an exception happens
+# ATEXIT:   Ensure a command runs even if the test fails (usually to clean up).
+# MKFILE_EMPTY: create an empty temporary file.
+# MKFILE:   Creates a temporary file with the given contents.
+# MKDIR:    create a temporary directory
+# INDENT:   indent some output.
 
 
 
@@ -176,5 +182,38 @@ MKDIR ()
 
 	eval "$1='$name'"
 	ATEXIT "rmdir '$name'"
+}
+
+
+# 
+# INDENT
+#
+# Indents the output the given number of spaces.
+# Note that this only works with stdout!  You'll have to combine
+# the stdout and stderr streams if you want to indent stderr.
+#
+# By default this script indents each line with two spaces.
+# Pass an argument to tell this function what to put before
+# each line.
+#
+# Examples:
+#
+#    echo hi | INDENT "\t"      # indents stdout with a tab char
+#    cat /tmp 2>&1 | INDENT     # indents both stdout and stderr
+#    exec > >(INDENT)           # indents all further script output
+#
+
+INDENT ()
+{
+    # sed appears more binary transparent than bash's builtins so I'm
+    # using sed instead of read.
+
+    sed -e "s/^/${1-  }/"
+
+    # even though this might be faster, it mucks things up.
+    #
+    #	while read LINE; do
+    #		echo $'\t'"$LINE"
+    #	done
 }
 

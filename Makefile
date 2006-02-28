@@ -5,7 +5,7 @@
 # This software is distributed under the LGPL.  See COPYING for more.
 
 
-VERSION=0.92
+VERSION=0.94
 
 # override this when installing: "make install prefix=/usr/local"
 #prefix=/usr
@@ -95,6 +95,8 @@ clean:
 distclean: clean
 	rm -f stscan.[co]
 
+dist: stscan.c
+	
 tags: $(CSRC) $(CHDR) $(INTERMED)
 	ctags -R
 
