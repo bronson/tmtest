@@ -2,6 +2,7 @@
   (especially hit the newlines hard)
 - Release next version.
 ----
+- Now reports in the test results if child was terminated by a signal.
 - Added the INDENT and REPLACE functions to tmlib.
 - Bash3 has made it so that the RE can no longer appear on the same line as
   the MODIFY command.  I updated all tests and accelerated MODIFY deprecation.

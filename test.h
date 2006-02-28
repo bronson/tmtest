@@ -47,7 +47,9 @@ struct test {
     int outfd;				///< the file that receives the test's stdout.
     int errfd;				///< the file that receives the test's stderr.
     int statusfd;			///< receives the runtime test status messages.
-    int exitno;				///< the test's actual exit value.
+    int exitno;				///< the test's actual exit value (WEXITSTATUS).
+    int exitsignal;         ///< the value returned for the test by waitpid(2)
+    int exitcored;          ///< if exitsignal is true, true if child core dumped.
 
 	pcrs_job *eachline;		///< a linked list of pcrs jobs to be applied to each line.
 

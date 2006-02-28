@@ -1,0 +1,15 @@
+# This verifies that tmtest correctly handles a child exiting
+# by a signal.
+
+# it's important that the heredoc word is quoted.  Otherwise the $$ would
+# be expanded to be the pid of the parent, not the pid of the child process
+# that we want to kill!
+
+tmtest $CFG -q - <<'EOL'
+    kill -9 $$
+EOL
+
+STDOUT:
+FAIL (STDIN)                   terminated by signal 9
+
+1 test run, 0 successes, 1 failure.

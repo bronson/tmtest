@@ -819,18 +819,24 @@ void test_results(struct test *test)
     } else {
         test_failures++;
         printf("FAIL %-25s ", get_testfile_name(test));
-		printf("%c%c%c  ",
-				(stdo ? 'O' : '.'),
-				(stde ? 'E' : '.'),
-				(exno ? 'X' : '.'));
-		if(stdo || stde) {
-			if(stdo) printf("stdout ");
-			if(stdo && stde) printf("and ");
-			if(stde) printf("stderr ");
-			printf("differed");
-		}
-		if((stdo || stde) && exno) printf(", ");
-		if(exno) printf("result was %d not %d", test->exitno, test->expected_exitno);
+        if(test->exitsignal) {
+            printf("terminated by signal %d%s", test->exitsignal,
+                    (test->exitcored ? " with core" : ""));
+        } else {
+            printf("%c%c%c  ",
+                    (stdo ? 'O' : '.'),
+                    (stde ? 'E' : '.'),
+                    (exno ? 'X' : '.'));
+            if(stdo || stde) {
+                if(stdo) printf("stdout ");
+                if(stdo && stde) printf("and ");
+                if(stde) printf("stderr ");
+                printf("differed");
+            }
+            if((stdo || stde) && exno) printf(", ");
+            if(exno) printf("result was %d not %d",
+                    test->exitno, test->expected_exitno);
+        }
 		printf("\n");
     }
 
