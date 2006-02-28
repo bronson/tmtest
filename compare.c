@@ -48,6 +48,11 @@ typedef struct {
 
 static int compare_fill(scanstate *ss)
 {
+    // need to pretend like we're updating the token,
+    // otherwise the readproc will think we need to keep
+    // the token and we quickly run out of buffer room.
+    ss->token = ss->cursor;
+
     return (*ss->read)(ss);
 }
 
@@ -90,6 +95,7 @@ static void compare_continue_bytes(scanstate *ss, const char *ptr, int len)
         n = ss->limit - ss->cursor;
         if(!n) {
             n = compare_fill(ss);
+            ss->line += n;
             if(n < 0) {
                 // there was an error while trying to fill the buffer
                 // TODO: this should be propagated to the client somehow.

@@ -33,18 +33,40 @@
 
  */
 
+
+// cnt tells how many bytes need to be shifted downward.
+// The bytes that need to be shifted are those between the token
+// and the limit.
+
 int read_shiftbuf(scanstate *ss)
 {
-    int cnt = ss->token - ss->bufptr;
+    const char *min;
+    int cnt;
+
+    min = ss->token;
+    if(ss->marker && ss->marker < min) {
+        min = ss->marker;
+    }
+
+    // this tells how many bytes need to be shifted.
+    cnt = ss->limit - min;
     if(cnt) {
-        memmove((void*)ss->bufptr, ss->token, ss->limit - ss->token);
-        ss->token = ss->bufptr;
-        ss->cursor -= cnt;
-        if(ss->marker) ss->marker -= cnt;
-        ss->limit -= cnt;
+        int delta = min - ss->bufptr;
+        memmove((void*)ss->bufptr, min, cnt);
+        ss->cursor -= delta;
+        ss->token -= delta;
+        if(ss->marker) ss->marker -= delta;
+        ss->limit -= delta;
+
         assert(ss->limit >= ss->bufptr);
         assert(ss->cursor >= ss->bufptr);
         assert(ss->cursor <= ss->limit);
+    } else {
+        // nothing to shift so we reset the buffer to maximum size.
+        ss->cursor = ss->bufptr;
+        ss->token = ss->bufptr;
+        if(ss->marker)  ss->marker = ss->bufptr;
+        ss->limit = ss->bufptr;
     }
 
     return ss->bufsiz - (ss->limit - ss->bufptr);
