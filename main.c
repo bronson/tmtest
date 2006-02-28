@@ -361,7 +361,7 @@ int run_test(const char *name, int warn_suffix)
     char buf[BUFSIZ];   // scan buffer for the testfile
     int pipes[2];
     int child;
-	int keepontruckin;
+	int keepontruckin = 0;
     int diffpid;
     int fd = -1;
     int i;
@@ -471,54 +471,58 @@ int run_test(const char *name, int warn_suffix)
 
     if(dumpscript) {
         print_template(&test, exec_template, stdout);
-        exit(0);  // screw the kid
+        // don't want to print a summary of the tests run so make
+        // sure tmtest realizes it's dumping a test.
+        outmode = outmode_dump;
+    } else {
+        // set up the pipes for the parent
+        close(pipes[0]);
+        tochild = fdopen(pipes[1], "w");
+        if(!tochild) {
+            perror("calling fdopen on pipe");
+            exit(runtime_error);
+        }
+
+        // write the test script to the kid
+        print_template(&test, exec_template, tochild);
+        fclose(tochild);
+
+        // wait for the test to finish
+        i = wait_for_child(child, "test");
+        test.exitsignal = (WIFSIGNALED(i) ? WTERMSIG(i) : 0);
+        test.exitcored = (WIFSIGNALED(i) ? WCOREDUMP(i) : 0);
+        test.exitno = (WIFEXITED(i) ? WEXITSTATUS(i) : 256);
+
+        // read the status file to determine what happened
+        // and store the information in the test struct.
+        scan_status_file(&test);
+
+        // process and output the test results
+        switch(outmode) {
+            case outmode_test:
+                test_results(&test);
+                break;
+            case outmode_dump:
+                dump_results(&test);
+                break;
+            case outmode_diff:
+                dump_results(&test);
+                finish_diff(&test, diffpid);
+                break;
+            default:
+                assert(!"Unhandled outmode 2 in run_test()");
+        }
+
+        // if we had to open the testfile to read it, we now close it.
+        // because the scanner is statically allocated, there's no
+        // need to destroy it.
+        if(fd >= 0) {
+            close(fd);
+        }
+
+        keepontruckin = !test.aborted;
     }
 
-    // set up the pipes for the parent
-    close(pipes[0]);
-    tochild = fdopen(pipes[1], "w");
-    if(!tochild) {
-        perror("calling fdopen on pipe");
-        exit(runtime_error);
-    }
-
-    // write the test script to the kid
-    print_template(&test, exec_template, tochild);
-    fclose(tochild);
-
-    // wait for the test to finish
-    i = wait_for_child(child, "test");
-    test.exitsignal = (WIFSIGNALED(i) ? WTERMSIG(i) : 0);
-    test.exitcored = (WIFSIGNALED(i) ? WCOREDUMP(i) : 0);
-    test.exitno = (WIFEXITED(i) ? WEXITSTATUS(i) : 256);
-
-	// read the status file to determine what happened
-	// and store the information in the test struct.
-	scan_status_file(&test);
-
-    // process and output the test results
-    switch(outmode) {
-        case outmode_test:
-            test_results(&test);
-            break;
-        case outmode_dump:
-            dump_results(&test);
-            break;
-        case outmode_diff:
-            dump_results(&test);
-            finish_diff(&test, diffpid);
-            break;
-        default:
-            assert(!"Unhandled outmode 2 in run_test()");
-    }
-
-    // if we had to open the testfile to read it, we now close it.
-    // because the scanner is statically allocated, there's no
-    // need to destroy it.
-    if(fd >= 0) {
-        close(fd);
-    }
-	keepontruckin = !test.aborted;
     test_free(&test);
 
 	return keepontruckin;
