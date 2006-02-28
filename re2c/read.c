@@ -47,6 +47,6 @@ int read_shiftbuf(scanstate *ss)
         assert(ss->cursor <= ss->limit);
     }
 
-    return ss->bufsiz - (ss->bufptr - ss->limit);
+    return ss->bufsiz - (ss->limit - ss->bufptr);
 }
 

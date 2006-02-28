@@ -176,7 +176,7 @@ struct scanstate {
     // (these do a poor job of simulating capturing parens)
     const char *token;  ///< The start of the current token (manually updated by the scanner).
     int line;           ///< The scanner may or may not maintain the current line number in this field.
-    int at_eof;         ///< You almost certainly don't want to be using this (unless you're writing a readproc).  Use scan_finished() instead.  This field gets set when the readproc realizes it has hit eof.  by convention 1 means eof, 2 means yes, at_eof is true, but because of an unrecoverable read error (todo: this should be formalized).
+    int at_eof;         ///< You almost certainly don't want to be using this unless you're writing a readproc.  Use scan_finished() instead.  This field gets set when the readproc realizes it has hit eof.  by convention 1 means eof, 2 means yes, at_eof is true, but because of an unrecoverable read error (todo: this should be formalized?  TODO: audit code to see if this is indeed the case).
 
     const char *bufptr; ///< The buffer currently in use
     int bufsiz;         ///< The maximum number of bytes that the buffer can hold
