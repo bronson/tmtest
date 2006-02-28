@@ -25,24 +25,24 @@ echo $'A\\\"b : ' $'a\\\"b'    | REPLACE $'a\\\"b' def
 echo $'A\\Q\\Eb:' $'a\\Q\\Eb' | REPLACE $'a\\Q\\Eb' def
 
 STDOUT:
-Abc :  def
-A'b :  def
-A"b :  def
+Abc  :  def
+A'b  :  def
+A"b  :  def
 A''b :  def
 A""b :  def
-A\'b:  def
-A\"b:  def
-A'\b:  def
-A"\b:  def
-A\\b:  def
-A/b:   def
-A.b:   def
-A*b:   def
-A+b:   def
-A$b:   def
-A$$b:  def
-A@b:   def
-D.f:   def
-A\'b:  def
-A\"b:  def
-A\Q\Eb:  def
+A\'b :  def
+A\"b :  def
+A'\b :  def
+A"\b :  def
+A\\b :  def
+A/b  :  def
+A.b  :  def
+A*b  :  def
+A+b  :  def
+A$b  :  def
+A$$b :  def
+A@b  :  def
+D.f  :  def
+A\'b :  def
+A\"b :  def
+A\Q\Eb: def
