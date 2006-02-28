@@ -1,8 +1,5 @@
-- rename TRUNK to trunk
 - write some tests to ensure diff works with files that don't end in CR.
-- Fix 99-Misc.
 - move INDENT from 04-diff into the stdlib.  Add to docs.
-- Eradicate the MODIFY clause from the documentation.  Mark it deprecated.
 ----
 - Bash3 has made it so that the RE can no longer appear on the same line as
   the MODIFY command.  I updated all tests and accelerated MODIFY deprecation.
