@@ -1,0 +1,10 @@
+# A blank test with an empty stderr clause should succeed because
+# the stdout clause doesn't contain anything -- not even a newline.
+
+tmtest -q - <<-EOL
+	STDERR:
+EOL
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

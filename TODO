@@ -1,20 +1,28 @@
 0.94:
-- An empty test with a STDOUT clause should fail without the -n right?
-  I mean, there's no newline in the actual output, but there is in the
-  expected...
-- write tests for nesting testfiles with --config.
-        // If the user specifies a config file, we only check directories
-        // not above the given config file.  i.e. if user specifies
-        // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
-        // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
+- Print a warning if we notice that an output section doesn't end in
+  a newline, but the testfile hasn't marked that section with a "-n".
+  See 22-PatchNoNL2.test for more.  Make sure a test for this is in 03 too.
+
+0.96:
+- Get rid of MODIFY clauses.  It's unnecessary complexity.
+  And it's a LOT.  First remove it from the tests, then from the code.
 - Add the ability to specify test arguments on the command line.
   I'm picturing something where VAR=val on the command line would be
   inserted without change into the template.  That way you can use the
   command line to override default settings in the testfile.
   - This would allow us to test almost every test to ensure it
     supports the --config argument (make them DISABLED or something).
+- write tests for nesting testfiles with --config.
+        // If the user specifies a config file, we only check directories
+        // not above the given config file.  i.e. if user specifies
+        // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
+        // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
+- get rid of all the exit(10) calls in test.c.  We need a better way to
+  abort the test.
+  should get rid of a whole bunch in main.c as well.
+  this should prevent us from dropping turds in /tmp all the time too.
 
-0.96:
+0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
   Convert to using the async io library.  Don't use temporary files.
   This would allow us to recognize that the test is disabled before
@@ -27,12 +35,6 @@
   the rest of the test script?  And why is it that if you fork, diff freezes?
   They're related problems I suspect.
     Is it because I'm forgetting to close all open filehandles before forking?
-- Tighten up printing a folder name when there are no testfiles in it.
-  No need for double spacing.
-- Add the ability to run multiple tests from one testfile.
-  See tmtest 0.8 for a potential implementation of this.
-  All we'd need to add is a framework to notify the user that multiple
-  tests are in progress; bash can take care of the rest.
 - Shouldn't run every test in a dir if the DISABLED directive is in a config
   file.
   Should discover what dir the DISABLED directive came from and refuse
@@ -40,19 +42,16 @@
   - Yes, if a config file returns DISABLED, then that folder and all its
     subfolders are skipped.  Just make the test itself call the DISABLED
 	command if you want testing to continue in that subfolder.
-- Print a warning if we notice that an output section doesn't end in
-  a newline, but the testfile hasn't marked that section with a "-n".
-  See 22-PatchNoNL2.test for more.  Make sure a test for this is in 03 too.
+- Tighten up printing a folder name when there are no testfiles in it.
+  No need for double spacing.
 
-0.98:
-- get rid of all the exit(10) calls in test.c.  We need a better way to
-  abort the test.
-  should get rid of a whole bunch in main.c as well.
-  this should prevent us from dropping turds in /tmp all the time too.
-- Get rid of MODIFY clauses.  It's unnecessary complexity.
-  And it's a LOT.  First remove it from the tests, then from the code.
+1.0!
 
-1.0:
+1.2:
+- Add the ability to run multiple tests from one testfile.
+  See tmtest 0.8 for a potential implementation of this.
+  All we'd need to add is a framework to notify the user that multiple
+  tests are in progress; bash can take care of the rest.
 
 ?:
 - add gcov support so you can see what sort of coverage your tests provide.
@@ -63,7 +62,7 @@
   directory hierarchy.
 - add the ability to run valgrind over each test and print success/failure
   of that.  (gives deep valgrind coverage)
-  - One problem with this will be all the false warnings.
+  - One problem with this will be all the false warnings that valgrind spews.
 
 No longer a problem when we dump pcrs:
 - allow multiple s/// expressions on a single line.  will probably require

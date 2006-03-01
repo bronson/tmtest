@@ -1,0 +1,11 @@
+# A blank test with an empty stderr clause should succeed (see
+# 15-BlankWithErr.test), so adding -n should not change the
+# results at all.
+
+tmtest -q - <<-EOL
+	STDERR: -n
+EOL
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.
