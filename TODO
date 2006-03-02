@@ -1,9 +1,11 @@
-0.94:
-- Print a warning if we notice that an output section doesn't end in
-  a newline, but the testfile hasn't marked that section with a "-n".
-  See 22-PatchNoNL2.test for more.  Make sure a test for this is in 03 too.
-
 0.96:
+- Put $args into EVERY test we run.
+- There's some sort of a bug with 10-DumpScript.test.  When running with
+  -o or -d, sometimes it complains about a missing newline.  Odd.
+- Write a test to ensure we can run tests named "-.test"
+- Write tests to verify what FDs are still open when we run
+  config files, test files, and diff.
+- Add --diff and --shell to change the executables that get launched.
 - Get rid of MODIFY clauses.  It's unnecessary complexity.
   And it's a LOT.  First remove it from the tests, then from the code.
 - Add the ability to specify test arguments on the command line.
@@ -21,16 +23,27 @@
   abort the test.
   should get rid of a whole bunch in main.c as well.
   this should prevent us from dropping turds in /tmp all the time too.
+- Rename --all-files to --ignore-extension.
+- Move newline suppressing out of compare.c.  If it can't be moved out,
+  at least clean it up!   (maybe?)
+- Figure out how to ensure that we run the binary in the project tree
+  when testing rather than the globally installed one.  What happened?
+- Ensure it compiles and runs on freebsd.
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
   Convert to using the async io library.  Don't use temporary files.
   This would allow us to recognize that the test is disabled before
   producing a partial diff, blowing away output sections.
+  - Make sure to keep reading both stdin and stderr to eof.
+  - This also allows us to get rid of STATUSFD so that NO other fds are open
+    when running the test.  OUTFD and ERRFD still need to be open when
+	running the config files though.
 - Use i/o lib for everything.  No need for temp files.
   This means that we stream everything EXCEPT stderr, which we memory
   buffer.  If your stderr is more than 100K or so in size, just redirect
-  it to stdout.
+  it to a file, then cat the file at the end.  We truncate stderr if it
+  gets too big.
 - stdin is all buggered up.  why is it that "cat" with no args will print
   the rest of the test script?  And why is it that if you fork, diff freezes?
   They're related problems I suspect.
@@ -44,6 +57,10 @@
 	command if you want testing to continue in that subfolder.
 - Tighten up printing a folder name when there are no testfiles in it.
   No need for double spacing.
+- Add a --continuous argument that will cycle through all tests tmtest
+  can find.  It prints nothing if a test succeeds, or the fail notice
+  if it fails.  Runs until cancelled with ^C.  Let it run overnight and
+  see if any of your tests have intermittent failures.
 
 1.0!
 
@@ -63,6 +80,15 @@
 - add the ability to run valgrind over each test and print success/failure
   of that.  (gives deep valgrind coverage)
   - One problem with this will be all the false warnings that valgrind spews.
+- Get rid of exNEW and all the definitions from tfscan.h.  It's uuuugly!
+  Not quite sure how... I mean, I see how to clean it up some but not
+  a lot.  Probably not worth it.  It's an ugly problem.
+- Is it possible to add a SECOND diff to the output from tmtest -d to
+  add a "-n" to the output section?  That way, instead of printing a
+  warning telling the user what to edit, we could just fix it ourselves.
+  See 18-NoNLWarn.test for more.
+- Maybe make an option to run the command from a pty so it looks just
+  like the user is running the command.
 
 No longer a problem when we dump pcrs:
 - allow multiple s/// expressions on a single line.  will probably require

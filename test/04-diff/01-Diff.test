@@ -7,7 +7,7 @@
 # updated for 2.0 on 27 Jan 2005
 
 
-tmtest -d - <<-EOL
+tmtest --diff - <<-EOL
     echo "right output"
     STDOUT:
     wrong output

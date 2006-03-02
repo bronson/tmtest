@@ -1,22 +1,24 @@
-- Release next version.
-----
-- --dump-script now cleans up after itself (before we'd leave turds in /tmp).
-- Now reports in the test results if child was terminated by a signal.
+get rid of ATEXIT from template.sh.  Can also merge 3>&- and 5>& in template.sh
+- Release 0.94 on 2 Mar 2006
+- NOTE: Bash3 has made it so that the regex can not appear on the same line as
+  the MODIFY keyword.  I updated all tests and accelerated MODIFY deprecation.
 - Added the INDENT and REPLACE functions to tmlib.
-- Bash3 has made it so that the RE can no longer appear on the same line as
-  the MODIFY command.  I updated all tests and accelerated MODIFY deprecation.
-- Added -n (--no-trailing-newline) capability to STDOUT and STDERR sections.
-- Rewrote the re2c parser in C so we should now be totally binary transparent.
-- Got rid of all AUTHOR and DATE automation.  Too heavyhanded.
 - Standardized licensing: everything under my control is MIT, package is LGPL.
+- --dump-script now cleans up after itself (before we'd leave turds in /tmp).
+- Now reports in the test results when child is terminated by a signal.
 - When installing locally, it's ~/.tmlib.sh instead of ~/share/tmtest/tmlib.sh
+- Added -n (--no-trailing-newline) capability to STDOUT and STDERR sections.
+- Got rid of all AUTHOR and DATE automation.  Too heavyhanded.
+- Added --patch/-p to do the same thing as --diff/-d.  Just feels natural.
+- Now only "\nSTDOUT[ \t\r\n:]" starts a section.  Anything else is just data.
+- Rewrote the re2c parser in C so we should now be totally binary transparent.
 
 - Bump to 0.92
-- install now installs config files too.
-- Added the --config option to override default config files.
+- Tests now start with /tmp as the cwd, not the testdir.
+  The testdir is supplied in $TESTDIR (or $MYDIR inside the testfile)
 - Added timing information to test summary.  Disable with new -q option.
+- Added the --config option to override default config files.
+- install now installs config files too.
 - Created tmlib, a "standard library" for tests.
 - We now stop running all tests if any test aborts.  DISABLE stops the current
   test but lets all other tests finish; ABORT stops testing altogether.
-- Tests now start with /tmp as the cwd, not the testdir.
-  The testdir is supplied in $TESTDIR (or $MYDIR inside the testfile)

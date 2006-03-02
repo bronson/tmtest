@@ -20,7 +20,7 @@
 
 void compare_attach(scanstate *ss, matchval *mv, pcrs_job *joblist, int nonl);
 void compare_continue(scanstate *ss, const char *ptr, int len);
-void compare_end(scanstate *cmp);
+void compare_end(scanstate *cmp, int *warn_nl);
 
 // no better place to put this for now...
 char* substitute_string(pcrs_job *job, const char *cp, const char *ce, size_t *newsize);

@@ -43,7 +43,14 @@
 
 static int var_testfile(struct test *test, FILE* fp, const char *var)
 {
-	fprintf(fp, "%s/%s", curabsolute(), test->testfilename);
+	if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
+		fprintf(fp, "(STDIN)");
+	} else if(test->testfilename[0] == '/') {
+		fprintf(fp, "%s", test->testfilename);
+	} else {
+		fprintf(fp, "%s/%s", curabsolute(), test->testfilename);
+	}
+
     return 0;
 }
 
@@ -60,13 +67,17 @@ static int var_testexec(struct test *test, FILE* fp, const char *var)
     // from stdin.  Otherwise, just have the shell execute the testfile.
 
     if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
-		// bash doesn't support setting LINENO any more but,
+		// bash3 doesn't support setting LINENO anymore.  Bash2 did.
 		// what the hell, it's worth a shot.
 		fprintf(fp, "LINENO=0\n");
         test_command_copy(test, fp);
     } else {
         test_command_copy(test, NULL);
-        fprintf(fp, ". '%s/%s'", curabsolute(), test->testfilename);
+		if(test->testfilename[0] == '/') {
+			fprintf(fp, ". %s", test->testfilename);
+		} else {
+			fprintf(fp, ". '%s/%s'", curabsolute(), test->testfilename);
+		}
     }
 
     return 0;
@@ -190,16 +201,25 @@ static void check_config(struct test *test, FILE *fp,
 static int var_config_files(struct test *test, FILE *fp, const char *var)
 {
 	char buf[PATH_MAX];
-    char *cp;
+    char *cp, *oldcfg;
 	int confbaselen;
 
 	// check global configuration files
 	if(config_file) {
-		// Need to obliterate config_file, otherwise it will think that
-		// it has included config_file twice and refuse to include it.
-		char *oldcfg = config_file;
+		// Need to temporarily forget config_file, otherwise it will think
+		// that it has included config_file twice and refuse to include it.
+		oldcfg = config_file;
 		config_file = NULL;
-		check_config_str(test, fp, oldcfg, NULL);
+
+		strncpy(buf, oldcfg, sizeof(buf));
+		buf[sizeof(buf)-1] = '\0';
+		cp = strrchr(buf, '/');
+		if(cp == NULL) {
+			fprintf(stderr, "Illegal config_file: '%s'\n", buf); 
+			exit(1);
+		}
+		*cp = '\0';
+		check_config_str(test, fp, buf, cp+1);
 		config_file = oldcfg;
 	} else {
 		check_config_str(test, fp, "/etc", CONFIG_FILE);
@@ -209,6 +229,7 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
 
 	// check config files in the current hierarchy
 	strncpy(buf, curabsolute(), sizeof(buf));
+	buf[sizeof(buf)-1] = '\0';
 	if(config_file) {
 		confbaselen = strrchr(config_file, '/') - config_file;
 	}

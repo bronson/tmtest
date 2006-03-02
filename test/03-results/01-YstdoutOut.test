@@ -1,0 +1,12 @@
+# Ensures an empty stderr section won't affect the test results.
+
+tmtest -q - <<-EOL
+	echo Howdy
+	STDOUT :
+	Howdy
+	STDERR:
+EOL
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

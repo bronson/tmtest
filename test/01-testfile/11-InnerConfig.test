@@ -1,0 +1,15 @@
+# Ensure that inner tests don't read any config files outside of the
+# test directory.  (seems like there's got to be a better way of doing
+# this but this works for now).
+
+tmtest $args -q - <<-'EOL'
+	if [ $OUTER_CONFIG_FILE ]; then
+		# this is what happens when inner tests don't have $args
+		ABORT "inner test read outer config file!"
+	fi
+EOL
+
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

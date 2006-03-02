@@ -2,11 +2,23 @@
 # This is just so we don't surprise ourselves...  Any time you modify
 # template.sh, you should expect test to fail.
 
-tmtest $args --dump-script - <<-EOL
-THE-SCRIPT THE-SCRIPT THE-SCRIPT 1
-THE-SCRIPT THE-SCRIPT THE-SCRIPT 2
-THE-SCRIPT THE-SCRIPT THE-SCRIPT 3
-THE-SCRIPT THE-SCRIPT THE-SCRIPT 4
+SANIFY ()
+{
+	# This function cleans the absolute pathnames specifying the
+	# 'tmtest.sub.conf' config file from the script.
+
+	sed \
+	-e "s/echo 'CONFIG: .*tmtest.sub.conf' .*/echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD/" \
+	-e "s/MYDIR='.*test'/MYDIR='...test'/" \
+	-e "s/MYFILE='.*tmtest.sub.conf'/MYFILE='...tmtest.sub.conf'/" \
+	-e "s/\\. '.*tmtest.sub.conf'/. '...tmtest.sub.conf'/"
+}
+
+tmtest $args --dump-script - <<-EOL | SANIFY
+	THE-SCRIPT THE-SCRIPT THE-SCRIPT 1
+	THE-SCRIPT THE-SCRIPT THE-SCRIPT 2
+	THE-SCRIPT THE-SCRIPT THE-SCRIPT 3
+	THE-SCRIPT THE-SCRIPT THE-SCRIPT 4
 EOL
 
 MODIFY:
@@ -28,8 +40,12 @@ STDOUT:
 	DISABLE:  () { DISABLED $*; }
 
 	TESTDIR='/tmp'
-	TESTFILE='/tmp/-'
+	TESTFILE='(STDIN)'
 
+	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
+	MYDIR='...test'
+	MYFILE='...tmtest.sub.conf'
+	. '...tmtest.sub.conf'
 
 
 	echo PREPARE >&7
@@ -43,9 +59,9 @@ STDOUT:
 	MODIFY () { exit 0; }
 	MODIFY: () { exit 0; }
 
-	echo 'RUNNING: /tmp/-' >&7
+	echo 'RUNNING: (STDIN)' >&7
 	MYDIR='/tmp'
-	MYFILE='/tmp/-'
+	MYFILE='(STDIN)'
 	exec >&3 2>&5
 	exec 3>&-
 	exec 5>&-

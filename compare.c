@@ -41,8 +41,9 @@ typedef struct {
 	const char *pbuf;
 	int pcursor;
 	int plimit;
-    int no_trailing_newline;
-    int nl_suppressed;
+    int no_trailing_newline;    ///< true if this section isn't supposed to end with a newline
+    int nl_suppressed;          ///< if no_trailing_newline is true, we need to suppress the newline in the execpted output when matching against the actual (because of the way heredocs work, the expected always ends in a newline).
+    int warn_no_newline;             ///< true if the section expected a trailing newline (no_trailing_newline == false), but the last buffer seen (presumably the end of the file) didn't end with a newline.
 } compare_state;
 
 
@@ -61,9 +62,6 @@ static void compare_halt(scanstate *ss, matchval newval)
 {
 	compare_state *cmp = (compare_state*)ss->scanref;
     *cmp->output = newval;
-	if(cmp->pbuf) free((char*)cmp->pbuf);
-	free(cmp);
-    ss->scanref = NULL;
 }
 
 
@@ -81,7 +79,8 @@ void compare_attach(scanstate *ss, matchval *mv, pcrs_job *jobs, int nonl)
 	cmp->output = mv;
 	cmp->jobs = jobs;
     cmp->no_trailing_newline = nonl;
-    cmp->nl_suppressed = 0;;
+    cmp->nl_suppressed = 0;
+    cmp->warn_no_newline = 0;
     ss->scanref = cmp;
 }
 
@@ -89,6 +88,7 @@ void compare_attach(scanstate *ss, matchval *mv, pcrs_job *jobs, int nonl)
 
 static void compare_continue_bytes(scanstate *ss, const char *ptr, int len)
 {
+	compare_state *cmp = (compare_state*)ss->scanref;
     int n;
 
     while(len > 0) {
@@ -105,6 +105,12 @@ static void compare_continue_bytes(scanstate *ss, const char *ptr, int len)
             if(n == 0) {
                 compare_halt(ss, match_no);
                 return;
+            }
+           
+            if(n > 0) {
+                // shouldn't force user to put a -n on empty sections!
+                // therefore, we'll only issue the warning if we've seen data.
+                cmp->warn_no_newline = (ss->limit[-1] != '\n' && ss->limit[-1] != '\r');
             }
         }
 
@@ -240,8 +246,8 @@ void compare_continue(scanstate *ss, const char *ptr, int len)
 {
 	compare_state *cmp = (compare_state*)ss->scanref;
 
-    if(!ss->scanref) {
-        // we already decided the files don't match
+    if(*cmp->output != match_inprogress) {
+        // we already decided an answer
         // so don't waste time comparing more.
         return;
     }
@@ -273,39 +279,36 @@ void compare_continue(scanstate *ss, const char *ptr, int len)
 }
 
 
-void compare_end(scanstate *ss)
+void compare_end(scanstate *ss, int *warn_nl)
 {
 	compare_state *cmp = (compare_state*)ss->scanref;
 
-    if(!ss->scanref) {
-        // we already decided the files don't match
-        // so don't waste time comparing more.
-        return;
+    // Tell the caller to emit a warning if the expected section was marked
+    // as having a trailing newline but the actual section didn't have it.
+    if(warn_nl && !cmp->no_trailing_newline) {
+        *warn_nl = cmp->warn_no_newline;
     }
 
-	assert(cmp->pcursor <= cmp->plimit);
-	assert(ss->cursor <= ss->limit);
+    if(*cmp->output == match_inprogress) {
+        assert(cmp->pcursor <= cmp->plimit);
+        assert(ss->cursor <= ss->limit);
 
-	if(cmp->jobs) {
-		// if there's more data in the pbuf then fail.
-		if(cmp->plimit - cmp->pcursor != 0) {
-			compare_halt(ss, match_no);
-			return;
-		}
-	}
+        *cmp->output = match_no;
+        if(cmp->jobs && cmp->plimit - cmp->pcursor != 0) {
+            // get rid of this asap.
+            *cmp->output = match_no;
+        } else if(scan_finished(ss)) {
+            // if we're totally out of data and we still don't know
+            // if they match, then they do match.
+            *cmp->output = match_yes;
+        }
+    }
 
-	// if we have no data left in the scan buffer
-	if(ss->cursor == ss->limit) {
-		// and our input file is at eof
-		if(compare_fill(ss) == 0) {
-			// then the two data streams match
-			compare_halt(ss, match_yes);
-			return;
-		}
-	}
+	if(cmp->pbuf) {
+        free((char*)cmp->pbuf);
+    }
 
-    // otherwise, they don't.
-    compare_halt(ss, match_no);
+	free(cmp);
+    ss->scanref = NULL;
 }
-
 

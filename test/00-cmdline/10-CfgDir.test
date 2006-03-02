@@ -1,0 +1,7 @@
+tmtest $args --config=/tmp - <<-EOL
+	echo Test!
+EOL
+
+RESULT: 2
+STDERR:
+Could not open /tmp: not a file!

@@ -1,0 +1,10 @@
+tmtest -q - <<-EOL
+	echo Howdy 1>&2
+	STDERR :
+	Howdy
+	STDOUT:
+EOL
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

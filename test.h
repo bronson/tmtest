@@ -39,7 +39,7 @@ extern char *config_file;
 // all strings are malloc'd and need to be freed when the test is finished.
 
 struct test {
-    const char *testfilename;   ///< will be "-" if reading from stdin.
+    const char *testfilename;   ///< name of the test file.  does not include any directories.  will be "-" if reading from stdin.
     scanstate testfile;         ///< scans the testfile.  may be stdin so seeking is not allowed.
 
     int rewritefd;          ///< where to dump the rewritten test.  -1 if we're just running the tests, or the fd of the file that should receive the test contents.
@@ -82,6 +82,7 @@ void test_init(struct test *test);
 void test_free(struct test *test);
 
 
-// random utility function for start_diff:
-void write_raw_file(int outfd, int infd);
+// random utility function for start_diff.  Return value is true if the
+// file ends in a newline, false if not.
+int write_raw_file(int outfd, int infd);
 

@@ -1,0 +1,17 @@
+# Ensure that a keyword can appear in the output clause as long as the
+# following char isn't a delimiter ("STDOUT ", "STDOUT:" and "STDOUT\n"
+# are all keywords, "STDOUTx" is not).
+#
+# Same as 02, but works on STDERR not STDOUT.
+
+
+tmtest $args -q - <<-EOL
+	echo STDERR. 1>&2
+	STDERR:
+	STDERR.
+EOL
+
+STDOUT:
+ok   (STDIN) 
+
+1 test run, 1 success, 0 failures.

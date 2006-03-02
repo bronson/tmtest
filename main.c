@@ -91,7 +91,7 @@ enum {
 /** Returns zero if s1 ends with s2, nonzero if not.
  */
 
-int strcmpend(const char *s1, const char *s2)
+static int strcmpend(const char *s1, const char *s2)
 {
     size_t n1 = strlen(s1);
     size_t n2 = strlen(s2);
@@ -104,10 +104,60 @@ int strcmpend(const char *s1, const char *s2)
 }
 
 
+static int i_have_permission(const struct stat *st, int op)
+{
+	if(st->st_mode & S_IRWXU & op) {
+		if(geteuid() == st->st_uid) {
+			return 1;
+		}
+	}
+
+	if(st->st_mode & S_IRWXG & op) {
+		if(getegid() == st->st_gid) {
+			return 1;
+		}
+	}
+
+	if(st->st_mode & S_IRWXO & op) {
+		return 1;
+	}
+
+	return 0;
+}
+
+
+static int verify_readable(const char *file, struct stat *st, int regfile)
+{
+	struct stat sts;
+	
+	// arg is optional so we can pass the stat struct back
+	// if the caller wants to do more with it.
+	if(st == NULL) {
+		st = &sts;
+	}
+
+
+	if(stat(file, st) < 0) {
+		fprintf(stderr, "Could not locate %s: %s\n", file, strerror(errno));
+		return 0;
+	}
+	if(regfile && !S_ISREG(st->st_mode)) {
+		fprintf(stderr, "Could not open %s: not a file!\n", file);
+		return 0;
+	}
+	if(!i_have_permission(st, 0444)) {
+		fprintf(stderr, "Could not open %s: permission denied!\n", file);
+		return 0;
+	}
+
+	return 1;
+}
+
+
 /** Prints the given template to the given file, performing substitutions.
  */
 
-void print_template(struct test *test, const char *tmpl,  FILE *fp)
+static void print_template(struct test *test, const char *tmpl,  FILE *fp)
 {
     char varbuf[32];
     const char *cp, *ocp, *ce;
@@ -153,7 +203,7 @@ void print_template(struct test *test, const char *tmpl,  FILE *fp)
  */
 
 
-void reset_fd(int fd, const char *fname)
+static void reset_fd(int fd, const char *fname)
 {
     if(lseek(fd, 0, SEEK_SET) < 0) {
         fprintf(stderr, "Couldn't seek to start of %s: %s\n",
@@ -169,7 +219,7 @@ void reset_fd(int fd, const char *fname)
 }
 
 
-int wait_for_child(int child, const char *name)
+static int wait_for_child(int child, const char *name)
 {
     int pid;
     int status;
@@ -200,7 +250,7 @@ int wait_for_child(int child, const char *name)
 }
 
 
-int open_file(char *fn, const char *name, int flags)
+static int open_file(char *fn, const char *name, int flags)
 {
 	strcpy(fn, g_testdir);
 	strcat(fn, "/");
@@ -216,7 +266,7 @@ int open_file(char *fn, const char *name, int flags)
 }
 
 
-int write_stdin_to_tmpfile(struct test *test)
+static int write_stdin_to_tmpfile(struct test *test)
 {
 	char *buf;
 	int fd;
@@ -240,7 +290,7 @@ int write_stdin_to_tmpfile(struct test *test)
 /** Forks off a diff process and sets it up to receive the dumped test.
  */
 
-int start_diff(struct test *test)
+static int start_diff(struct test *test)
 {
     int pipes[2];
     int child;
@@ -312,7 +362,7 @@ int start_diff(struct test *test)
 /** Waits for the forked diff process to finish.
  */
 
-void finish_diff(struct test *test, int diffpid)
+static void finish_diff(struct test *test, int diffpid)
 {
     int status;
     int exitcode;
@@ -341,7 +391,7 @@ void finish_diff(struct test *test, int diffpid)
  * If warn_suffix is true and the ffilename doesn't end in ".test"
  * then we'll print a warning to stderr.  This is used when
  * processing the cmdline args so the user will know why a file
- * explicitly named didn't run.
+ * that was explicitly named didn't run.
  *
  * When config files are executing, they use the standard stdout
  * and stderr.  That way, the user sees any output while the test
@@ -355,7 +405,7 @@ void finish_diff(struct test *test, int diffpid)
  * @returns 1 if we should keep testing, 0 if we should stop now.
  */
 
-int run_test(const char *name, int warn_suffix)
+static int run_test(const char *name, int warn_suffix)
 {
     struct test test;
     char buf[BUFSIZ];   // scan buffer for the testfile
@@ -533,7 +583,7 @@ int run_test(const char *name, int warn_suffix)
  *  We don't want to process any hidden files or special directories.
  */
 
-int select_nodots(const struct dirent *d)
+static int select_nodots(const struct dirent *d)
 {
     return d->d_name[0] != '.';
 }
@@ -543,6 +593,33 @@ int select_nodots(const struct dirent *d)
 int process_dir();
 
 
+/**
+ * Sucks the dirname from an absolute file path and calls curinit with it.
+ */
+
+static void init_path(const char *path)
+{
+	const char *cp;
+	int loc;
+	char buf[PATH_MAX];
+	
+	cp = strrchr(path, '/');
+	if(cp == NULL) {
+		fprintf(stderr, "Illegal absolute path '%s'\n", path);
+		exit(runtime_error);
+	}
+
+	strncpy(buf, path, sizeof(buf));
+
+	loc = cp - path;
+	if(sizeof(buf)-1 < loc) {
+		loc = sizeof(buf)-1;
+	}
+
+	buf[loc] = '\0';
+	curinit(buf);
+}
+
 /** Processes a directory specified using an absolute path.
  *
  * We need to save and restore curpath to do this.
@@ -550,13 +627,13 @@ int process_dir();
  * @returns 1 if we should continue testing, 0 if we should abort.
  */
 
-int process_absolute_file(const char *path, int warn_suffix)
+static int process_absolute_file(const char *path, int warn_suffix)
 {
 	struct cursave save;
 	int keepontruckin;
 
 	cursave(&save);
-	curinit("/");
+	init_path(path);
 
 	if(outmode == outmode_test) {
 		printf("\nProcessing %s\n", path);
@@ -573,7 +650,7 @@ int process_absolute_file(const char *path, int warn_suffix)
  * We need to save and restore curpath to do this.
  */
 
-int process_absolute_dir(const char *path)
+static int process_absolute_dir(const char *path)
 {
 	struct cursave save;
 	int keepontruckin;
@@ -597,9 +674,9 @@ int process_absolute_dir(const char *path)
  * See run_test() for an explanation of warn_suffix.
  */
 
-int process_ents(char **ents, int warn_suffix)
+static int process_ents(char **ents, int warn_suffix)
 {
-    struct stat st;
+	struct stat st;
     mode_t *modes;
     int i, n;
 	int keepontruckin;
@@ -626,8 +703,10 @@ int process_ents(char **ents, int warn_suffix)
 				}
 				cp = curabsolute();
 			}
-            if(stat(cp, &st) < 0) {
-                fprintf(stderr, "%s: %s\n", cp, strerror(errno));
+			// Need to be careful to test that file does exist.
+			// Bash opens it, not us, so the error message might
+			// be confusing.
+			if(!verify_readable(cp,&st,0)) {
                 exit(runtime_error);
             }
 			if(ents[i][0] != '/') curpop(keep);
@@ -716,7 +795,7 @@ static void checkerr(int err, const char *op, const char *name)
 }
 
 
-void stop_tests()
+static void stop_tests()
 {
 	checkerr(close(g_outfd), "closing", g_outname);
 	checkerr(close(g_errfd), "closing", g_errname);
@@ -744,7 +823,7 @@ static void sig_int(int blah)
  * This should save some inode thrashing.
  */
 
-void start_tests()
+static void start_tests()
 {
 	char *cp;
 
@@ -780,11 +859,16 @@ void start_tests()
 }
 
 
-void set_config_file(const char *cfg)
+static void set_config_file(const char *cfg)
 {
 	char cwd[PATH_MAX];
 	char out[PATH_MAX];
 	char *path;
+
+	if(cfg[0] == '\0') {
+		fprintf(stderr, "You must specify a directory for --config.\n");
+		exit(argument_error);
+	}
 
 	if(!getcwd(cwd, PATH_MAX)) {
 		perror("Couldn't get current working directory");
@@ -798,6 +882,13 @@ void set_config_file(const char *cfg)
 		exit(runtime_error);
 	}
 
+	// need to ensure as well as we can that the file is readable because
+	// we don't open it ourselves.  Bash does.  And that can lead to some
+	// really cryptic error messages.
+	if(!verify_readable(out,NULL,1)) {
+		exit(runtime_error);
+	}
+
 	config_file = strdup(out);
 	if(!config_file) {
 		perror("strdup");
@@ -806,7 +897,7 @@ void set_config_file(const char *cfg)
 }
 
 
-void usage()
+static void usage()
 {
 	printf(
 			"Usage: tmtest [OPTION]... [DLDIR]\n"
@@ -819,7 +910,7 @@ void usage()
 }
 
 
-void process_args(int argc, char **argv)
+static void process_args(int argc, char **argv)
 {
     char buf[256], *cp;
     int optidx, i, c;
@@ -833,6 +924,7 @@ void process_args(int argc, char **argv)
 		{"dump-script", 0, &dumpscript, 1},
 		{"help", 0, 0, 'h'},
 		{"output", 0, 0, 'o'},
+		{"patch", 0, 0, 'p'},
 		{"quiet", 0, 0, 'q'},
 		{"version", 0, 0, 'V'},
 		{0, 0, 0, 0},
@@ -870,6 +962,10 @@ void process_args(int argc, char **argv)
 			case 'o':
                 outmode = outmode_dump;
 				break;
+
+			case 'p':
+                outmode = outmode_diff;
+                break;
 
 			case 'q':
 				quiet++;

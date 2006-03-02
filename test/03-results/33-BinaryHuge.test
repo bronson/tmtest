@@ -3,18 +3,20 @@
 # of 2 1-byte values (64K of data).
 
 # We need to manually create the testfile because Bash will screw 
-# things up if we use a heredoc.
+# things up if we use a heredoc.  We also ensure that the test data
+# ends in a newline, otherwise tmtest will complain (we could also
+# just have specified -n).
 
 
 MKFILE tt <<-'EOL'
-    perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}'
+    perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}; print "\n";'
     # stdout will be filled in below
 	STDOUT:
 EOL
 
 
 # Add the expected results to the testfile.
-perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}' >> "$tt"
+perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}; print "\n";' >> "$tt"
 
 # and run the test
 tmtest --all-files -q "$tt" | REPLACE "$tt" /tmp/FILE

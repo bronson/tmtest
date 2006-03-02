@@ -1,0 +1,20 @@
+# Ensures that tmtest correctly handles when we specify a nonexistent file.
+# NOTE: the result is the result of the sed command, not the result of
+# the tmtest command.  tmtest should return 2.  This is unfortunate.
+# TODO: how can I fix this?
+
+
+SANIFY ()
+{
+	sed -e 's/Could not locate .*zzyzx: No such file or directory/Could not locate ...zzyzx: No such file or directory/'
+}
+
+tmtest $args --config="$MYDIR/zzyzx" - <<-EOL 2>&1 | SANIFY
+	echo Howdy
+	STDOUT:
+	Howdy
+EOL
+
+RESULT: 0
+STDOUT:
+Could not locate ...zzyzx: No such file or directory

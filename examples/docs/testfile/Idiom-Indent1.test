@@ -1,0 +1,11 @@
+DISABLED: neads streaming tmtest?
+
+echo test output > >(INDENT)
+
+# What the hell?  These two sleeps make this test mostly reliable
+# but not 100%.
+sleep 0.001
+sleep 0.001
+
+STDOUT:
+    test output

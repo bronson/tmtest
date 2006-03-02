@@ -2,47 +2,71 @@
 # regular expression metachars are correctly interpreted as
 # regular characters.
 
-echo $'Abc  : '   $'abc'       | REPLACE abc def
-echo $'A\'b  : '  $'a\'b'      | REPLACE $'a\'b' def
-echo $'A\"b  : '  $'a\"b'      | REPLACE $'a\"b' def
-echo $'A\'\'b : ' $'a\'\'b'    | REPLACE $'a\'\'b' def
-echo $'A\"\"b : ' $'a\"\"b'    | REPLACE $'a\"\"b' def
-echo $'A\\\'b : ' $'a\\\'b'    | REPLACE $'a\\\'b' def
-echo $'A\\\"b : ' $'a\\\"b'    | REPLACE $'a\\\"b' def
-echo $'A\'\\b : ' $'a\'\\b'    | REPLACE $'a\'\\b' def
-echo $'A\"\\b : ' $'a\"\\b'    | REPLACE $'a\"\\b' def
-echo $'A\\\\b : ' $'a\\\\b'    | REPLACE $'a\\\\b' def
-echo  'A/b  : '   'a/b'        | REPLACE a/b def
-echo  'A.b  : '   'a.b'        | REPLACE 'a.b' def
-echo  'A*b  : '   'a*b'        | REPLACE 'a*b' def
-echo  'A+b  : '   'a+b'        | REPLACE 'a+b' def
-echo  'A$b  : '   'a$b'        | REPLACE 'a$b' def
-echo  'A$$b : '   'a$$b'       | REPLACE 'a$$b' def
-echo  'A@b  : '   'a@b'        | REPLACE 'a@b' def
-echo  'D.f  : '   'def'        | REPLACE 'd.f' BAD
-echo $'A\\\'b : ' $'a\\\'b'    | REPLACE $'a\\\'b' def
-echo $'A\\\"b : ' $'a\\\"b'    | REPLACE $'a\\\"b' def
-echo $'A\\Q\\Eb:' $'a\\Q\\Eb' | REPLACE $'a\\Q\\Eb' def
+tmtest $CFG -o - <<'EOL' | INDENT
+	echo $'Abc  : '   $'abc'       | REPLACE abc def
+	echo $'A\'b  : '  $'a\'b'      | REPLACE $'a\'b' def
+	echo $'A\"b  : '  $'a\"b'      | REPLACE $'a\"b' def
+	echo $'A\'\'b : ' $'a\'\'b'    | REPLACE $'a\'\'b' def
+	echo $'A\"\"b : ' $'a\"\"b'    | REPLACE $'a\"\"b' def
+	echo $'A\\\'b : ' $'a\\\'b'    | REPLACE $'a\\\'b' def
+	echo $'A\\\"b : ' $'a\\\"b'    | REPLACE $'a\\\"b' def
+	echo $'A\'\\b : ' $'a\'\\b'    | REPLACE $'a\'\\b' def
+	echo $'A\"\\b : ' $'a\"\\b'    | REPLACE $'a\"\\b' def
+	echo $'A\\\\b : ' $'a\\\\b'    | REPLACE $'a\\\\b' def
+	echo  'A/b  : '   'a/b'        | REPLACE a/b def
+	echo  'A.b  : '   'a.b'        | REPLACE 'a.b' def
+	echo  'A*b  : '   'a*b'        | REPLACE 'a*b' def
+	echo  'A+b  : '   'a+b'        | REPLACE 'a+b' def
+	echo  'A$b  : '   'a$b'        | REPLACE 'a$b' def
+	echo  'A$$b : '   'a$$b'       | REPLACE 'a$$b' def
+	echo  'A@b  : '   'a@b'        | REPLACE 'a@b' def
+	echo  'D.f  : '   'def'        | REPLACE 'd.f' BAD
+	echo $'A\\\'b : ' $'a\\\'b'    | REPLACE $'a\\\'b' def
+	echo $'A\\\"b : ' $'a\\\"b'    | REPLACE $'a\\\"b' def
+	echo $'A\\Q\\Eb:' $'a\\Q\\Eb'  | REPLACE $'a\\Q\\Eb' def
+EOL
 
 STDOUT:
-Abc  :  def
-A'b  :  def
-A"b  :  def
-A''b :  def
-A""b :  def
-A\'b :  def
-A\"b :  def
-A'\b :  def
-A"\b :  def
-A\\b :  def
-A/b  :  def
-A.b  :  def
-A*b  :  def
-A+b  :  def
-A$b  :  def
-A$$b :  def
-A@b  :  def
-D.f  :  def
-A\'b :  def
-A\"b :  def
-A\Q\Eb: def
+    	echo $'Abc  : '   $'abc'       | REPLACE abc def
+    	echo $'A\'b  : '  $'a\'b'      | REPLACE $'a\'b' def
+    	echo $'A\"b  : '  $'a\"b'      | REPLACE $'a\"b' def
+    	echo $'A\'\'b : ' $'a\'\'b'    | REPLACE $'a\'\'b' def
+    	echo $'A\"\"b : ' $'a\"\"b'    | REPLACE $'a\"\"b' def
+    	echo $'A\\\'b : ' $'a\\\'b'    | REPLACE $'a\\\'b' def
+    	echo $'A\\\"b : ' $'a\\\"b'    | REPLACE $'a\\\"b' def
+    	echo $'A\'\\b : ' $'a\'\\b'    | REPLACE $'a\'\\b' def
+    	echo $'A\"\\b : ' $'a\"\\b'    | REPLACE $'a\"\\b' def
+    	echo $'A\\\\b : ' $'a\\\\b'    | REPLACE $'a\\\\b' def
+    	echo  'A/b  : '   'a/b'        | REPLACE a/b def
+    	echo  'A.b  : '   'a.b'        | REPLACE 'a.b' def
+    	echo  'A*b  : '   'a*b'        | REPLACE 'a*b' def
+    	echo  'A+b  : '   'a+b'        | REPLACE 'a+b' def
+    	echo  'A$b  : '   'a$b'        | REPLACE 'a$b' def
+    	echo  'A$$b : '   'a$$b'       | REPLACE 'a$$b' def
+    	echo  'A@b  : '   'a@b'        | REPLACE 'a@b' def
+    	echo  'D.f  : '   'def'        | REPLACE 'd.f' BAD
+    	echo $'A\\\'b : ' $'a\\\'b'    | REPLACE $'a\\\'b' def
+    	echo $'A\\\"b : ' $'a\\\"b'    | REPLACE $'a\\\"b' def
+    	echo $'A\\Q\\Eb:' $'a\\Q\\Eb'  | REPLACE $'a\\Q\\Eb' def
+    STDOUT:
+    Abc  :  def
+    A'b  :  def
+    A"b  :  def
+    A''b :  def
+    A""b :  def
+    A\'b :  def
+    A\"b :  def
+    A'\b :  def
+    A"\b :  def
+    A\\b :  def
+    A/b  :  def
+    A.b  :  def
+    A*b  :  def
+    A+b  :  def
+    A$b  :  def
+    A$$b :  def
+    A@b  :  def
+    D.f  :  def
+    A\'b :  def
+    A\"b :  def
+    A\Q\Eb: def

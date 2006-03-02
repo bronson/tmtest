@@ -1,0 +1,22 @@
+# Scott Bronson
+# 26 Feb 2006
+#
+# Verifies that a warning is printed when a the actual output for a
+# section didn't include a newline, but the expected output for that
+# section had one.  (this error can only be fixed by editing the
+# testfile; patch can't fix it).
+
+# See also 18-NoNLWarnOut.test and 04-diff/22-PatchNoNL2.test
+
+tmtest -q - <<-EOL
+	echo -n Howdy
+	STDOUT:
+	Howdy
+EOL
+STDOUT : 
+FAIL (STDIN)                   O..  stdout differed
+
+1 test run, 0 successes, 1 failure.
+STDERR:
+WARNING: STDOUT didn't end with a newline!
+   Add a -n to (STDIN) line 3 if this is the expected behavior.

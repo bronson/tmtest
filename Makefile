@@ -65,7 +65,9 @@ run: tmtest
 install: tmtest
 	install -d -m755 $(bindir)
 	install tmtest $(bindir)
+ifneq ($(libdir),$(HOME))
 	install -d -m755 $(libdir)
+endif
 	install tmlib.sh $(stdlib)
 ifeq ($(wildcard $(conf_dst)),$(conf_dst))
 	# configuration already exists, don't overwrite it.

@@ -1,0 +1,9 @@
+tmtest $args --config= - <<-EOL
+	echo Howdy
+	STDOUT:
+	Howdy
+EOL
+
+RESULT: 1
+STDERR:
+You must specify a directory for --config.

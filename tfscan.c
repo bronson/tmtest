@@ -8,6 +8,11 @@
  * This file is covered by the MIT License.
  */
 
+// STDOUT\n starts a new section.  STDOUT my be followed by
+// either whitespace or a colon -- nothing else.  If it's followed
+// by anything else, it's interpreted as data.
+
+
 // TOTEST: >8K token not containing a cr
 // STDOUT:, STDERR:, etc at the EOF with no data.
 // STDOUT at the beginning of the file.
@@ -42,7 +47,7 @@ int tfscan_nontok_start(scanstate *ss);
 
 /*!re2c
  
-  // This is almost the scanner that this file implements, except that
+  // The following is almost the scanner that this file implements, except that
   // this file handles data at EOF correctly.
 
 WS      = [ \t];
@@ -67,107 +72,8 @@ ANYN* "\n"                  { return (int)ss->scanref; }
 */
 
 
-
-static int scan_to_end_of_keyword(scanstate *ss, int tok)
+static int nontok_start(scanstate *ss)
 {
-	// We assume that we're immediately at the end of a keyword
-	// section.  The first six bytes just guarantees the keyword.
-
-	// skip all characters up to the final nl.
-
-	while(*YYCURSOR != '\r' && *YYCURSOR != '\n') {
-		YYCURSOR++;
-		if(YYCURSOR >= YYLIMIT) {
-			break;
-		}
-	}
-
-	if(*YYCURSOR == '\r') YYCURSOR++;
-	if(*YYCURSOR == '\n') YYCURSOR++;
-
-    ss->line += 1;
-
-	START(tok);
-	return exNEW|tok;
-}
-
-
-/* When it finds a line that begins
- * with a new section, it returns the token name of that section
- * with the exNEW flag turned on.  After that, it returns each
- * line in the section with the token's identifier.  Then, when it
- * finds a new section, you get a exNEW+TOKEN of the new section.
- */
-
-int tfscan_tok_start(scanstate *ss)
-{
-    scanner_enter(ss);
-
-    // if we can read at least 8 more bytes from the current buffer,
-    // we won't bother reloading it.  This should cut down drastically
-    // on the number of small reads we make.
-	if(YYCURSOR+8 >= YYLIMIT) {
-		int r = (*ss->read)(ss);
-		// if there was an error, return an error token.
-		if(r < 0) return r;
-		// Only if we're _completely_ out of data, return eof.
-		// (this is why we can't use re2c for this scanner)
-		if(ss->token >= ss->limit) return 0;
-	}
-
-	// At this point in the scanner, we know that we are at the beginning
-    // of a line (previous character was either start-of-file or \n).
-	// So check to see if there's a token.
-
-	if(YYCURSOR + 8 < YYLIMIT) {
-		// There's enough data in this buffer to contain a keyword.
-		// If there are less than 8 bytes in the buffer then it means
-		// that we're 7 bytes from the EOF and there's no chance that
-		// there's another keyword to scan.  (6 bytes for the keyword,
-		// 1 byte for the colon, one byte for the newline).
-		switch(*YYCURSOR) {
-			case 'S':
-				if(YYCURSOR[1] == 'T' && YYCURSOR[2] == 'D') {
-					if(YYCURSOR[3]=='O' && YYCURSOR[4]=='U' && YYCURSOR[5]=='T') {
-						return scan_to_end_of_keyword(ss, exSTDOUT);
-					}
-					if(YYCURSOR[3]=='E' && YYCURSOR[4]=='R' && YYCURSOR[5]=='R') {
-						return scan_to_end_of_keyword(ss, exSTDERR);
-					}
-				}
-				// else it wasn't a token so we can just keep scanning.
-				break;
-			case 'R':
-				if(YYCURSOR[1]=='E' && YYCURSOR[2]=='S' &&
-					YYCURSOR[3]=='U' && YYCURSOR[4]=='L' && YYCURSOR[5]=='T')
-				{
-					return scan_to_end_of_keyword(ss, exRESULT);
-				}
-				break;
-			case 'M':
-				if(YYCURSOR[1]=='O' && YYCURSOR[2]=='D' &&
-					YYCURSOR[3]=='I' && YYCURSOR[4]=='F' && YYCURSOR[5]=='Y')
-				{
-					return scan_to_end_of_keyword(ss, exMODIFY);
-				}
-				break;
-			default:
-				break;
-		}
-	}
-
-	// So there wasn't a keyword at this point in the buffer.
-	// We just treat it as random data.  Since we haven't moved the
-    // cursor we can just call straight into the nontok routine.
-	ss->state = tfscan_nontok_start;
-	return tfscan_nontok_start(ss);
-}
-
-
-int tfscan_nontok_start(scanstate *ss)
-{
-	scanner_enter(ss);
-
 	if(YYCURSOR >= YYLIMIT) {
 		int r = (*ss->read)(ss);
 		// if there was an error, return an error token.
@@ -198,6 +104,144 @@ int tfscan_nontok_start(scanstate *ss)
 	// We have potential for finding a token at this point.
 	ss->state = tfscan_tok_start;
 	return (int)ss->scanref;
+}
+
+
+
+static int scan_to_end_of_keyword(scanstate *ss, int tok)
+{
+    int r;
+
+	// We assume that we're immediately at the end of a keyword
+	// section.  The first six bytes just guarantees the keyword.
+
+	// skip all characters up to the final nl.
+
+    // there's a chance we can be called with an empty buffer.
+    // If so, we need to fill it before proceeding.
+    if(YYCURSOR >= YYLIMIT) {
+        r = (*ss->read)(ss);
+        if(r < 0) return r;
+        // if we're at eof, then the current token is just data.
+        if(r == 0) return (int)ss->scanref;
+    }
+
+    if(*YYCURSOR != '\r' && *YYCURSOR != '\n' && *YYCURSOR != ':' &&
+            *YYCURSOR != ' ' && *YYCURSOR != '\t')
+    {
+        // We had a keyword but it didn't end in a proper delimiter.
+        // Therefore, it's data, not a keyword.
+        ss->state = tfscan_nontok_start;
+        return nontok_start(ss);
+    }
+
+	while(*YYCURSOR != '\r' && *YYCURSOR != '\n') {
+		YYCURSOR++;
+		if(YYCURSOR >= YYLIMIT) {
+            // try to fill the buffer (maybe it's a really long keyword)
+            r = (*ss->read)(ss);
+            if(r < 0) return r;
+            // if we're at eof, then the current token is just data.
+            if(r == 0) return (int)ss->scanref;
+		}
+	}
+
+	if(*YYCURSOR == '\r') YYCURSOR++;
+	if(*YYCURSOR == '\n') YYCURSOR++;
+    ss->line += 1;
+
+	START(tok);
+	return exNEW|tok;
+}
+
+
+/* When it finds a line that begins
+ * with a new section, it returns the token name of that section
+ * with the exNEW flag turned on.  After that, it returns each
+ * line in the section with the token's identifier.  Then, when it
+ * finds a new section, you get a exNEW+TOKEN of the new section.
+ */
+
+int tfscan_tok_start(scanstate *ss)
+{
+    int r;
+
+    scanner_enter(ss);
+
+    // if we can read at least 8 more bytes from the current buffer,
+    // we won't bother reloading it.  This should cut down drastically
+    // on the number of small reads we make.  The constant in the if
+    // statement is an arbitrary number; if we have less than that
+    // number of bytes available in the buffer, we read some more data.
+	if(YYCURSOR+16 >= YYLIMIT) {
+		r = (*ss->read)(ss);
+		// if there was an error, return an error token.
+		if(r < 0) return r;
+		// Only if we're _completely_ out of data, return eof.
+		// (this is why we can't use re2c for this scanner)
+        // we can handle cursor==limit; we just return the
+        // final token.  But, if token==limit, we're out of data.
+        // (except, at this point in the function, cursor == token).
+		if(ss->token >= ss->limit) return 0;
+	}
+
+	// At this point in the scanner, we know that we are at the beginning
+    // of a line (previous character was either start-of-file or \n).
+	// So check to see if there's a token.
+
+	if(YYCURSOR + 7 <= YYLIMIT) {
+		// There's enough data in this buffer to contain a keyword.
+		// If there are less than 8 bytes in the buffer then it means
+		// that we're 7 bytes from the EOF and there's no chance that
+		// there's another keyword to scan.  (6 bytes for the keyword,
+		// 1 byte for the colon, one byte for the newline).
+		switch(*YYCURSOR) {
+			case 'S':
+				if(YYCURSOR[1] == 'T' && YYCURSOR[2] == 'D') {
+					if(YYCURSOR[3]=='O' && YYCURSOR[4]=='U' && YYCURSOR[5]=='T') {
+                        YYCURSOR += 6;
+						return scan_to_end_of_keyword(ss, exSTDOUT);
+					}
+					if(YYCURSOR[3]=='E' && YYCURSOR[4]=='R' && YYCURSOR[5]=='R') {
+                        YYCURSOR += 6;
+						return scan_to_end_of_keyword(ss, exSTDERR);
+					}
+				}
+				// else it wasn't a token so we can just keep scanning.
+				break;
+			case 'R':
+				if(YYCURSOR[1]=='E' && YYCURSOR[2]=='S' &&
+					YYCURSOR[3]=='U' && YYCURSOR[4]=='L' && YYCURSOR[5]=='T')
+				{
+                    YYCURSOR += 6;
+					return scan_to_end_of_keyword(ss, exRESULT);
+				}
+				break;
+			case 'M':
+				if(YYCURSOR[1]=='O' && YYCURSOR[2]=='D' &&
+					YYCURSOR[3]=='I' && YYCURSOR[4]=='F' && YYCURSOR[5]=='Y')
+				{
+                    YYCURSOR += 6;
+					return scan_to_end_of_keyword(ss, exMODIFY);
+				}
+				break;
+			default:
+				break;
+		}
+	}
+
+	// So there wasn't a keyword at this point in the buffer.
+	// We just treat it as random data.  Since we haven't moved the
+    // cursor we can just call straight into the nontok routine.
+	ss->state = tfscan_nontok_start;
+	return tfscan_nontok_start(ss);
+}
+
+
+int tfscan_nontok_start(scanstate *ss)
+{
+	scanner_enter(ss);
+    return nontok_start(ss);
 }
 	
 

@@ -1,0 +1,31 @@
+# If a section is marked as having a trailing newline, but one wasn't
+# found in the actual output, we need to print a warning.
+
+# By the time we figure out that the section didn't end in a trailing
+# newline, we've long since output the section header and so we missed
+# our chance to fix it ourselves.  Therefore, we'll warn the user that
+# he has to fix it himself).
+
+# See also 14-NoNLWarn.test and 04-diff/18-NeedNLWarn.test
+
+tmtest -o -q - <<-EOL | INDENT
+	echo -n "right output"
+	echo -n "stderr text" 1>&2
+	STDOUT:
+	right output
+	STDERR:
+	stderr text
+EOL
+
+STDERR:
+WARNING: STDOUT didn't end with a newline!
+   Add a -n to (STDIN) line 3 if this is the expected behavior.
+WARNING: STDERR didn't end with a newline!
+   Add a -n to (STDIN) line 5 if this is the expected behavior.
+STDOUT:
+    echo -n "right output"
+    echo -n "stderr text" 1>&2
+    STDOUT:
+    right outputSTDERR:
+    stderr text
+    

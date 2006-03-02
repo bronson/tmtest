@@ -1,0 +1,6 @@
+# Testfile to demonstrate fixing a temporary filename
+MKFILE tt <<< "file contents"
+echo "patching $tt" | REPLACE "$tt" /tmp/FILE
+
+STDOUT:
+patching /tmp/FILE

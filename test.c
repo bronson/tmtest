@@ -347,13 +347,6 @@ void compare_section_start(scanstate *cmpscan, int fd, pcrs_job *joblist,
 {
     assert(!compare_in_progress(cmpscan));
 
-    // associates the scanstate with the fd and prepares to compare.
-    if(*mv != match_unknown) {
-        fprintf(stderr, "'%s' has multiple %s sections!\n",
-                filename, sectionname);
-        exit(10);
-    }
-
     // rewind the file
     if(lseek(fd, 0, SEEK_SET) < 0) {
         fprintf(stderr, "read_file lseek for status file: %s\n", strerror(errno));
@@ -579,7 +572,13 @@ int start_output_section_argproc(int i, const char *cp, const char *ce,
 }
 
 
-void start_output_section(struct test *test, const char *tok,
+/**
+ * Called when we're at the start of a STDOUT or STDERR section.
+ * Sets the cmpscanner up to compare the section.
+ * See end_output_section().
+ */
+
+int start_output_section(struct test *test, const char *tok,
         int toklen, scanstate *cmpscan, int fd, matchval *val,
         const char *secname)
 {
@@ -595,13 +594,44 @@ void start_output_section(struct test *test, const char *tok,
         fprintf(stderr, "%s line %d Error: duplicate %s "
                 "section.  Ignored.\n", get_testfile_name(test),
                 test->testfile.line, secname);
-        // as long as scanref == null, no comparison will happen.
-        assert(!cmpscan->scanref);
-        return;
+        return 0;
     }
 
     compare_section_start(cmpscan, fd, test->eachline, val,
         get_testfile_name(test), secname, suppress_trailing_newline);
+
+    return 1;
+}
+
+
+/** 
+ * If the actual test results were found to not end in a newline,
+ * but the expected results were marked in the testfile as expecting
+ * a newline, this function prints the warning.
+ */
+
+void warn_section_newline(struct test *test, const char *name)
+{
+	fprintf(stderr, "WARNING: %s didn't end with a newline!\n"
+			"   Add a -n to %s line %d if this is the expected behavior.\n",
+			name, get_testfile_name(test), test->testfile.line);
+}
+
+
+/**
+ * Finishes comparing a section.
+ * see start_output_section().
+ */
+
+void end_output_section(struct test *test, scanstate *cmpscan,
+        const char *name)
+{
+    int warn_nl = 0;
+
+    compare_end(cmpscan, &warn_nl);
+    if(warn_nl) {
+		warn_section_newline(test, name);
+    }
 }
 
 
@@ -621,30 +651,26 @@ void parse_section_compare(struct test *test, int sec,
     #define get_cur_state(ss)    ((int)(ss)->userref)
     #define set_cur_state(ss,x)  ((ss)->userref=(void*)(x))
 
-    // compscan is the comparison scanner -- it is used to diff the
-    // current output section (either stdout or stderr).
+    // cmpscan is the scanner used to perform the diff.
     scanstate *cmpscan = refcon;
 
-    // the section that we're entering (without the NEW flag attached)
+    // the section that we're processing (without the NEW flag attached)
     int newsec = EX_TOKEN(sec);
 
-    if(get_cur_state(cmpscan) == 0) {
-        // This is the first time this scanner has been used.
-        set_cur_state(cmpscan, exCOMMAND);
-    }
-
-    if(!is_section_token(newsec) && sec != 0) {
-        // We only work with result section tokens.  Ignore all
-        // non-section-tokens except the eof token.
-        return;
-    }
+    // make sure we're not fed an illegal token.
+    assert(is_section_token(newsec) || sec == 0);
+    // make sure we're not starting from an illegal state.
+    assert(is_section_token(get_cur_state(cmpscan)) ||
+            get_cur_state(cmpscan) == 0);
 
     if(EX_ISNEW(sec) || sec == 0) {
         // ensure previoius section is finished
         switch(get_cur_state(cmpscan)) {
             case exSTDOUT:
+                end_output_section(test, cmpscan, "STDOUT");
+                break;
             case exSTDERR:
-                compare_end(cmpscan);
+                end_output_section(test, cmpscan, "STDERR");
                 break;
             default:
                 ;
@@ -652,14 +678,23 @@ void parse_section_compare(struct test *test, int sec,
 
         // then fire up the new section
         set_cur_state(cmpscan, newsec);
-        switch(get_cur_state(cmpscan)) {
+        switch(newsec) {
+            case 0:
+                // don't start a new section if eof.
+                break;
             case exSTDOUT:
-                start_output_section(test, datap, len, cmpscan,
-                        test->outfd, &test->stdout_match, "STDOUT");
+                if(!start_output_section(test, datap, len, cmpscan,
+                        test->outfd, &test->stdout_match, "STDOUT"))
+                {
+                    set_cur_state(cmpscan, 0);
+                }
                 break;
             case exSTDERR:
-                start_output_section(test, datap, len, cmpscan,
-                        test->errfd, &test->stderr_match, "STDERR");
+                if(!start_output_section(test, datap, len, cmpscan,
+                        test->errfd, &test->stderr_match, "STDERR"))
+                {
+                    set_cur_state(cmpscan, 0);
+                }
                 break;
             case exRESULT:
 				parse_exit_clause(test, datap, len);
@@ -668,19 +703,15 @@ void parse_section_compare(struct test *test, int sec,
 				parse_modify_clause(test, skip_section_name(datap,len),
                         datap+len);
                 break;
-            case exCOMMAND:
-                fprintf(stderr, "%s line %d Error: Well, this is impossible.  "
-                        "How did you start a new command section??\n",
-                        get_testfile_name(test), test->testfile.line);
-                // it should be harmless to continue but this definitely
-                // indicates a bug in the scanner.
-                break;
         }
     } else {
         // we're continuing an already started section.
-        assert(get_cur_state(cmpscan) == newsec);
+        assert(get_cur_state(cmpscan) == newsec || get_cur_state(cmpscan) == 0);
 
         switch(get_cur_state(cmpscan)) {
+            case 0:
+                // do nothing
+                break;
             case exSTDOUT:
             case exSTDERR:
                 compare_continue(cmpscan, datap, len);
@@ -854,10 +885,11 @@ static void write_exit_no(int fd, int exitno)
 }
 
 
-void write_raw_file(int outfd, int infd)
+int write_raw_file(int outfd, int infd)
 {
     char buf[BUFSIZ];
     int rcnt, wcnt;
+	int ending_newline;
 
     // first rewind the input file
     if(lseek(infd, 0, SEEK_SET) < 0) {
@@ -871,6 +903,7 @@ void write_raw_file(int outfd, int infd)
             rcnt = read(infd, buf, sizeof(buf));
         } while(rcnt < 0 && errno == EINTR);
         if(rcnt > 0) {
+			ending_newline = (buf[rcnt-1] == '\n');
             do {
                 wcnt = write(outfd, buf, rcnt);
             } while(wcnt < 0 && errno == EINTR);
@@ -885,6 +918,8 @@ void write_raw_file(int outfd, int infd)
             break;
         }
     } while(rcnt);
+
+	return ending_newline;
 }
 
 
@@ -947,14 +982,51 @@ static void write_modified_file(int outfd, int infd, pcrs_job *job)
 }
 
 
-static void write_file(int outfd, int infd, pcrs_job *job)
+static int write_file(int outfd, int infd, pcrs_job *job)
 {
 	if(!job) {
 		// use the simple, fast routine
-		write_raw_file(outfd, infd);
-	} else {
-		// use the line buffered routine
-		write_modified_file(outfd, infd, job);
+		return write_raw_file(outfd, infd);
+	}
+
+	// use the line buffered routine
+	// (don't bother with the return value because we
+	// know that MODIFY sections are going away in the
+	// next release anyway)
+	write_modified_file(outfd, infd, job);
+	return 0;
+}
+
+
+static void write_section(struct test *test, const char *datap, int len,
+		int fd, const char *name)
+{
+    int marked_no_nl = 0;
+	int has_nl;
+
+	parse_section_args(datap, len,
+			get_testfile_name(test), test->testfile.line,
+			start_output_section_argproc, &marked_no_nl);
+
+	write(test->rewritefd, datap, len);
+	has_nl = write_file(test->rewritefd, fd, test->eachline);
+
+	if(marked_no_nl) {
+		// if a section is marked with --no-trailing-newline, we need
+		// to print a newline here so that the testfile isn't messed up.
+		// Otherwise, you'd end up with "STDOUT -n:STDERR:" on one line.
+		write_strconst(test->rewritefd, "\n");
+	} else if(!has_nl) {
+		// If the section isn't marked with --no-trailing-newline, but
+		// the output DOESN'T have one, we need to print a warning.
+		// First, if the user will be viewing the test output, we need
+		// to add the final CR so our error message will appear at the
+		// start of the line.
+		if(test->rewritefd == STDOUT_FILENO) {
+			printf("\n");
+		}
+
+		warn_section_newline(test, name);
 	}
 }
 
@@ -965,44 +1037,23 @@ static void write_file(int outfd, int infd, pcrs_job *job)
 void parse_section_output(struct test *test, int sec,
         const char *datap, int len, void *refcon)
 {
-    int *needs_nl = (int*)refcon;
-
     assert(sec >= 0);
 
-    if(sec & exNEW) {
-        // check to see if previous section needs a newline appended.
-        if(*needs_nl) {
-            write_strconst(test->rewritefd, "\n");
-        }
-
-        *needs_nl = 0;
-    }
-
     switch(sec) {
-        case 0:
-            if(*needs_nl) {
-                write_strconst(test->rewritefd, "\n");
-            }
-            break;
+		case 0:
+			// eof!  nothing to do.
+			break;
 
         case exSTDOUT|exNEW:
-            parse_section_args(datap, len,
-                    get_testfile_name(test), test->testfile.line,
-                    start_output_section_argproc, needs_nl);
-            write(test->rewritefd, datap, len);
-            write_file(test->rewritefd, test->outfd, test->eachline);
-            test->stdout_match = match_yes;
+			write_section(test, datap, len, test->outfd, "STDOUT");
+			test->stdout_match = match_yes;
             break;
         case exSTDOUT:
             // ignore all data in the expected stdout.
             break;
 
         case exSTDERR|exNEW:
-            parse_section_args(datap, len,
-                    get_testfile_name(test), test->testfile.line,
-                    start_output_section_argproc, needs_nl);
-            write(test->rewritefd, datap, len);
-            write_file(test->rewritefd, test->errfd, test->eachline);
+			write_section(test, datap, len, test->errfd, "STDERR");
             test->stderr_match = match_yes;
             break;
         case exSTDERR:

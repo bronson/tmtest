@@ -1,4 +1,5 @@
-# Ensures that a test disabled by a config file doesn't run.
+# Ensures that testfiles with quotes in their names are skipped
+# (might as well close this potential security hole right now)
 
 MKDIR dir
 cd "$dir"

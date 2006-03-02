@@ -1,0 +1,23 @@
+# Ensure the variables are set up correctly when we're running a test
+# from stdin.
+
+# MYDIR=/tmp, MYFILE="(STDIN)", TESTDIR=/tmp, TESTFILE="(STDIN)"
+
+
+tmtest $args -o -q - <<-'EOL' | INDENT
+	echo MYDIR:    "$MYDIR"
+	echo MYFILE:   "$MYFILE"
+	echo TESTDIR:  "$TESTDIR"
+	echo TESTFILE: "$TESTFILE"
+EOL
+
+STDOUT:
+    echo MYDIR:    "$MYDIR"
+    echo MYFILE:   "$MYFILE"
+    echo TESTDIR:  "$TESTDIR"
+    echo TESTFILE: "$TESTFILE"
+    STDOUT:
+    MYDIR: /tmp
+    MYFILE: (STDIN)
+    TESTDIR: /tmp
+    TESTFILE: (STDIN)

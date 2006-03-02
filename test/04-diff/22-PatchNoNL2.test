@@ -9,6 +9,8 @@
 # of the last STDOUT line.  This is not real good, but at least it
 # guarantees that the test will fail until the user fixes it.
 
+# See also test/03-results/18-NoNLWarn.test
+
 
 MKFILE tt <<-EOL
 	echo -n "right output"
@@ -22,8 +24,10 @@ EOL
 
 # This is a little exotic...  Patch needs the CWD to be the directory
 # containing the file to patch.  "dirname $(tt.test)" gives that dir.
+# Pipe STDERR to /dev/null because we want to ignore the warning that
+# tmtest prints (other tests ensure the warning works)
 
-tmtest --all-files -d "$tt" | (cd `dirname "$tt"` && patch | FIX_PATCH)
+tmtest --all-files -d "$tt" 2>/dev/null | (cd `dirname "$tt"` && patch | FIX_PATCH)
 echo "And the patched file:"
 INDENT < "$tt"
 echo "<<DONE>>"
@@ -31,9 +35,9 @@ echo "<<DONE>>"
 STDOUT:
 patching FILE
 And the patched file:
-  echo -n "right output"
-      echo "stderr text" 1>&2
-  STDOUT:
-  right outputSTDERR:
-  stderr text
+    echo -n "right output"
+        echo "stderr text" 1>&2
+    STDOUT:
+    right outputSTDERR:
+    stderr text
 <<DONE>>

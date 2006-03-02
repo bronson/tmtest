@@ -29,8 +29,8 @@ echo "<<DONE>>"
 STDOUT:
 patching FILE
 And the patched file:
-  echo "right output"
-  STDOUT: -n
-  right output
-  
+    echo "right output"
+    STDOUT: -n
+    right output
+    
 <<DONE>>
