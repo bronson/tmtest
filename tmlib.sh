@@ -8,7 +8,6 @@
 # will be lost!
 
 
-# TODO: should these routines be prefixed by "TM"?
 # TODO: is there any way to get rid of MKFILE_EMPTY?  Can't MKFILE notice
 #       if read would block and, if so, just create an empty file.?
 
@@ -168,12 +167,20 @@ MKFILE_EMPTY ()
 # argument 1: varname, the name of the variable that will contain the new directory name.
 # argument 2: dirname, (optional) the name/fullpath to give the directory.
 #
+#	NOTE: unless you really know what you are doing, specifying argument2
+#   is a major security risk.  Always use the single argument version.
+#   The one exception is if you're creating a directory inside another
+#   directory that was created with the single arg.
+#
 # Examples:
 #
 # create a new directory with a random name in $TMPDIR or /tmp:
 #
 #     MKDIR dn
 #     cd "$dn"
+#
+# TODO: should emulate mkdir -p too.  Right now tmtest forces you to
+# call MKDIR for each dir you want to create.  Too wordy.
 #
 
 MKDIR ()
@@ -182,7 +189,7 @@ MKDIR ()
 	if [ -z "$name" ]; then
 		name=`mktemp -d -t tmtest.XXXXXX || ABORT MKDIR: could not mktemp`
 	else
-		[ -d $name ] || mkdir --mode 0600 $name || ABORT "MKDIR: could not 'mkdir \"$name\"'"
+		[ -d $name ] || mkdir --mode 0700 $name || ABORT "MKDIR: could not 'mkdir \"$name\"'"
 	fi
 
 	eval "$1='$name'"

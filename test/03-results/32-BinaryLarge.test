@@ -28,8 +28,6 @@ done >> "$tt"
 tmtest --all-files -q "$tt" | REPLACE "$tt" /tmp/FILE
 
 STDOUT:
-
-Processing /tmp/FILE
 ok   /tmp/FILE 
 
 1 test run, 1 success, 0 failures.

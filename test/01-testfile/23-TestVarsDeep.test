@@ -1,0 +1,27 @@
+# Make sure the variables are set up correctly when we are running a
+# test with a relative pathname.
+
+MKDIR do
+
+MKDIR di "$do/di"
+
+MKFILE tt "$do/di/tt.test" <<-'EOL'
+	echo MYDIR:    "$MYDIR"
+	echo MYFILE:   "$MYFILE"
+	echo TESTDIR:  "$TESTDIR"
+	echo TESTFILE: "$TESTFILE"
+EOL
+
+cd "$do"
+tmtest $config -o -q "di/tt.test" <<-EOL | REPLACE $do /tmp/DIR | INDENT
+
+STDOUT:
+    echo MYDIR:    "$MYDIR"
+    echo MYFILE:   "$MYFILE"
+    echo TESTDIR:  "$TESTDIR"
+    echo TESTFILE: "$TESTFILE"
+    STDOUT:
+    MYDIR: /tmp/DIR/di
+    MYFILE: /tmp/DIR/di/tt.test
+    TESTDIR: /tmp/DIR/di
+    TESTFILE: /tmp/DIR/di/tt.test

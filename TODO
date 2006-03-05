@@ -1,4 +1,15 @@
 0.96:
+- Make tmtest only execute config files owned by either the user or root.
+  Print a big fat warning when the config file is skipped.  This prevents
+  a malicious user from putting a config file in /tmp and having it
+  executed.  But is this a good idea?  I may want to run tests in another
+  user's directory.  Would it be better to just ensure that we never
+  read a config file from /tmp?  No, cause sticky dirs could be anywhere.
+  Maybe here's the deal: if a config file is in or below a world-writable
+  dir, it must be owned by the current user to be exectued.  Not even root.
+  That's probably the most agreeable.
+  We will not read either config or test files from a world-writable directory.
+  Ever.
 - Put $args into EVERY test we run.
 - There's some sort of a bug with 10-DumpScript.test.  When running with
   -o or -d, sometimes it complains about a missing newline.  Odd.
@@ -29,6 +40,9 @@
 - Figure out how to ensure that we run the binary in the project tree
   when testing rather than the globally installed one.  What happened?
 - Ensure it compiles and runs on freebsd.
+- Add some unit tests.  http://kooditakomo.cs.tut.fi/projects/gunit/
+  http://pvanhoof.be/blog/index.php/2006/03/03/tinymail-unit-testing-and-creating-messages     Actually, this looks better: http://cutest.sourceforge.net/
+  Potential units: curdir, path normalization
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
@@ -44,6 +58,8 @@
   buffer.  If your stderr is more than 100K or so in size, just redirect
   it to a file, then cat the file at the end.  We truncate stderr if it
   gets too big.
+- Is there any way to record memory and swap usage for each test?
+  sure, it's in the rusage. prolly add a "tmtest -v" to print it for each test.
 - stdin is all buggered up.  why is it that "cat" with no args will print
   the rest of the test script?  And why is it that if you fork, diff freezes?
   They're related problems I suspect.

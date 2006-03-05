@@ -1,0 +1,4 @@
+These tests verify that the testfile can be named on the command
+line in any way possible, yet each config file gets included
+exactly once and MYDIR and MYFILE are normalized and correct
+each time.

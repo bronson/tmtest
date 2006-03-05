@@ -5,19 +5,19 @@
 # This software is distributed under the LGPL.  See COPYING for more.
 
 
-VERSION=0.94
+VERSION=0.95
 
-# override this when installing: "make install prefix=/usr/local"
+# override this for make install.  "make install prefix=/usr/local"
 #prefix=/usr
 prefix=$(HOME)
 
-
+# figure out where to install the software:
 bindir=$(prefix)/bin
 lib_src=tmlib.sh
 
 ifeq ($(prefix), $(HOME))
-	libdir=$(prefix)
-	stdlib=$(libdir)/.tmlib.sh
+	libdir=$(HOME)
+	stdlib=$(HOME)/.tmlib.sh
 	conf_dst=$(HOME)/.tmtestrc
 else
 	libdir=$(prefix)/share/tmtest
@@ -29,8 +29,8 @@ endif
 COPTS=-g -Wall -Werror
 
 # utilities:
-CSRC+=curdir.c qscandir.c pcrs.c rel2abs.c
-CHDR+=curdir.h qscandir.h pcrs.h rel2abs.h
+CSRC+=curdir.c qscandir.c pcrs.c pathconv.c
+CHDR+=curdir.h qscandir.h pcrs.h pathconv.h
 # scanner files
 CSRC+=re2c/read.c re2c/read-fd.c re2c/scan.c
 CHDR+=re2c/read.h re2c/read-fd.h re2c/scan.h

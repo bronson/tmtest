@@ -29,7 +29,7 @@
 #include "qscandir.h"
 #include "vars.h"
 #include "tfscan.h"
-#include "rel2abs.h"
+#include "pathconv.h"
 
 
 #define DIFFPROG "/usr/bin/diff"
@@ -46,9 +46,12 @@ int outmode = outmode_test;
 int allfiles = 0;
 int dumpscript = 0;
 int quiet = 0;
+const char *orig_cwd;		// tmtest runs with the cwd pointed to /tmp
 char *config_file;	// absolute path to the user-specified config file
 					// null if user didn't specify a config file.
 
+int arg_was_absolute;	// this is an absolutely awful hack.  it's true
+		// if the current path is absolute, false if it's relative.
 
 #define TESTDIR "/tmp/tmtest-XXXXXX"
 char g_testdir[sizeof(TESTDIR)];
@@ -135,7 +138,6 @@ static int verify_readable(const char *file, struct stat *st, int regfile)
 	if(st == NULL) {
 		st = &sts;
 	}
-
 
 	if(stat(file, st) < 0) {
 		fprintf(stderr, "Could not locate %s: %s\n", file, strerror(errno));
@@ -339,9 +341,10 @@ static int start_diff(struct test *test)
 					perror("strdup in start_diff");
 					exit(runtime_error);
 				}
-				curreset();
+				curpop(1);
 				if(0 != chdir(curabsolute())) {
-					fprintf(stderr, "Could not chdir 1 to %s: %s\n", curabsolute(), strerror(errno));
+					fprintf(stderr, "Could not chdir 1 to %s: %s\n",
+							curabsolute(), strerror(errno));
 					exit(runtime_error);
 				}
 			}
@@ -405,7 +408,7 @@ static void finish_diff(struct test *test, int diffpid)
  * @returns 1 if we should keep testing, 0 if we should stop now.
  */
 
-static int run_test(const char *name, int warn_suffix)
+static int run_test(const char *name, const char *dispname, int warn_suffix)
 {
     struct test test;
     char buf[BUFSIZ];   // scan buffer for the testfile
@@ -550,7 +553,7 @@ static int run_test(const char *name, int warn_suffix)
         // process and output the test results
         switch(outmode) {
             case outmode_test:
-                test_results(&test);
+                test_results(&test, dispname);
                 break;
             case outmode_dump:
                 dump_results(&test);
@@ -589,15 +592,11 @@ static int select_nodots(const struct dirent *d)
 }
 
 
-// forward declaration for recursion
-int process_dir();
-
-
 /**
  * Sucks the dirname from an absolute file path and calls curinit with it.
  */
 
-static void init_path(const char *path)
+static void init_absolute_filepath(const char *path)
 {
 	const char *cp;
 	int loc;
@@ -620,9 +619,12 @@ static void init_path(const char *path)
 	curinit(buf);
 }
 
-/** Processes a directory specified using an absolute path.
+
+/** Processes a directory specified using an absolute or deep
+ * path.  We need to save and restore curpath to do this.
  *
- * We need to save and restore curpath to do this.
+ * It's illegal to call this routine with a path that doesn't
+ * include at least one / character.
  *
  * @returns 1 if we should continue testing, 0 if we should abort.
  */
@@ -633,22 +635,55 @@ static int process_absolute_file(const char *path, int warn_suffix)
 	int keepontruckin;
 
 	cursave(&save);
-	init_path(path);
+	init_absolute_filepath(path);
 
-	if(outmode == outmode_test) {
-		printf("\nProcessing %s\n", path);
-	}
-	keepontruckin = run_test(path, warn_suffix);
+	keepontruckin = run_test(strrchr(path,'/')+1, path, warn_suffix);
 
 	currestore(&save);
 	return keepontruckin;
 }
 
 
-/** Processes a directory specified using an absolute path.
- *
- * We need to save and restore curpath to do this.
+static void init_path(const char *base, const char *path)
+{
+	char buf[PATH_MAX];
+
+	strncpy(buf, curabsolute(), PATH_MAX);
+	strncat(buf, "/", PATH_MAX);
+	strncat(buf, path, PATH_MAX);
+	buf[PATH_MAX-1] = '\0';
+
+	normalize_absolute_path(buf);
+
+	curinit(buf);
+}
+
+
+
+/**
+ * This is actually a hassle.  The user may have specified
+ * "../.." which means we need to normalize an absolute path
+ * and use that.
  */
+
+static int process_deep_file(const char *path, int warn_suffix)
+{
+	struct cursave save;
+	int keepontruckin;
+
+	cursave(&save);
+	init_path(orig_cwd, path);
+	curpop(1);	// get rid of the filename
+
+	keepontruckin = run_test(strrchr(path,'/')+1, path, warn_suffix);
+
+	currestore(&save);
+	return keepontruckin;
+}
+
+
+// forward declaration for recursion
+int process_dir();
 
 static int process_absolute_dir(const char *path)
 {
@@ -657,6 +692,9 @@ static int process_absolute_dir(const char *path)
 
 	cursave(&save);
 	curinit(path);
+
+	// we are certain the fullpath has already been normalized.
+	// no need to do it again.
 
 	if(outmode == outmode_test) {
 		printf("\nProcessing %s\n", path);
@@ -669,12 +707,61 @@ static int process_absolute_dir(const char *path)
 }
 
 
-/** Process all entries in a directory.
+static void print_relative_dir()
+{
+	char buf[PATH_MAX];
+
+	if(arg_was_absolute) {
+		printf("\nProcessing %s\n", curabsolute());
+	} else {
+		if(!abs2rel(curabsolute(), orig_cwd, buf, PATH_MAX)) {
+			printf("Path couldn't be converted \"\%s\"\n", curabsolute());
+			exit(runtime_error);
+		}
+		printf("\nProcessing ./%s\n", buf);
+	}
+}
+
+
+/**
+ * This routine used to be a simple "push the dir onto curpath,
+ * run, and pop" affair.  Now, with ".." being fairly nontrivial,
+ * we just need to save and restore.  Arg.  But at least this
+ * works.
  *
- * See run_test() for an explanation of warn_suffix.
+ * The relative path can't be normalied because it might be
+ * simply "..".  Therefore, it's one above whatever the cwd
+ * is.  Gotta figure that out at runtime.
  */
 
-static int process_ents(char **ents, int warn_suffix)
+static int process_relative_dir(const char *path)
+{
+	struct cursave save;
+	int keepontruckin;
+
+	cursave(&save);
+	init_path(curabsolute(), path);
+
+	if(outmode == outmode_test) {
+		print_relative_dir();
+	}
+	keepontruckin = process_dir();
+
+	currestore(&save);
+
+	return keepontruckin;
+}
+
+
+/** Process all entries in a directory.
+ *
+ * @param is_topmost True if we are not recursing.  This allows us to
+ * tell whether we should display pathnames absolute or relative
+ * (if the user specified them relative on the command line, we
+ * show them relative, and vice versa).
+ */
+
+static int process_ents(char **ents, int is_topmost)
 {
 	struct stat st;
     mode_t *modes;
@@ -718,9 +805,12 @@ static int process_ents(char **ents, int warn_suffix)
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || S_ISREG(modes[i])) {
 			if(ents[i][0] == '/') {
-				keepontruckin = process_absolute_file(ents[i], warn_suffix);
+				// we know the path has already been fully normalized.
+				keepontruckin = process_absolute_file(ents[i], is_topmost);
+			} else if(strchr(ents[i], '/')) {
+				keepontruckin = process_deep_file(ents[i], is_topmost);
 			} else {
-				keepontruckin = run_test(ents[i], warn_suffix);
+				keepontruckin = run_test(ents[i], ents[i], is_topmost);
 			}
 			if(!keepontruckin) {
 				goto abort;
@@ -733,19 +823,16 @@ static int process_ents(char **ents, int warn_suffix)
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || modes[i] == 0) continue;
         if(S_ISDIR(modes[i])) {
+			if(is_topmost) {
+				// this is an unfortunate hack.  we display the path the same
+				// way the user specified (absolute or relative) so we need
+				// to remember which one it is.
+				arg_was_absolute = (ents[i][0] == '/');
+			}
 			if(ents[i][0] == '/') {
 				keepontruckin = process_absolute_dir(ents[i]);
 			} else {
-				int keep = curpush(ents[i]);
-				if(keep <= 0) {
-					fprintf(stderr, "Path is too long.");
-					exit(runtime_error);
-				}
-				if(outmode == outmode_test) {
-					printf("\nProcessing ./%s\n", currelative());
-				}
-				keepontruckin = process_dir();
-				curpop(keep);
+				keepontruckin = process_relative_dir(ents[i]);
 			}
 			if(!keepontruckin) {
 				goto abort;
@@ -861,35 +948,33 @@ static void start_tests()
 
 static void set_config_file(const char *cfg)
 {
-	char cwd[PATH_MAX];
-	char out[PATH_MAX];
-	char *path;
+	char buf[PATH_MAX];
 
 	if(cfg[0] == '\0') {
 		fprintf(stderr, "You must specify a directory for --config.\n");
 		exit(argument_error);
 	}
 
-	if(!getcwd(cwd, PATH_MAX)) {
-		perror("Couldn't get current working directory");
-		exit(runtime_error);
+	if(cfg[0] == '/') {
+		strncpy(buf, cfg, PATH_MAX);
+		buf[PATH_MAX-1] = '\0';
+	} else {
+		strncpy(buf, orig_cwd, PATH_MAX);
+		strncat(buf, "/", PATH_MAX);
+		strncat(buf, cfg, PATH_MAX);
+		buf[PATH_MAX-1] = '\0';
 	}
 
-	path = rel2abs(cfg, cwd, out, PATH_MAX);
-	if(!path) {
-		fprintf(stderr, "Got %d figuring out absolute path for \"%s\": %s",
-				errno, cfg, strerror(errno));
-		exit(runtime_error);
-	}
+	normalize_absolute_path(buf);
 
 	// need to ensure as well as we can that the file is readable because
 	// we don't open it ourselves.  Bash does.  And that can lead to some
 	// really cryptic error messages.
-	if(!verify_readable(out,NULL,1)) {
+	if(!verify_readable(buf,NULL,1)) {
 		exit(runtime_error);
 	}
 
-	config_file = strdup(out);
+	config_file = strdup(buf);
 	if(!config_file) {
 		perror("strdup");
 		exit(runtime_error);
@@ -924,7 +1009,6 @@ static void process_args(int argc, char **argv)
 		{"dump-script", 0, &dumpscript, 1},
 		{"help", 0, 0, 'h'},
 		{"output", 0, 0, 'o'},
-		{"patch", 0, 0, 'p'},
 		{"quiet", 0, 0, 'q'},
 		{"version", 0, 0, 'V'},
 		{0, 0, 0, 0},
@@ -963,10 +1047,6 @@ static void process_args(int argc, char **argv)
                 outmode = outmode_dump;
 				break;
 
-			case 'p':
-                outmode = outmode_diff;
-                break;
-
 			case 'q':
 				quiet++;
 				break;
@@ -991,13 +1071,109 @@ static void process_args(int argc, char **argv)
 }
 
 
+/*
+ * I wish I could use canonicalize_path(3), but that routine resolves
+ * symbolic links and provides no way to turn that behavior off.
+ * How stupid!  This isn't as much of a hack as it looks because
+ * "./../.." still needs to resolve to a real directory.
+ *
+ * @param original: the path to be normalized
+ * @param outpath: the normalized path.  this may or may not be the same
+ *     as original.
+ */
+
+static void normalize_path(char *original, char **outpath)
+{
+    char buf[PATH_MAX];
+    char normalized[PATH_MAX];
+
+    if(original[0] == '/') {
+		if(strlen(original) > PATH_MAX-1) {
+			fprintf(stderr, "Path is too long: %s\n", original);
+			exit(runtime_error);
+		}
+		strcpy(normalized, original);
+		normalize_absolute_path(normalized);
+    } else {
+        strncpy(buf, curabsolute(), PATH_MAX);
+		strncat(buf, "/", PATH_MAX);
+		strncat(buf, original, PATH_MAX);
+		buf[PATH_MAX-1] = '\0';
+		normalize_absolute_path(buf);
+
+		// convert it back to a relative path so it prints the
+		// way the user intends.  We need to beware later on
+		// to trim .. from the leading path.
+		if(!abs2rel(buf, curabsolute(), normalized, PATH_MAX)) {
+            fprintf(stderr, "Could not reabsize %s: %s\n",
+				original, strerror(errno));
+			exit(runtime_error);
+		}
+    }
+
+	if(strcmp(original,normalized) == 0) {
+		*outpath = original;
+	} else {
+		*outpath = strdup(normalized);
+	}
+}
+
+
+static void normalize_free(const char *original, char *outpath)
+{
+    if(outpath != original) {
+        free(outpath);
+    }
+}
+
+
+/**
+ * Normalize all the passed-in paths, then call process_ents()
+ * with the normalized paths.  It's easiest to just dup argv
+ * and modify that.
+ */
+
+static void process_argv(char **argv)
+{
+	char **ents;
+	int i, n;
+
+    for(n=0; argv[n]; n++) { }
+
+	ents = malloc((n+1)*sizeof(*ents));
+	ents[n] = NULL;
+
+	for(i=0; i<n; i++) { normalize_path(argv[i], &ents[i]); }
+	process_ents(ents, 1);
+	for(i=0; i<n; i++) { normalize_free(argv[i], ents[i]); }
+}
+
+
+/**
+ * The Gnu version of getcwd can do this for us but that's not portable.
+ */
+
+static const char* dup_cwd()
+{
+	char buf[PATH_MAX];
+
+	if(!getcwd(buf, PATH_MAX)) {
+		perror("Couldn't get current working directory");
+		exit(runtime_error);
+	}
+
+	return strdup(buf);
+}
+
+
 int main(int argc, char **argv)
 {
+	orig_cwd = dup_cwd();
 	process_args(argc, argv);
 
     start_tests();
     if(optind < argc) {
-        process_ents(argv+optind, 1);
+		process_argv(argv+optind);
     } else {
         if(outmode == outmode_test) {
             printf("\nProcessing .\n");
@@ -1010,6 +1186,7 @@ int main(int argc, char **argv)
         print_test_summary();
     }
 
+	free((char*)orig_cwd);
 	return 0;
 }
 

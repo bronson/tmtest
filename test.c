@@ -792,9 +792,10 @@ static void print_reason(struct test *test, const char *name, const char *prep)
 
 
 /** Checks the actual results against the expected results.
+ * dispname is the name we should display for the test.
  */
 
-void test_results(struct test *test)
+void test_results(struct test *test, const char *dispname)
 {
     scanstate scanner;
     char scanbuf[MAX_LINE_LENGTH];
@@ -846,10 +847,10 @@ void test_results(struct test *test)
 
     if(!stdo && !stde && !exno) {
         test_successes++;
-        printf("ok   %s \n", get_testfile_name(test));
+        printf("ok   %s \n", convert_testfile_name(dispname));
     } else {
         test_failures++;
-        printf("FAIL %-25s ", get_testfile_name(test));
+        printf("FAIL %-25s ", convert_testfile_name(dispname));
         if(test->exitsignal) {
             printf("terminated by signal %d%s", test->exitsignal,
                     (test->exitcored ? " with core" : ""));
@@ -994,7 +995,7 @@ static int write_file(int outfd, int infd, pcrs_job *job)
 	// know that MODIFY sections are going away in the
 	// next release anyway)
 	write_modified_file(outfd, infd, job);
-	return 0;
+	return 1;
 }
 
 

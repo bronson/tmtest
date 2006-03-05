@@ -5,7 +5,7 @@
 
 
 
-tmtest --patch - <<-EOL
+tmtest --diff - <<-EOL
 	ABORT
 	echo "right output"
 	STDOUT:

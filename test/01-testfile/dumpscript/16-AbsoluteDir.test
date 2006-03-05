@@ -1,0 +1,83 @@
+# Ensures we prepare tests properly even when the --config
+# file is entirely outside the testdir.
+
+# Note that this test assumes that MKDIR will create its directory
+# in /tmp.  If this is not the case, and the test is failing, just
+# add a replace directive to fix it and send me a patch.
+
+# tmtest 0.94 and earlier had a bug where if you supplied a
+# trailing slash after a directory name on the command line,
+# it would include config files from that directory twice.
+# This test ensures that won't happen anymore.
+
+
+MKDIR do
+
+MKDIR di "$do/di"
+
+MKFILE cc1 "$do/tmtest.conf" <<'EOL'
+	config="yaksula"
+EOL
+
+MKFILE cc2 "$di/tmtest.conf" <<'EOL'
+	config="excellent"
+EOL
+
+MKFILE tt2 "$di/tt.test" <<'EOL'
+	echo "$config"
+EOL
+
+
+tmtest $args --dump-script "$do/di//../di" | REPLACE "$do" DIR | FIX_SCRIPT
+
+
+STDOUT:
+	
+	Processing DIR/di
+	echo START >&FD
+	
+	ABORT ()  { echo "ABORTED: $*" >&FD; exit 0; }
+	ABORT: () { ABORT $*; }
+	
+	DISABLED  () { echo "DISABLED: $*" >&FD; exit 0; }
+	DISABLED: () { DISABLED $*; }
+	DISABLE   () { DISABLED $*; }
+	DISABLE:  () { DISABLED $*; }
+	
+	TESTDIR='DIR/di'
+	TESTFILE='DIR/di/tt.test'
+	
+	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
+	MYDIR='...test'
+	MYFILE='...tmtest.sub.conf'
+	. '...tmtest.sub.conf'
+	echo 'CONFIG: DIR/tmtest.conf' >&FD
+	MYDIR='DIR'
+	MYFILE='DIR/tmtest.conf'
+	. 'DIR/tmtest.conf'
+	echo 'CONFIG: DIR/di/tmtest.conf' >&FD
+	MYDIR='DIR/di'
+	MYFILE='DIR/di/tmtest.conf'
+	. 'DIR/di/tmtest.conf'
+	
+	
+	echo PREPARE >&FD
+	
+	STDOUT () { exit 0; }
+	STDOUT: () { exit 0; }
+	STDERR () { exit 0; }
+	STDERR: () { exit 0; }
+	RESULT () { exit 0; }
+	RESULT: () { exit 0; }
+	MODIFY () { exit 0; }
+	MODIFY: () { exit 0; }
+	
+	echo 'RUNNING: DIR/di/tt.test' >&FD
+	MYDIR='DIR/di'
+	MYFILE='DIR/di/tt.test'
+	exec >&FD FD>&FD FD>&- FD>&-
+	. 'DIR/di/tt.test'
+	
+	echo DONE >&FD
+RESULT: 0
+STDERR:

@@ -55,16 +55,16 @@ ok   sub.test
 Processing ./.
 ok   mid.test 
 
-Processing ././sub
+Processing ./sub
 ok   sub.test 
 
 Processing ./..
 ok   sup.test 
 
-Processing ./../mid
+Processing ./.
 ok   mid.test 
 
-Processing ./../mid/sub
+Processing ./sub
 ok   sub.test 
 
 9 tests run, 9 successes, 0 failures.

@@ -18,7 +18,6 @@ struct cursave {
 int curinit(const char *path);
 int curpush(const char *dir);
 void curpop(int keep);
-void curreset();
 void cursave(struct cursave *save);
 void currestore(struct cursave *save);
 const char *curabsolute();

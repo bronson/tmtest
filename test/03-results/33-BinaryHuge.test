@@ -22,8 +22,6 @@ perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("c
 tmtest --all-files -q "$tt" | REPLACE "$tt" /tmp/FILE
 
 STDOUT:
-
-Processing /tmp/FILE
 ok   /tmp/FILE 
 
 1 test run, 1 success, 0 failures.

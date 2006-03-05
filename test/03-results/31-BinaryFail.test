@@ -17,8 +17,6 @@ echo -e "\\0\\0\\0" >> "$tt"
 tmtest --all-files -q "$tt" | REPLACE "$tt" /tmp/FILE
 
 STDOUT:
-
-Processing /tmp/FILE
 FAIL /tmp/FILE        O..  stdout differed
 
 1 test run, 0 successes, 1 failure.

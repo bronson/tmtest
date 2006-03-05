@@ -74,7 +74,7 @@ struct test {
 void scan_status_file(struct test *test);
 void test_command_copy(struct test *test, FILE *fp);
 
-void test_results(struct test *test);
+void test_results(struct test *test, const char *dispname);
 void dump_results(struct test *test);
 void print_test_summary();
 

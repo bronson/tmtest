@@ -1,0 +1,65 @@
+# Ensures we prepare tests properly even when the --config
+# file is entirely outside the testdir.
+
+# tmtest 0.94 and earlier had a bug where if you supplied a
+# trailing slash after a directory name on the command line,
+# it would include config files from that directory twice.
+# This test ensures that won't happen anymore.
+
+
+MKDIR dd
+
+MKFILE tt1 "$dd/tmtest.conf" <<'EOL'
+	config="yes!"
+EOL
+
+MKFILE tt2 "$dd/tt.test" <<'EOL'
+	echo "$config"
+EOL
+
+tmtest $args --dump-script "$dd/" | REPLACE "$dd" /tmp/DIR | FIX_SCRIPT
+
+STDOUT:
+	
+	Processing /tmp/DIR
+	echo START >&FD
+	
+	ABORT ()  { echo "ABORTED: $*" >&FD; exit 0; }
+	ABORT: () { ABORT $*; }
+	
+	DISABLED  () { echo "DISABLED: $*" >&FD; exit 0; }
+	DISABLED: () { DISABLED $*; }
+	DISABLE   () { DISABLED $*; }
+	DISABLE:  () { DISABLED $*; }
+	
+	TESTDIR='/tmp/DIR'
+	TESTFILE='/tmp/DIR/tt.test'
+	
+	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
+	MYDIR='...test'
+	MYFILE='...tmtest.sub.conf'
+	. '...tmtest.sub.conf'
+	echo 'CONFIG: /tmp/DIR/tmtest.conf' >&FD
+	MYDIR='/tmp/DIR'
+	MYFILE='/tmp/DIR/tmtest.conf'
+	. '/tmp/DIR/tmtest.conf'
+	
+	
+	echo PREPARE >&FD
+	
+	STDOUT () { exit 0; }
+	STDOUT: () { exit 0; }
+	STDERR () { exit 0; }
+	STDERR: () { exit 0; }
+	RESULT () { exit 0; }
+	RESULT: () { exit 0; }
+	MODIFY () { exit 0; }
+	MODIFY: () { exit 0; }
+	
+	echo 'RUNNING: /tmp/DIR/tt.test' >&FD
+	MYDIR='/tmp/DIR'
+	MYFILE='/tmp/DIR/tt.test'
+	exec >&FD FD>&FD FD>&- FD>&-
+	. '/tmp/DIR/tt.test'
+	
+	echo DONE >&FD
