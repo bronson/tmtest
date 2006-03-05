@@ -1,5 +1,0 @@
-echo RESULT
-MODIFY:
-   s/^(.)/   $1/
-STDOUT:
-   RESULT

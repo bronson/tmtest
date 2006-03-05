@@ -51,7 +51,7 @@ cat > two/one/t.test <<-EOL
 EOL
 
 
-tmtest --all-files -d | patch -p0
+tmtest --all-files -d | patch -p0 | FIX_PATCH
 echo
 INDENT "\t" < t.test
 echo
@@ -65,9 +65,6 @@ INDENT "\t" < two/one/t.test
 
 rm -rf t.test one two
 
-
-MODIFY:
-  s/^patching .*/patching FILE/
 
 STDOUT:
 patching FILE

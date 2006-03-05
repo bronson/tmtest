@@ -52,7 +52,7 @@ EOL
 
 cd two
 
-tmtest --all-files -d .. | patch -p0
+tmtest --all-files -d .. | patch -p0 | FIX_PATCH
 echo
 INDENT "\t" < ../t.test
 echo
@@ -66,9 +66,6 @@ INDENT "\t" < one/t.test
 
 rm -rf ../t.test ../one ../two
 
-
-MODIFY:
-  s/^patching .*/patching FILE/
 
 STDOUT:
 patching FILE

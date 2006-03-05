@@ -26,7 +26,7 @@ EOL
 
 # All tt* files must be in the same directory.
 
-tmtest --all-files -d "$tt1" "$tt2" "$tt3" | (cd `dirname "$tt1"` && patch)
+tmtest --all-files -d "$tt1" "$tt2" "$tt3" | (cd `dirname "$tt1"` && patch | FIX_PATCH)
 echo
 INDENT "\t" < "$tt1"
 echo
@@ -34,8 +34,6 @@ INDENT "\t" < "$tt2"
 echo
 INDENT "\t" < "$tt3"
 
-MODIFY:
-  s/^patching .*/patching FILE/
 
 STDOUT:
 patching FILE

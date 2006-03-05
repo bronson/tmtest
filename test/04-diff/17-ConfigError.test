@@ -1,6 +1,9 @@
 # This is like 17-ConfigError in the running directory except
 # that it performs a diff.
 
+# TODO: We pipe stderr to stdout so it can be rewritten.
+# This needs to be changed!!
+
 # BUG: notice that the diff IS STILL PRODUCED!  It just erases
 # all the sections.  This is bad, of course.  Unfortunately,
 # until we have dynamic status and can terminate the test
@@ -30,34 +33,25 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-tmtest -d
+tmtest -d 2>&1 | REPLACE "$dir" /tmp/DIR | FIX_DIFF
 rm tmtest.conf t1.test t2.test
 
 
-MODIFY:
-	# blow away changing data in the erroneous diff
-	s/^\-\-\- t1.test.*/--- T1.TEST DATE TIME TZ/
-	s/^\-\-\- t2.test.*/--- T2.TEST DATE TIME TZ/
-	s/^\+\+\+.*/+++ - DATE TIME TZ/
-	# blow away filenames in the STDERR
-	s/^\/.*\/tmtest.conf/TMTEST.CONF/
-	s/ in \/.*\/tmtest.conf/ in TMTEST.CONF/
-
 STDOUT:
---- T1.TEST DATE TIME TZ
+/tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
+Error: t1.test was not started due to errors in /tmp/DIR/tmtest.conf.
+--- /tmp/FILE DATE TIME TZ
 +++ - DATE TIME TZ
 @@ -1,3 +1 @@
  echo hi
 -STDOUT:
 -hi
---- T2.TEST DATE TIME TZ
+/tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
+Error: t2.test was not started due to errors in /tmp/DIR/tmtest.conf.
+--- /tmp/FILE DATE TIME TZ
 +++ - DATE TIME TZ
 @@ -1,3 +1 @@
  echo he
 -STDOUT:
 -he
 STDERR:
-TMTEST.CONF: line 3: dotheyspeakbocceonwhat: command not found
-Error: t1.test was not started due to errors in TMTEST.CONF.
-TMTEST.CONF: line 3: dotheyspeakbocceonwhat: command not found
-Error: t2.test was not started due to errors in TMTEST.CONF.

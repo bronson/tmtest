@@ -13,11 +13,6 @@ tmtest -q - <<-EOL
 EOL
 
 
-MODIFY:
-	s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
-	s/^\+\+\+.*/+++ - DATE TIME TZ/
-
-
 STDOUT:
 dis  (STDIN)                   
 

@@ -9,14 +9,11 @@
 # (back when we were parsing tests using re2c, lines needed to be
 # less than BUFSIZ and the results always had to end in a newline).
 
-tmtest -o -q - <<-EOL
+tmtest -o -q - <<-EOL | INDENT "   "
 	echo -n Howdy
 	STDOUT: -n
 	Howdy
 EOL
-
-MODIFY:
-   s/^(.)/   $1/
 
 STDOUT:
    echo -n Howdy

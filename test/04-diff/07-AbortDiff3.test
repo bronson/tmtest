@@ -6,7 +6,7 @@
 
 
 
-tmtest -d - <<-EOL
+tmtest -d - <<-EOL | FIX_DIFF
 	ABORT This is the reason
 	echo "right output"
 	STDOUT:
@@ -14,13 +14,8 @@ tmtest -d - <<-EOL
 EOL
 
 
-MODIFY:
-	s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
-	s/^\+\+\+.*/+++ - DATE TIME TZ/
-
-
 STDOUT:
---- /tmp/STDIN-pid.unique DATE TIME TZ
+--- /tmp/FILE DATE TIME TZ
 +++ - DATE TIME TZ
 @@ -1,4 +1,2 @@
  ABORT This is the reason

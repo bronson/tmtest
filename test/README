@@ -21,10 +21,12 @@ These are the test subcategories:
 03-results: tests the results
     Ensures that we compare the test results properly.
     For instance, verifies that we handle results that don't
-    end in newlines, binary characters, etc. properly.
+    end in newlines, binary characters, etc. properly.  If it doesn't
+	exercise the comparison code, a test doesn't belong in here.
 
 04-diff: ensures diffing and patching works
 
 09-docs: tests that appear in our documentation.
     This ensures that tmtest behaves exactly like our docs say it will.
+
 

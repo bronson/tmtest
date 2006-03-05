@@ -2,6 +2,10 @@
 # config files which mark us pedantic.  This should preven the
 # tests from being run if there are config errors.
 
+# TODO: this pipes stderr to stdout so it can be rewritten.
+# That's bad news and needs to be fixed.
+
+
 MKDIR dir
 cd "$dir"
 
@@ -23,20 +27,17 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-tmtest $CFG -q
+tmtest $CFG -q 2>&1 | REPLACE "$dir" /tmp/DIR
 rm tmtest.conf t1.test t2.test
 
 
-MODIFY:
-	s/^\/.*\/tmtest.conf/TMTEST.CONF/
-	s/ in \/.*\/tmtest.conf/ in TMTEST.CONF/
 STDOUT:
+/tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
+/tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
 
 Processing .
-ERR  t1.test                   error in TMTEST.CONF
-ERR  t2.test                   error in TMTEST.CONF
+ERR  t1.test                   error in /tmp/DIR/tmtest.conf
+ERR  t2.test                   error in /tmp/DIR/tmtest.conf
 
 2 tests run, 0 successes, 2 failures.
 STDERR:
-TMTEST.CONF: line 3: dotheyspeakbocceonwhat: command not found
-TMTEST.CONF: line 3: dotheyspeakbocceonwhat: command not found

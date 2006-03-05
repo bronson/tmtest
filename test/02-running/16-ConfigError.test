@@ -1,6 +1,10 @@
 # Ensures that even if config files generate errors, tests will
 # still try to run.  Config file errors go to stderr.
 
+# TODO: figure out how to rewrite stderr.  That may require some
+# assistance from tmtest...  After 0.98's streaming changes though.
+# 	tmtest $CFG -q 2> >( REPLACE "$dir" /tmp/DIR >&2 )
+
 MKDIR dir
 cd "$dir"
 
@@ -21,13 +25,13 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-tmtest $CFG -q
+tmtest $CFG -q 2>&1 | REPLACE "$dir" /tmp/DIR
 rm tmtest.conf t1.test t2.test
 
 
-MODIFY:
-  s/^\/.*\/tmtest.conf/TMTEST.CONF/
 STDOUT:
+/tmp/DIR/tmtest.conf: line 2: dotheyspeakbocceonwhat: command not found
+/tmp/DIR/tmtest.conf: line 2: dotheyspeakbocceonwhat: command not found
 
 Processing .
 ok   t1.test 
@@ -35,5 +39,3 @@ ok   t2.test
 
 2 tests run, 2 successes, 0 failures.
 STDERR:
-TMTEST.CONF: line 2: dotheyspeakbocceonwhat: command not found
-TMTEST.CONF: line 2: dotheyspeakbocceonwhat: command not found

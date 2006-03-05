@@ -4,7 +4,7 @@
 # Verifies what happens when a diff is aborted and gives a reason.
 
 
-tmtest -d - <<-EOL
+tmtest -d - <<-EOL | FIX_DIFF
 	ABORT: This is the reason
 	echo "right output"
 	STDOUT:
@@ -12,15 +12,10 @@ tmtest -d - <<-EOL
 EOL
 
 
-MODIFY:
-	s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
-	s/^\+\+\+.*/+++ - DATE TIME TZ/
-
-
 STDERR:
 ERROR Test was aborted: This is the reason
 STDOUT:
---- /tmp/STDIN-pid.unique DATE TIME TZ
+--- /tmp/FILE DATE TIME TZ
 +++ - DATE TIME TZ
 @@ -1,4 +1,2 @@
  ABORT: This is the reason

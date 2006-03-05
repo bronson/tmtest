@@ -22,15 +22,13 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-tmtest $CFG -q
+tmtest $CFG -q | REPLACE "$dir" /tmp/DIR
 rm tmtest.conf t1.test t2.test
 
 
-MODIFY:
-  s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
 STDOUT:
 
 Processing .
-ABRT t1.test                   by TMTEST.CONF: bail from config
+ABRT t1.test                   by /tmp/DIR/tmtest.conf: bail from config
 
 1 test run, 0 successes, 1 failure.

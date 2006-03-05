@@ -20,16 +20,14 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-tmtest $CFG -q
+tmtest $CFG -q | REPLACE "$dir" /tmp/DIR
 rm tmtest.conf t1.test t2.test
 
 
-MODIFY:
-  s/ by \/.*\/tmtest.conf/ by TMTEST.CONF/
 STDOUT:
 
 Processing .
-dis  t1.test                   by TMTEST.CONF: this is the reason
-dis  t2.test                   by TMTEST.CONF: this is the reason
+dis  t1.test                   by /tmp/DIR/tmtest.conf: this is the reason
+dis  t2.test                   by /tmp/DIR/tmtest.conf: this is the reason
 
 2 tests run, 0 successes, 0 failures.

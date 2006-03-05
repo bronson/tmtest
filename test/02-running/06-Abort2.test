@@ -12,11 +12,6 @@ tmtest -q - <<-EOL
 EOL
 
 
-MODIFY:
-	s/^\-\-\-.*/--- \/tmp\/STDIN-pid.unique DATE TIME TZ/
-	s/^\+\+\+.*/+++ - DATE TIME TZ/
-
-
 STDERR:
 STDOUT:
 ABRT (STDIN)                   This is the reason
