@@ -11,8 +11,6 @@
   We will not read either config or test files from a world-writable directory.
   Ever.
 - Put $args into EVERY test we run.
-- There's some sort of a bug with 10-DumpScript.test.  When running with
-  -o or -d, sometimes it complains about a missing newline.  Odd.
 - Write a test to ensure we can run tests named "-.test"
 - Write tests to verify what FDs are still open when we run
   config files, test files, and diff.

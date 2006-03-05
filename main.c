@@ -282,7 +282,7 @@ static int write_stdin_to_tmpfile(struct test *test)
 	test->diffname = buf;
 	fd = open_file(buf, DIFFNAME, 0);
 	assert(strlen(buf) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
-	write_raw_file(fd, 0);
+	write_file(fd, 0);
 	close(fd);
 
 	return fd;

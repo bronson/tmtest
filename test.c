@@ -15,8 +15,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
-
-// to get PATH_MAX:
 #include <dirent.h>
 
 #include "re2c/read-fd.h"
@@ -24,13 +22,8 @@
 #include "test.h"
 #include "stscan.h"
 #include "tfscan.h"
-#include "compare.h"
 #include "rusage.h"
 
-
-// This is the maximum line length for the eachline substitution.
-// Lines longer than this will be parsed as 2 separate lines.
-#define MAX_LINE_LENGTH BUFSIZ
 
 // utility function so you can say i.e. write_strconst(fd, "/");
 #define write_strconst(fd, str) write((fd), (str), sizeof(str)-1)
@@ -342,8 +335,8 @@ void test_command_copy(struct test *test, FILE *fp)
  * it up.
  */
 
-void compare_section_start(scanstate *cmpscan, int fd, pcrs_job *joblist,
-		matchval *mv, const char *filename, const char *sectionname, int nonl)
+void compare_section_start(scanstate *cmpscan, int fd, matchval *mv,
+		const char *filename, const char *sectionname, int nonl)
 {
     assert(!compare_in_progress(cmpscan));
 
@@ -355,7 +348,7 @@ void compare_section_start(scanstate *cmpscan, int fd, pcrs_job *joblist,
 
     scanstate_reset(cmpscan);
     readfd_attach(cmpscan, fd);
-	compare_attach(cmpscan, mv, joblist, nonl);
+	compare_attach(cmpscan, mv, nonl);
 
     // we may want to check the token to see if there are any
     // special requests (like detabbing).
@@ -425,69 +418,6 @@ const char *skip_section_name(const char *cp, int len)
 	return cp;
 }
 
-
-void parse_modify_clause(struct test *test, const char *cp, const char *ce)
-{
-	pcrs_job *job, **p;
-	char *string;
-	int err;
-
-	char buf[128];	// holds the pcrs command.  We will dynamically
-		// allocate a buffer if the entire substitution doesn't fit
-		// into this buffer.  The vast majority of substitutions will
-		// be less than 40 chars.
-
-	// skip any leading whitespace
-	while(isspace(*cp) && cp < ce) cp++;
-
-	// ensure there's still data worth parsing
-	if(*cp == '\n' || cp >= ce) {
-		return;
-	}
-
-	// don't parse it if it's a comment
-	if(*cp == '#') {
-		return;
-	}
-
-	// It's retarded that I can't pass a buf/len combo to pcrs_compile_command.
-	// It's also retarded that pcrs won't tell me where it stopped parsing
-	// so that we can have multiple substitution clauses on line line.
-
-	if(ce-cp-1 < sizeof(buf)) {
-		string = buf;
-	} else {
-		string = malloc(ce-cp+1);
-		if(!string) {
-			perror("malloc in parse_modify_clause");
-			exit(10);
-		}
-	}
-
-	memcpy(string, cp, ce-cp);
-	string[ce-cp] = '\0';
-	job = pcrs_compile_command(string, &err);
-	if(job == NULL) {
-        fprintf(stderr, "%s line %d compile error: %s (%d).\n",
-                get_testfile_name(test), test->testfile.line,
-                pcrs_strerror(err), err);
-	}
-
-	if(ce-cp-1 < sizeof(buf)) {
-		// nothing to do; we used the static buffer
-	} else {
-		free(string);
-	}
-
-	if(job == NULL) {
-		return;
-	}
-
-	// link this job onto the end of the list.
-	p = &test->eachline;
-	while(*p) p = &(**p).next;
-	*p = job;
-}
 
 
 /**
@@ -597,7 +527,7 @@ int start_output_section(struct test *test, const char *tok,
         return 0;
     }
 
-    compare_section_start(cmpscan, fd, test->eachline, val,
+    compare_section_start(cmpscan, fd, val,
         get_testfile_name(test), secname, suppress_trailing_newline);
 
     return 1;
@@ -699,10 +629,6 @@ void parse_section_compare(struct test *test, int sec,
             case exRESULT:
 				parse_exit_clause(test, datap, len);
                 break;
-            case exMODIFY:
-				parse_modify_clause(test, skip_section_name(datap,len),
-                        datap+len);
-                break;
         }
     } else {
         // we're continuing an already started section.
@@ -723,9 +649,6 @@ void parse_section_compare(struct test *test, int sec,
 							get_testfile_name(test), test->testfile.line);
                     // Harmless to continue.  The testfile needs to be fixed.
 				}
-                break;
-            case exMODIFY:
-				parse_modify_clause(test, datap, datap+len);
                 break;
             case exCOMMAND:
                 break;
@@ -798,7 +721,7 @@ static void print_reason(struct test *test, const char *name, const char *prep)
 void test_results(struct test *test, const char *dispname)
 {
     scanstate scanner;
-    char scanbuf[MAX_LINE_LENGTH];
+    char scanbuf[BUFSIZ];
 	int stdo, stde, exno;	// true if there are differences.
 	
 	if(was_aborted(test->status)) {
@@ -886,7 +809,7 @@ static void write_exit_no(int fd, int exitno)
 }
 
 
-int write_raw_file(int outfd, int infd)
+int write_file(int outfd, int infd)
 {
     char buf[BUFSIZ];
     int rcnt, wcnt;
@@ -924,81 +847,6 @@ int write_raw_file(int outfd, int infd)
 }
 
 
-static void write_modified_file(int outfd, int infd, pcrs_job *job)
-{
-    // this routine is fairly similar to compare_continue_lines.
-    // it would be nice to unify them.  that would take some fairly
-    // major surgery though.
-
-    scanstate scanner, *ss = &scanner;
-    char scanbuf[MAX_LINE_LENGTH];
-    const char *p;
-    char *new;
-    size_t newsize;
-    int rcnt, wcnt;
-
-    // first rewind the input file
-    if(lseek(infd, 0, SEEK_SET) < 0) {
-        fprintf(stderr, "write_file lseek on %d: %s\n", infd, strerror(errno));
-        exit(10);   // todo: consolidate with error codes in main
-    }
-
-    // create the scanner we'll use to buffer the lines
-    scanstate_init(ss, scanbuf, sizeof(scanbuf));
-    readfd_attach(ss, infd);
-
-    do {
-        p = memchr(ss->cursor, '\n', ss->limit - ss->cursor);
-        if(!p) {
-            rcnt = (*ss->read)(ss);
-            if(rcnt < 0) {
-                // read error.  do something!
-                perror("reading in write_modified_file");
-                break;
-            }
-            p = memchr(ss->cursor, '\n', ss->limit - ss->cursor);
-            if(!p) {
-                p = ss->limit - 1;
-            }
-        }
-
-        p += 1;
-        new = substitute_string(job, ss->cursor, p, &newsize);
-        if(!new) {
-            // substitution error!  message already printed.
-            break;
-        }
-
-        do {
-            wcnt = write(outfd, new, newsize);
-        } while(wcnt < 0 && errno == EINTR);
-        free(new);
-        if(wcnt < 0) {
-            // write error.  do something!
-            perror("writing in write_modified_file");
-            break;
-        }
-        ss->cursor = p;
-    } while(rcnt);
-}
-
-
-static int write_file(int outfd, int infd, pcrs_job *job)
-{
-	if(!job) {
-		// use the simple, fast routine
-		return write_raw_file(outfd, infd);
-	}
-
-	// use the line buffered routine
-	// (don't bother with the return value because we
-	// know that MODIFY sections are going away in the
-	// next release anyway)
-	write_modified_file(outfd, infd, job);
-	return 1;
-}
-
-
 static void write_section(struct test *test, const char *datap, int len,
 		int fd, const char *name)
 {
@@ -1010,7 +858,7 @@ static void write_section(struct test *test, const char *datap, int len,
 			start_output_section_argproc, &marked_no_nl);
 
 	write(test->rewritefd, datap, len);
-	has_nl = write_file(test->rewritefd, fd, test->eachline);
+	has_nl = write_file(test->rewritefd, fd);
 
 	if(marked_no_nl) {
 		// if a section is marked with --no-trailing-newline, we need
@@ -1070,16 +918,6 @@ void parse_section_output(struct test *test, int sec,
             write(test->rewritefd, datap, len);
             break;
 
-        case exMODIFY|exNEW:
-            parse_modify_clause(test, skip_section_name(datap,len), datap+len);
-            write(test->rewritefd, datap, len);
-            break;
-        case exMODIFY:
-            // parse modify sections and still print them.
-            parse_modify_clause(test, datap, datap+len);
-            write(test->rewritefd, datap, len);
-            break;
-            
         default:
             write(test->rewritefd, datap, len);
     }
@@ -1138,9 +976,6 @@ void dump_results(struct test *test)
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
-    // ensure that we haven't yet parsed any modify sections.
-    assert(!test->eachline);
-
     scan_sections(test, &test->testfile, parse_section_output, &tempref);
 
     // if any sections haven't been output, but they differ from
@@ -1151,11 +986,11 @@ void dump_results(struct test *test)
     }
     if(test->stderr_match == match_unknown && fd_has_data(test->errfd)) {
 		write_strconst(test->rewritefd, "STDERR:\n");
-        write_file(test->rewritefd, test->errfd, test->eachline);
+        write_file(test->rewritefd, test->errfd);
     }
     if(test->stdout_match == match_unknown && fd_has_data(test->outfd)) {
 		write_strconst(test->rewritefd, "STDOUT:\n");
-        write_file(test->rewritefd, test->outfd, test->eachline);
+        write_file(test->rewritefd, test->outfd);
     }
 }
 
@@ -1187,11 +1022,6 @@ void test_init(struct test *test)
 void test_free(struct test *test)
 {
 	int err;
-
-	// the buffer for the testfile scanner is allocated on the stack.
-	if(test->eachline) {
-		pcrs_free_joblist(test->eachline);
-	}
 
 	if(test->diffname) {
 		err = close(test->diff_fd);

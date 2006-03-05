@@ -6,9 +6,7 @@
  * This file is covered by the MIT License.
  */
 
-#include "pcrs.h"
-#include "matchval.h"
-#include "re2c/scan.h"
+#include "compare.h"
 
 
 typedef enum {
@@ -51,8 +49,6 @@ struct test {
     int exitsignal;         ///< the value returned for the test by waitpid(2)
     int exitcored;          ///< if exitsignal is true, true if child core dumped.
 
-	pcrs_job *eachline;		///< a linked list of pcrs jobs to be applied to each line.
-
 	char *diffname;			///< if we're diffing against stdin, this contains the name of the required tempfile.
 	int diff_fd;			///< if diffname is set, then this is the fd of the tempfile we're using to store stdin.
 
@@ -84,5 +80,5 @@ void test_free(struct test *test);
 
 // random utility function for start_diff.  Return value is true if the
 // file ends in a newline, false if not.
-int write_raw_file(int outfd, int infd);
+int write_file(int outfd, int infd);
 

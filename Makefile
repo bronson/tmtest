@@ -29,14 +29,14 @@ endif
 COPTS=-g -Wall -Werror
 
 # utilities:
-CSRC+=curdir.c qscandir.c pcrs.c pathconv.c
-CHDR+=curdir.h qscandir.h pcrs.h pathconv.h
+CSRC+=curdir.c qscandir.c pathconv.c
+CHDR+=curdir.h qscandir.h pathconv.h
 # scanner files
 CSRC+=re2c/read.c re2c/read-fd.c re2c/scan.c
 CHDR+=re2c/read.h re2c/read-fd.h re2c/scan.h
 # program files:
 CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c
-CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h matchval.h
+CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
