@@ -48,8 +48,6 @@ STDOUT:
 	STDERR: () { exit 0; }
 	RESULT () { exit 0; }
 	RESULT: () { exit 0; }
-	MODIFY () { exit 0; }
-	MODIFY: () { exit 0; }
 	
 	echo 'RUNNING: /tmp/DIR/tt.test' >&FD
 	MYDIR='/tmp/DIR'
