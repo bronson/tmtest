@@ -1,4 +1,7 @@
-- Got rid of MODIFY clauses.  Use INDENT, REPLACE, or sed instead.
+- If an output section is marked -n but ends with multiple newlines, we print
+  a warning and fail it automatically.  We used to let this nonsense pass.
+- Added the Cutest unit test framework.  Refactored compare.c.
+- Got rid of MODIFY and all its code.  Use INDENT, REPLACE, or sed instead.
 
 Released 0.94 on 2 Mar 2006
 - NOTE: Bash3 has made it so that the regex can not appear on the same line as

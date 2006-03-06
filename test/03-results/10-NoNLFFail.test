@@ -9,6 +9,9 @@ tmtest -q - <<-EOL
 
 EOL
 STDOUT : 
-ok   (STDIN) 
+FAIL (STDIN)                   O..  stdout differed
 
-1 test run, 1 success, 0 failures.
+1 test run, 0 successes, 1 failure.
+STDERR:
+WARNING: STDOUT is marked -n but it ends with multiple newlines!
+    Please remove all but one newline from (STDIN) around line 4.

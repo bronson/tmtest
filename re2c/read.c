@@ -38,10 +38,10 @@
 // The bytes that need to be shifted are those between the token
 // and the limit.
 
-int read_shiftbuf(scanstate *ss)
+ssize_t read_shiftbuf(scanstate *ss)
 {
     const char *min;
-    int cnt;
+    ssize_t cnt;
 
     min = ss->token;
     if(ss->marker && ss->marker < min) {
@@ -51,7 +51,7 @@ int read_shiftbuf(scanstate *ss)
     // this tells how many bytes need to be shifted.
     cnt = ss->limit - min;
     if(cnt) {
-        int delta = min - ss->bufptr;
+        ssize_t delta = min - ss->bufptr;
         memmove((void*)ss->bufptr, min, cnt);
         ss->cursor -= delta;
         ss->token -= delta;

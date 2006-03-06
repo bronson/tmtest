@@ -1,4 +1,4 @@
-DISABLED: neads streaming tmtest?
+DISABLED: needs streaming tmtest?
 
 echo test output > >(INDENT)
 

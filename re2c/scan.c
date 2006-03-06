@@ -12,7 +12,7 @@
  * Note that you must attach it to a reader after calling this routine.
  */
 
-void scanstate_init(scanstate *ss, const char *bufptr, int bufsiz)
+void scanstate_init(scanstate *ss, const char *bufptr, size_t bufsiz)
 {
     ss->cursor = bufptr;
     ss->limit = bufptr;
@@ -36,12 +36,13 @@ void scanstate_init(scanstate *ss, const char *bufptr, int bufsiz)
  * Doesn't modify:
  * - the reader or the readref.
  * - the scanner or the scanref.
+ * - the userproc or userref.
  * - the buffer or buffer size
  *
  * But sets everything else to the default values.
- * You may still need to reattach to the reader if it needs to
- * reset some part of its internal state.  This is true of the
- * scanner too.
+ *
+ * If you want to reset the reader and scanner, you probalby want
+ * to detach and reattach them.  The userproc is entirely up to you.
  */
 
 void scanstate_reset(scanstate *ss)

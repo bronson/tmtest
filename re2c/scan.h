@@ -4,12 +4,19 @@
  *
  * This part of support code to make writing re2c scanners much easier.
  *
+ * TODO: add dispose procs.  Normally these will just be null but
+ * if they're set, they will ensure that all resources are collected.
+ *
  * TODO: probably want to split the re2c-specific code from the general
  * code.  This file is overall very useful, but it's got a few limitations
  * imposed by re2c that should probably be placed in its own layer.
  * That way, future versions of re2c won't have to suffer the same
  * limitations.
  */
+
+// to pull in the definition for size_t
+#include <sys/types.h>
+
 
 /** @file scan.h
  *
@@ -82,7 +89,7 @@
  */
 
 #define YYFILL(n)   do { \
-		int r = (*ss->read)(ss); \
+		ssize_t r = (*ss->read)(ss); \
 		if(r < 0) return r; \
 		if((ss)->cursor >= (ss)->limit) return 0; \
 	} while(0);
@@ -135,7 +142,7 @@ struct scanstate;
  * up as much as it possibly can.
  */
 
-typedef int (*readproc)(struct scanstate *ss);
+typedef ssize_t (*readproc)(struct scanstate *ss);
 
 
 /** Prototype of scanner function
@@ -179,7 +186,7 @@ struct scanstate {
     int at_eof;         ///< You almost certainly don't want to be using this unless you're writing a readproc.  Use scan_finished() instead.  This field gets set when the readproc realizes it has hit eof.  by convention 1 means eof, 2 means yes, at_eof is true, but because of an unrecoverable read error (todo: this should be formalized?  TODO: audit code to see if this is indeed the case).
 
     const char *bufptr; ///< The buffer currently in use
-    int bufsiz;         ///< The maximum number of bytes that the buffer can hold
+    size_t bufsiz;         ///< The maximum number of bytes that the buffer can hold
 
     void *readref;      ///< Data specific to the reader (i.e. for readfp_attach() it's a FILE*).
     readproc read;      ///< The routine the scanner calls when the buffer needs to be reread.
@@ -193,7 +200,7 @@ struct scanstate {
 typedef struct scanstate scanstate;
 
 
-void scanstate_init(scanstate *ss, const char *bufptr, int bufsiz);
+void scanstate_init(scanstate *ss, const char *bufptr, size_t bufsiz);
 void scanstate_reset(scanstate *ss);
 
 
@@ -206,9 +213,17 @@ void scanstate_reset(scanstate *ss);
  * If there's no data in the buffer but we're not at eof, then we need
  * to execute a read to see if there's more data available.  If so, we're
  * not finished.  Otherwise, we're all done.
+ *
+ * Potential problem: this routine might call read, and if read returns
+ * an error token, you'll miss it.  So, only call this routine when
+ * you're sure you're at EOF anyway.  To find out if you're at EOF
+ * without missing the errors, just call scan_token() and see if it
+ * returns 0.
+ *
+ * TODO: should this routine be removed entirely?
  */
 
-#define scan_finished(ss) \
+#define scan_is_finished(ss) \
     (((ss)->cursor < (ss)->limit) ? 0 : \
 		 ((ss)->at_eof || ((*(ss)->read)(ss) <= 0)) \
     )
@@ -217,7 +232,6 @@ void scanstate_reset(scanstate *ss);
 /** Fetches the next token in the stream from the scanner.
  */
 
-#define scan_token(ss) ((*((ss)->state))(ss))
 #define scan_next_token(ss) ((*((ss)->state))(ss))
 
 
@@ -288,7 +302,10 @@ void scanstate_reset(scanstate *ss);
 #define scan_pushback(ss) ((ss)->cursor = (ss)->token)
 
 
-/** Sets the current line number in the scanner to the given value.
+/**
+ * Sets the current line number in the scanner to the given value.
+ * I think most people will just manipulate ss->line directly.
+ * TODO: get rid of this macro?
  */
 
 #define scan_set_line(ss,n) (ss->line=(n));
@@ -301,8 +318,9 @@ void scanstate_reset(scanstate *ss);
 
 
 /**
- * Prepares the scanner to scan a new token.
- * This should be called at the beginning of every scanproc.
+ * Scanners only!  Prepares the scanner to scan a new token.
+ * This should be called at the beginning of every scanproc
+ * and nowhere else.
  */
 
 #define scanner_enter(ss) ((ss)->token = (ss)->cursor)

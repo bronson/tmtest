@@ -9,6 +9,21 @@
 #include "compare.h"
 
 
+/**
+ * a tristate that tells whether something
+ *    - matches
+ *    - doesn't match
+ *    - hasn't been checked yet.
+ */
+
+enum matchval {
+    match_inprogress = -2,
+    match_unknown = -1,
+    match_no = 0,
+    match_yes = 1,
+};
+
+
 typedef enum {
 	test_pending=0,			///< still processing config files
 	config_was_aborted,		///< some config file called ABORT
@@ -61,9 +76,9 @@ struct test {
 
 	int expected_exitno;	///< the test's expected exit value.  this is only valid when stderr_match != match_unknown.
 
-    matchval exitno_match;	///< tells whether the expected and actual exit values match.
-    matchval stdout_match;	///< tells whether the expected and actual stdout matches.
-    matchval stderr_match;	///< tells whether the expected and actual stderr matches.
+    enum matchval exitno_match;	///< tells whether the expected and actual exit values match.
+    enum matchval stdout_match;	///< tells whether the expected and actual stdout matches.
+    enum matchval stderr_match;	///< tells whether the expected and actual stderr matches.
 };
 
 

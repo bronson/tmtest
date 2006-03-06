@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
+#include <assert.h>
 
 #include "re2c/read-fd.h"
 
@@ -158,7 +159,7 @@ void scan_status_file(struct test *test)
     // it means that we attempted to start the test.  If not,
     // then the test bailed early.
     do {
-        tok = scan_token(&ss);
+        tok = scan_next_token(&ss);
 
 		// look for errors...
         if(tok < 0) {
@@ -234,7 +235,7 @@ void scan_status_file(struct test *test)
 				fprintf(stderr, "Unknown token (%d) on line %d of the status file: '%.*s'\n",
 						tok, ss.line, token_length(&ss)-1, token_start(&ss));
 		}
-    } while(!scan_finished(&ss));
+    } while(!scan_is_finished(&ss));
 
 	if(lastfile_good) {
 		test->last_file_processed = strdup(lastfile);
@@ -289,7 +290,7 @@ void test_command_copy(struct test *test, FILE *fp)
 
     do {
         oldline = test->testfile.line;
-        int tokno = scan_token(&test->testfile);
+        int tokno = scan_next_token(&test->testfile);
         if(tokno < 0) {
             fprintf(stderr, "Error %d pulling status tokens: %s\n", 
                     tokno, strerror(errno));
@@ -323,7 +324,7 @@ void test_command_copy(struct test *test, FILE *fp)
             // print the unmodified data to the command script.
             fwrite(token_start(&test->testfile), token_length(&test->testfile), 1, fp);
         }
-    } while(!scan_finished(&test->testfile));
+    } while(!scan_is_finished(&test->testfile));
 
     rewrite_command_section(test, 0, NULL, 0);
 }
@@ -335,11 +336,9 @@ void test_command_copy(struct test *test, FILE *fp)
  * it up.
  */
 
-void compare_section_start(scanstate *cmpscan, int fd, matchval *mv,
-		const char *filename, const char *sectionname, int nonl)
+void compare_section_start(scanstate *cmpscan, int fd,
+		const char *filename, const char *sectionname)
 {
-    assert(!compare_in_progress(cmpscan));
-
     // rewind the file
     if(lseek(fd, 0, SEEK_SET) < 0) {
         fprintf(stderr, "read_file lseek for status file: %s\n", strerror(errno));
@@ -348,7 +347,7 @@ void compare_section_start(scanstate *cmpscan, int fd, matchval *mv,
 
     scanstate_reset(cmpscan);
     readfd_attach(cmpscan, fd);
-	compare_attach(cmpscan, mv, nonl);
+	compare_attach(cmpscan);
 
     // we may want to check the token to see if there are any
     // special requests (like detabbing).
@@ -502,6 +501,13 @@ int start_output_section_argproc(int i, const char *cp, const char *ce,
 }
 
 
+// store the state we need directly in the cmpscan structure.
+#define cmpscan_state             (*(int*)&(cmpscan)->userref)
+#define cmpscan_suppress_newline  (*(int*)&(cmpscan)->userproc)
+	///< 0 for normal processing, 1 if a newline should be suppressed
+	///  from the expected output (so it can match actual).
+
+
 /**
  * Called when we're at the start of a STDOUT or STDERR section.
  * Sets the cmpscanner up to compare the section.
@@ -509,7 +515,7 @@ int start_output_section_argproc(int i, const char *cp, const char *ce,
  */
 
 int start_output_section(struct test *test, const char *tok,
-        int toklen, scanstate *cmpscan, int fd, matchval *val,
+        int toklen, scanstate *cmpscan, int fd, enum matchval val,
         const char *secname)
 {
     int suppress_trailing_newline = 0;
@@ -519,7 +525,7 @@ int start_output_section(struct test *test, const char *tok,
             start_output_section_argproc, 
             (void*)&suppress_trailing_newline);
 
-    if(*val != match_unknown) {
+    if(val != match_unknown) {
         // we've already obtained a value for this section!
         fprintf(stderr, "%s line %d Error: duplicate %s "
                 "section.  Ignored.\n", get_testfile_name(test),
@@ -527,8 +533,12 @@ int start_output_section(struct test *test, const char *tok,
         return 0;
     }
 
-    compare_section_start(cmpscan, fd, val,
-        get_testfile_name(test), secname, suppress_trailing_newline);
+	scanstate_reset(cmpscan);
+    compare_section_start(cmpscan, fd,
+        get_testfile_name(test), secname);
+
+	// store the newline flag in the cmpscan structure
+	cmpscan_suppress_newline = suppress_trailing_newline;
 
     return 1;
 }
@@ -551,17 +561,60 @@ void warn_section_newline(struct test *test, const char *name)
 /**
  * Finishes comparing a section.
  * see start_output_section().
+ *
+ * When should we warn?
+ * - If the actual stdout didn't end with a \n but the exptected stdout
+ *   said it would.  Actual is ss, expected is ptr.  So that means
+ *   compare_ptr_has_extra_nl is true AND suppress_trailing_newline
+ *   is false.
+ *
+ * Holy cats.  The -n option has made this routine really complex!
  */
 
-void end_output_section(struct test *test, scanstate *cmpscan,
+enum matchval end_output_section(struct test *test, scanstate *cmpscan,
         const char *name)
 {
-    int warn_nl = 0;
+	compare_result cmp = compare_check_newlines(cmpscan,0,0);
+	int suppress_trailing_newline = cmpscan_suppress_newline;
 
-    compare_end(cmpscan, &warn_nl);
-    if(warn_nl) {
-		warn_section_newline(test, name);
-    }
+	if(cmp == cmp_ptr_has_extra_nl) {
+		// actual is missing a single newline as compared to expected.
+
+		if(!suppress_trailing_newline) {
+			// user hasn't marked section needing suppression so warn.
+			warn_section_newline(test, name);
+			return match_no;
+		}
+
+		// it's met all the requirements.  We have a match.
+		return match_yes;
+	}
+
+	if(cmp == cmp_ptr_has_more_nls && suppress_trailing_newline) {
+		fprintf(stderr,
+			"WARNING: %s is marked -n but it ends with multiple newlines!\n"
+			"    Please remove all but one newline from %s around line %d.\n",
+			name, get_testfile_name(test), test->testfile.line);
+		return match_no;
+	}
+
+	if(cmp == cmp_full_match) {
+		if(suppress_trailing_newline) {
+			if(cmpscan->line == 0) {
+				// don't want to print the warning if it's an empty section
+				// because, while it's weird, it's technically correct.
+				return match_yes;
+			}
+
+			// section was marked -n but a newline was present.  No match.
+			return match_no;
+		}
+
+		// full match in a normal section (not marked -n)
+		return match_yes;
+	}
+
+	return match_no;
 }
 
 
@@ -572,15 +625,11 @@ void end_output_section(struct test *test, scanstate *cmpscan,
  * The refcon needs to be an allocated scanner.  It need not be
  * attached to anything -- this routine will take care of attaching
  * and detaching it as needed.
- *
  */
 
 void parse_section_compare(struct test *test, int sec,
         const char *datap, int len, void *refcon)
 {
-    #define get_cur_state(ss)    ((int)(ss)->userref)
-    #define set_cur_state(ss,x)  ((ss)->userref=(void*)(x))
-
     // cmpscan is the scanner used to perform the diff.
     scanstate *cmpscan = refcon;
 
@@ -589,41 +638,41 @@ void parse_section_compare(struct test *test, int sec,
 
     // make sure we're not fed an illegal token.
     assert(is_section_token(newsec) || sec == 0);
+
     // make sure we're not starting from an illegal state.
-    assert(is_section_token(get_cur_state(cmpscan)) ||
-            get_cur_state(cmpscan) == 0);
+    assert(is_section_token(cmpscan_state) || cmpscan_state == 0);
 
     if(EX_ISNEW(sec) || sec == 0) {
         // ensure previoius section is finished
-        switch(get_cur_state(cmpscan)) {
+        switch(cmpscan_state) {
             case exSTDOUT:
-                end_output_section(test, cmpscan, "STDOUT");
-                break;
+			  test->stdout_match = end_output_section(test, cmpscan, "STDOUT");
+              break;
             case exSTDERR:
-                end_output_section(test, cmpscan, "STDERR");
-                break;
+			  test->stderr_match = end_output_section(test, cmpscan, "STDERR");
+              break;
             default:
                 ;
         }
 
         // then fire up the new section
-        set_cur_state(cmpscan, newsec);
+        cmpscan_state = newsec;
         switch(newsec) {
             case 0:
                 // don't start a new section if eof.
                 break;
             case exSTDOUT:
                 if(!start_output_section(test, datap, len, cmpscan,
-                        test->outfd, &test->stdout_match, "STDOUT"))
-                {
-                    set_cur_state(cmpscan, 0);
+                        test->outfd, test->stdout_match, "STDOUT")) {
+					// ignore the rest of this section
+                    cmpscan_state = 0;
                 }
                 break;
             case exSTDERR:
                 if(!start_output_section(test, datap, len, cmpscan,
-                        test->errfd, &test->stderr_match, "STDERR"))
-                {
-                    set_cur_state(cmpscan, 0);
+                        test->errfd, test->stderr_match, "STDERR")) {
+					// ignore the rest of this section
+                    cmpscan_state = 0;
                 }
                 break;
             case exRESULT:
@@ -632,15 +681,15 @@ void parse_section_compare(struct test *test, int sec,
         }
     } else {
         // we're continuing an already started section.
-        assert(get_cur_state(cmpscan) == newsec || get_cur_state(cmpscan) == 0);
+        assert(cmpscan_state == newsec || cmpscan_state == 0);
 
-        switch(get_cur_state(cmpscan)) {
+        switch(cmpscan_state) {
             case 0:
                 // do nothing
                 break;
             case exSTDOUT:
             case exSTDERR:
-                compare_continue(cmpscan, datap, len);
+				compare_continue(cmpscan, datap, len);
                 break;
             case exRESULT:
 				if(contains_nws(datap, len)) {
@@ -674,12 +723,12 @@ void scan_sections(struct test *test, scanstate *scanner,
     // if the testfile is already at its eof, it means that
     // it didn't have any sections.  therefore, we'll assume
     // defaults for all values.  we're done.
-    if(scan_finished(scanner)) {
+    if(scan_is_finished(scanner)) {
         return;
     }
     
     do {
-        int tokno = scan_token(scanner);
+        int tokno = scan_next_token(scanner);
         if(tokno < 0) {
             fprintf(stderr, "Error %d pulling status tokens: %s\n", 
                     tokno, strerror(errno));
@@ -691,7 +740,7 @@ void scan_sections(struct test *test, scanstate *scanner,
         (*parseproc)(test, tokno, token_start(scanner),
                 token_length(scanner), refcon);
 
-    } while(!scan_finished(scanner));
+    } while(!scan_is_finished(scanner));
 
     // give the parser an eof token so it can finalize things.
     (*parseproc)(test, 0, NULL, 0, refcon);

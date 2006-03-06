@@ -2,40 +2,29 @@
  * Scott Bronson
  * 31 Dec 2004
  *
- * File comparison prototypes.
- *
  * See compare.c for license.
  */
 
 #include "re2c/scan.h"
 
 
-
 /**
- * a tristate that tells whether something
- *    - matches
- *    - doesn't match
- *    - hasn't been checked yet.
+ * Unless you get a return value of cmp_full_match, the streams
+ * were not exactly equal.
  */
 
 typedef enum {
-    match_inprogress = -2,
-    match_unknown = -1,
-    match_no = 0,
-    match_yes = 1,
-} matchval;
+	cmp_in_progress = -1,	///< internal state; will never be returned.
+	cmp_full_match = 0,		///< data doesn't match at all
+	cmp_no_match,			///< data matches exactly
+	cmp_ptr_has_extra_nl,	///< the scanner has an extra newline
+	cmp_ptr_has_more_nls,	///< ok, this is a problem...  the app needs to know if the ss ended in a newline so it can suppress the -n warning.  So, cmp_ss_has_extra_nl means that ss didn't end in a nl, ptr did, but other than that they were identical.  cm_ptr_has_more_nls means that ss did end in a nl, ptr did too, and ptr and ss were exactly the same except ptr has one more newline.  In summary: both of these mean that ptr has one more nl than ss.  It's just whether ss ended with a newline (cmp_ptr_has_more_nls) or not (cmp_ptr_has_extra_nl).
+	cmp_ss_has_extra_nl,	///< the data passed to continue has ex. CR
+	cmp_ss_has_more_data	///< ptr and ss matched up to now
+} compare_result;
 
 
-
-
-/** Returns zero if the compare has stopped (i.e. the files differed),
- *  one if we're still unsure.
- */
-
-#define compare_in_progress(ss) ((ss)->scanref)
-
-
-void compare_attach(scanstate *ss, matchval *mv, int nonl);
-void compare_continue(scanstate *ss, const char *ptr, int len);
-void compare_end(scanstate *cmp, int *warn_nl);
-
+void compare_attach(scanstate *ss);
+int compare_continue(scanstate *ss, const char *ptr, size_t len);
+compare_result compare_check(scanstate *ss, const char *ptr, size_t len);
+compare_result compare_check_newlines(scanstate *ss, const char *ptr, size_t len);

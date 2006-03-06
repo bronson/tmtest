@@ -32,20 +32,25 @@ COPTS=-g -Wall -Werror
 CSRC+=curdir.c qscandir.c pathconv.c
 CHDR+=curdir.h qscandir.h pathconv.h
 # scanner files
-CSRC+=re2c/read.c re2c/read-fd.c re2c/scan.c
-CHDR+=re2c/read.h re2c/read-fd.h re2c/scan.h
+CSRC+=re2c/read.c re2c/read-fd.c re2c/read-mem.c re2c/read-rand.c \
+	re2c/scan.c re2c/scan-dyn.c
+CHDR+=re2c/read.h re2c/read-fd.h re2c/read-mem.h re2c/read-rand.h \
+	re2c/scan.h re2c/scan-dyn.h
 # program files:
-CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c
+CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c template.c
 CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h
+# unit test files
+CSRC+=cutest.c
+CHDR+=cutest.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
 
 
-tmtest: $(CSRC) $(CHDR) template.c Makefile $(INTERMED)
-	$(CC) $(COPTS) $(CSRC) -lpcre template.c -o tmtest "-DVERSION=$(VERSION)"
+tmtest: $(CSRC) $(CHDR) $(INTERMED)
+	$(CC) $(COPTS) $(CSRC) -o tmtest -DVERSION="$(VERSION)"
 
-template.c: template.sh cstrfy Makefile
+template.c: template.sh cstrfy
 	./cstrfy -n exec_template < template.sh > template.c
 
 %.c: %.re
@@ -57,10 +62,7 @@ template.c: template.sh cstrfy Makefile
 
 .PHONY: test
 test: tmtest
-	./tmtest test
-
-run: tmtest
-	./tmtest
+	./tmtest --run-tests
 
 install: tmtest
 	install -d -m755 $(bindir)
@@ -72,7 +74,7 @@ endif
 ifeq ($(wildcard $(conf_dst)),$(conf_dst))
 	# configuration already exists, don't overwrite it.
 	@echo "---> Not installing new config file over '$(conf_dst).'"
-	@echo "---> Please merge changes in 'sample.conf' by hand or run 'make uninstall' first."
+	@echo "---> Please merge changes in 'sample.conf' by hand."
 else
 	# global configuration file doesn't exist so install it
 	install sample.conf $(conf_dst)
@@ -93,7 +95,6 @@ endif
 clean:
 	rm -f tmtest template.c tags
 
-# Ensure re2c is installed to regenerate the scanners before making distclean
 distclean: clean
 	rm -f stscan.[co]
 

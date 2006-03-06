@@ -1,4 +1,5 @@
 0.96:
+- Get rid of all scan_is_finished() calls?
 - Make tmtest only execute config files owned by either the user or root.
   Print a big fat warning when the config file is skipped.  This prevents
   a malicious user from putting a config file in /tmp and having it
@@ -41,6 +42,7 @@
 - Add some unit tests.  http://kooditakomo.cs.tut.fi/projects/gunit/
   http://pvanhoof.be/blog/index.php/2006/03/03/tinymail-unit-testing-and-creating-messages     Actually, this looks better: http://cutest.sourceforge.net/
   Potential units: curdir, path normalization
+- Get rid of -g, add -O2.  Make it easy to set these for compilation.
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
@@ -75,6 +77,8 @@
   can find.  It prints nothing if a test succeeds, or the fail notice
   if it fails.  Runs until cancelled with ^C.  Let it run overnight and
   see if any of your tests have intermittent failures.
+- Reomve as many TODOs as possible.
+- Make zutest take the names of tests to run on stdin?
 
 1.0!
 
