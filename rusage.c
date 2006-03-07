@@ -54,7 +54,7 @@ void print_rusage(struct timeval *start_tv, struct timeval *stop_tv)
 			(int)(100.0*schild/total+0.5));
 			*/
 
-	printf("%.2fs (%02d%% user, %02d%% sys)",
+	printf("%.2fs (%d%% user, %d%% sys)",
 			total,
 			(int)(100.0*uchild/total+0.5),
 			(int)(100.0*schild/total+0.5));
