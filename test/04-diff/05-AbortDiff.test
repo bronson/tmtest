@@ -5,7 +5,7 @@
 
 
 
-tmtest --diff - <<-EOL | FIX_DIFF
+$tmtest --diff - <<-EOL | FIX_DIFF
 	ABORT
 	echo "right output"
 	STDOUT:

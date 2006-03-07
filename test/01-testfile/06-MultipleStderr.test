@@ -1,7 +1,7 @@
 # Ensure we emit a warning if the user includes multiple stderr sections.
 # This test succeeds because the second stderr section is ignored.
 
-tmtest $args -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy
 	STDOUT :
 	Howdy

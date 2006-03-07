@@ -38,7 +38,7 @@ cat > sub/test <<-EOL
 	skip
 EOL
 
-tmtest $CFG -q mid.test sub/sub.test ../sup.test sub . ..
+$tmtest -q mid.test sub/sub.test ../sup.test sub . ..
 
 # clean up after ourselves
 rm -rf ../sup.test ../mid

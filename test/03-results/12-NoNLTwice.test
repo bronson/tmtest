@@ -11,7 +11,7 @@
 
 DISABLED
 
-head -c -1 <<-EOL | tmtest -d -q -
+head -c -1 <<-EOL | $tmtest -d -q -
     echo -n Howdy
     STDOUT:
     Howdy

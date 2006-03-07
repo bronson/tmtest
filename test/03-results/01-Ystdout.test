@@ -1,4 +1,4 @@
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy
 	STDOUT :
 	Howdy

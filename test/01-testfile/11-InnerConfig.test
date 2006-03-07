@@ -2,7 +2,7 @@
 # test directory.  (seems like there's got to be a better way of doing
 # this but this works for now).
 
-tmtest $args -q - <<-'EOL'
+$tmtest $args -q - <<-'EOL'
 	if [ $OUTER_CONFIG_FILE ]; then
 		# this is what happens when inner tests don't have $args
 		ABORT "inner test read outer config file!"

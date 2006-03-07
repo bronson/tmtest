@@ -1,11 +1,14 @@
 # Verifies that we correctly report unknown short switches
 
-tmtest $args --huh - <<-EOL
+# TODO: this sends stderr to stdout for rewriting.  This sucks
+# and needs to be fixed.  The exit code is also lost.
+
+
+$tmtest --huh - <<-EOL 2>&1 | REPLACE "$tmtest_file" tmtest
 	echo Howdy
 	STDOUT:
 	Howdy
 EOL
 
-RESULT: 1
-STDERR:
+STDOUT:
 tmtest: unrecognized option `--huh'

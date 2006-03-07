@@ -11,7 +11,7 @@ MKFILE file "$dir/-" <<-EOL
 	Howdy pardner.
 EOL
 
-tmtest -q --ignore-extension "$file" | REPLACE "$dir" /tmp/DIR
+$tmtest -q --ignore-extension "$file" | REPLACE "$dir" /tmp/DIR
 
 
 STDOUT:

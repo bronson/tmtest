@@ -1,7 +1,7 @@
 # Ensures that a disabled test doesn't run.
 
 
-tmtest $CFG -q - <<-EOL
+$tmtest -q - <<-EOL
 	DISABLED
 	echo it ran
 	STDOUT:

@@ -6,7 +6,7 @@
 dn=`mktemp -d -t`
 
 cd "$TESTDIR"
-tmtest $cfg -q - <<-EOL
+$tmtest $cfg -q - <<-EOL
 
 	# normally we run tests in pedantic mode, where any single error
 	# will cause the test to bail and return a nonzero result code.

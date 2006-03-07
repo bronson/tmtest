@@ -5,7 +5,7 @@
 # be expanded to be the pid of the parent, not the pid of the child process
 # that we want to kill!
 
-tmtest $CFG -q - <<'EOL'
+$tmtest -q - <<'EOL'
     kill -9 $$
 EOL
 

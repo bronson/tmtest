@@ -13,7 +13,7 @@ MKFILE tt "$do/di/tt.test" <<-'EOL'
 EOL
 
 cd "$do"
-tmtest $config -o -q "di/tt.test" <<-EOL | REPLACE $do /tmp/DIR | INDENT
+$tmtest $config -o -q "di/tt.test" <<-EOL | REPLACE $do /tmp/DIR | INDENT
 
 STDOUT:
     echo MYDIR:    "$MYDIR"

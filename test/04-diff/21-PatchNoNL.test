@@ -20,7 +20,7 @@ EOL
 # Ignore stderr because we want to ignore the warning that tmtest prints
 # about the sections not having matching trailing newlines.
 
-tmtest --ignore-extension -d "$tt" 2>/dev/null | (cd `dirname "$tt"` && patch | FIX_PATCH)
+$tmtest --ignore-extension -d "$tt" 2>/dev/null | (cd `dirname "$tt"` && patch | FIX_PATCH)
 echo "And the patched file:"
 INDENT < "$tt"
 echo "<<DONE>>"

@@ -10,7 +10,7 @@
 # less than BUFSIZ and the results always had to end in a newline).
 
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy
 	STDOUT: -n
 	Howdy

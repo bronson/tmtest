@@ -11,12 +11,6 @@
   That's probably the most agreeable.
   We will not read either config or test files from a world-writable directory.
   Ever.
-- Put $args into EVERY test we run.  NO!  This is not as useful.
-  Get rid of $args and turn every invocation of tmtest into $tmtest.
-  This allows us to run the entire suite under i.e. "valgrind tmtest"
-  - Figure out how to ensure that we run the binary in the project tree
-    when testing rather than the globally installed one.  What happened?
-	(this is how -- specify the executable and args using $tmtest).
 - Add --diff and --shell to change the executables that get launched.
   No, that clutters the arguments up.  Take them from $DIFF and $SHELL.
   No, obviously that's a bad idea.  That prevents people using tcsh
@@ -54,6 +48,11 @@
   unit tests only add 12K or so, where might as well just leave em).
 - If there were failures, should highlight that in the test summary.
 	"%d FAILURES" or somesuch.
+- Well, piping the result of a command to a function destroys the the
+  exit code.  I don't know of any good way around this!  Maybe this
+  is a good argument to have rewriting performed by tmtest itself...
+  I think it is.  So, we can add, "STDOUT: --pipe 'sed -e /.../'"
+  or something.  I don't like that.  Ick. it all sucks.
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
@@ -142,6 +141,11 @@ No longer a problem when we dump pcrs:
   DISABLED DISABLED:  Hopefully that will clean up 05-08-Disable/Abort.test
 - Add a timeout that will terminate stalled tests.  You can set the timeout
   in the config file or the test itself.
+- I don't like that $tmtest expands to "$tmtest --config=...".  That's
+  not what one would normally expect.  However, since it also potentially
+  expands to "valgrind tmtest --config..." it's not THAT bad -- it's
+  never just a filename.  Maybe change $tmtest to $tmtest_cmd?  In every
+  test... arg.  or something!
 
 maybe never:
 - Add STDOUT: trimws and STDERR: trimws - to trim whitespace from

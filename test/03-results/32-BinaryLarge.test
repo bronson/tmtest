@@ -25,7 +25,7 @@ for i in `seq 1 20`; do
 done >> "$tt"
 
 # and run the test
-tmtest --ignore-extension -q "$tt" | REPLACE "$tt" /tmp/FILE
+$tmtest --ignore-extension -q "$tt" | REPLACE "$tt" /tmp/FILE
 
 STDOUT:
 ok   /tmp/FILE 

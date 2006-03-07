@@ -25,7 +25,7 @@ EOL
 
 
 cd "$di"
-tmtest $args --dump-script ".." | REPLACE "$do" /tmp/DIR | FIX_SCRIPT
+$tmtest --dump-script ".." | REPLACE "$do" /tmp/DIR | FIX_SCRIPT
 
 
 STDOUT:

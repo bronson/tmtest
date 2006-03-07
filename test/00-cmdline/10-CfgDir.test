@@ -1,4 +1,4 @@
-tmtest $args --config=/tmp - <<-EOL
+$tmtest --config=/tmp - <<-EOL
 	echo Test!
 EOL
 

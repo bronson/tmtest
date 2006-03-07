@@ -8,7 +8,7 @@
 # printed after the "ERROR Test was aborted".  TODO.
 
 
-tmtest -d - <<-EOL | FIX_DIFF
+$tmtest -d - <<-EOL | FIX_DIFF
 	ABORT: "   "
 	echo "right output"
 	STDOUT:

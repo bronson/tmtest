@@ -8,7 +8,7 @@ MKFILE tt <<-'EOL'
 	echo TESTFILE: "$TESTFILE"
 EOL
 
-tmtest $args --ignore-extension -o -q "$tt" <<-EOL | REPLACE "$tt" /tmp/FILE | INDENT
+$tmtest $args --ignore-extension -o -q "$tt" <<-EOL | REPLACE "$tt" /tmp/FILE | INDENT
 
 STDOUT:
     echo MYDIR:    "$MYDIR"

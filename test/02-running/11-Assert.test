@@ -8,7 +8,7 @@
 
 
 cd "$TESTDIR"
-tmtest $CFG -q - <<-EOL | sed -re "s/ on.*line [0-9]+/ on line LL/"
+$tmtest -q - <<-EOL | sed -re "s/ on.*line [0-9]+/ on line LL/"
 	ASSERT -1 -eq 1
 	echo it ran
 	STDOUT:

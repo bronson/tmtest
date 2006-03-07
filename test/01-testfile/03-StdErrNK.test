@@ -5,7 +5,7 @@
 # Same as 02, but works on STDERR not STDOUT.
 
 
-tmtest $args -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo STDERR. 1>&2
 	STDERR:
 	STDERR.

@@ -6,7 +6,7 @@
 # no differences.
 
 
-tmtest -d - <<-EOL
+$tmtest -d - <<-EOL
 	echo "right output"
 	STDOUT:
 	right output

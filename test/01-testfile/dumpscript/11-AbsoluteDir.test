@@ -17,7 +17,7 @@ MKFILE tt2 "$dd/tt.test" <<'EOL'
 	echo "$config"
 EOL
 
-tmtest $args --dump-script "$dd/" | REPLACE "$dd" /tmp/DIR | FIX_SCRIPT
+$tmtest --dump-script "$dd/" | REPLACE "$dd" /tmp/DIR | FIX_SCRIPT
 
 STDOUT:
 	

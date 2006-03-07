@@ -1,7 +1,7 @@
 # Ensures that INDENT works.  Also tests that we can exec to a process
 # group to cause all further output from the script to be indented.
 
-tmtest $CFG -o - <<-EOL | INDENT "| "
+$tmtest -o - <<-EOL | INDENT "| "
 	# this technique doesn't work.  Fixes scheduled for 0.98 should
 	# fix it.  Put it into its own test when that happens.
 	# exec > >(INDENT)

@@ -2,7 +2,7 @@
 # Since the test is only expecting a single newline, and only
 # one will be suppressed, this test will fail.
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy 1>&2
 	STDERR: -n
 	Howdy

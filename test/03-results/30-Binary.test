@@ -14,7 +14,7 @@ EOL
 echo -e "\\0\\0\\0\\0" >> "$tt"
 
 # and run the test
-tmtest --ignore-extension -q "$tt" | REPLACE "$tt" /tmp/FILE
+$tmtest --ignore-extension -q "$tt" | REPLACE "$tt" /tmp/FILE
 
 STDOUT:
 ok   /tmp/FILE 

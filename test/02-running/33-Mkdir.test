@@ -4,7 +4,7 @@
 dn=`mktemp -d -t`
 
 cd "$TESTDIR"
-tmtest $cfg -q - <<-EOL
+$tmtest $cfg -q - <<-EOL
 	MKDIR sdn '$dn'
 
 	echo start

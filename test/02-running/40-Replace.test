@@ -2,7 +2,7 @@
 # regular expression metachars are correctly interpreted as
 # regular characters.
 
-tmtest $CFG -o - <<'EOL' | INDENT
+$tmtest -o - <<'EOL' | INDENT
 	echo $'Abc  : '   $'abc'       | REPLACE abc def
 	echo $'A\'b  : '  $'a\'b'      | REPLACE $'a\'b' def
 	echo $'A\"b  : '  $'a\"b'      | REPLACE $'a\"b' def

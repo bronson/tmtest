@@ -6,7 +6,7 @@
 
 
 
-tmtest -d - <<-EOL | FIX_DIFF
+$tmtest -d - <<-EOL | FIX_DIFF
 	DISABLED This is the reason
 	echo "right output"
 	STDOUT:

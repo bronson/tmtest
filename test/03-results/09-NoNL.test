@@ -9,7 +9,7 @@
 # (back when we were parsing tests using re2c, lines needed to be
 # less than BUFSIZ and the results always had to end in a newline).
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo -n Howdy
 	STDOUT: -n
 	Howdy

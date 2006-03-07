@@ -4,7 +4,7 @@
 # Verifies what happens when a test is aborted and gives a reason.
 
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	ABORT: This is the reason
 	echo "right output"
 	STDOUT:

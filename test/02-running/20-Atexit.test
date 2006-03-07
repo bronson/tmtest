@@ -1,7 +1,7 @@
 # Ensures that the atexit function does what it is supposed to.
 
 cd "$TESTDIR"
-tmtest $CFG -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo begin
 	ATEXIT echo 1
 	ATEXIT echo 2

@@ -8,7 +8,7 @@
 
 # See also 18-NoNLWarnOut.test and 04-diff/22-PatchNoNL2.test
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo -n Howdy
 	STDOUT:
 	Howdy

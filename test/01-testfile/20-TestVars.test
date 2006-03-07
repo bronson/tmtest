@@ -4,7 +4,7 @@
 # MYDIR=/tmp, MYFILE="(STDIN)", TESTDIR=/tmp, TESTFILE="(STDIN)"
 
 
-tmtest $args -o -q - <<-'EOL' | INDENT
+$tmtest $args -o -q - <<-'EOL' | INDENT
 	echo MYDIR:    "$MYDIR"
 	echo MYFILE:   "$MYFILE"
 	echo TESTDIR:  "$TESTDIR"

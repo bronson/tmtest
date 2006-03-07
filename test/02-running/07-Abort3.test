@@ -4,7 +4,7 @@
 # Verifies what happens when a test is aborted but output is selected.
 
 
-tmtest -q -o - <<-EOL
+$tmtest -q -o - <<-EOL
 	ABORT This is the reason
 	echo "right output"
 	STDOUT:

@@ -9,7 +9,7 @@
 # less than BUFSIZ and the results always had to end in a newline).
 
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo -n Howdy 1>&2
 	STDERR: --no-trailing-newline
 	Howdy

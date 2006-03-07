@@ -1,6 +1,6 @@
 # What happens when we output an empty test file?
 # Should just produce nothing.
 
-tmtest $CFG -o - <<-EOL
+$tmtest -o - <<-EOL
 EOL
 

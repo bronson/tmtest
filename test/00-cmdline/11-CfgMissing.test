@@ -9,7 +9,7 @@ SANIFY ()
 	sed -e 's/Could not locate .*zzyzx: No such file or directory/Could not locate ...zzyzx: No such file or directory/'
 }
 
-tmtest $args --config="$MYDIR/zzyzx" - <<-EOL 2>&1 | SANIFY
+$tmtest --config="$MYDIR/zzyzx" - <<-EOL 2>&1 | SANIFY
 	echo Howdy
 	STDOUT:
 	Howdy

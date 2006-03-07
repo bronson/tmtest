@@ -11,7 +11,7 @@ MKFILE file "$dir/-.test" <<-EOL
 	Howdy pardner.
 EOL
 
-tmtest -q "$file" | REPLACE "$dir" /tmp/DIR
+$tmtest -q "$file" | REPLACE "$dir" /tmp/DIR
 
 
 STDOUT:

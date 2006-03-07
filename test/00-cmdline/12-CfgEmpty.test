@@ -1,4 +1,4 @@
-tmtest $args --config= - <<-EOL
+$tmtest --config= - <<-EOL
 	echo Howdy
 	STDOUT:
 	Howdy

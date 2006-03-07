@@ -3,7 +3,7 @@
 #
 # Ensures that we recognize when the stdout clause contains garbage.
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
     echo crapola
     echo crapola
     echo crapola

@@ -8,7 +8,7 @@
 
 # See also 14-NoNLWarn.test and 04-diff/18-NeedNLWarn.test
 
-tmtest -o -q - <<-EOL | INDENT
+$tmtest -o -q - <<-EOL | INDENT
 	echo -n "right output"
 	echo -n "stderr text" 1>&2
 	STDOUT:

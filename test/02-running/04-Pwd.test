@@ -5,7 +5,7 @@
 # TMPFILE environment variable, or if TMPFILE='/tmp'.  If you have
 # some other value in TMPFILE, you will have to modify this test.
 
-tmtest $CFG -q - <<-EOL
+$tmtest -q - <<-EOL
 	pwd
 	STDOUT:
 	/tmp

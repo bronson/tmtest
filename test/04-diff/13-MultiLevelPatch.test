@@ -52,7 +52,7 @@ EOL
 
 cd two
 
-tmtest --ignore-extension -d .. | patch -p0 | FIX_PATCH
+$tmtest --ignore-extension -d .. | patch -p0 | FIX_PATCH
 echo
 INDENT "\t" < ../t.test
 echo

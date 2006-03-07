@@ -1,11 +1,13 @@
 # Verifies that we correctly report unknown short switches
 
-tmtest $args -z - <<-EOL
+# TODO: we pipe stderr to stdout for rewriting.  that needs to be
+# changed during 0.98.  Also, the exit code is lost -- tmtest returns 1.
+
+$tmtest -z - <<-EOL 2>&1 | REPLACE "$tmtest_file" tmtest
 	echo Howdy
 	STDOUT:
 	Howdy
 EOL
 
-RESULT: 1
-STDERR:
+STDOUT:
 tmtest: invalid option -- z

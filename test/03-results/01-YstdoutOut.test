@@ -1,6 +1,6 @@
 # Ensures an empty stderr section won't affect the test results.
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy
 	STDOUT :
 	Howdy

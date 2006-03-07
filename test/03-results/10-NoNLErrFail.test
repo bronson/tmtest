@@ -6,7 +6,7 @@
 #
 # Also see: 09-NoNL.test
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy 1>&2
 	STDERR: -n
 	Howdy

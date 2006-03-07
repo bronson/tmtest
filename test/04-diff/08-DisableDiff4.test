@@ -8,7 +8,7 @@
 # printed after the "ERROR Test is disabled".  TODO.
 
 
-tmtest -d - <<-EOL | FIX_DIFF
+$tmtest -d - <<-EOL | FIX_DIFF
 	DISABLED: "   "
 	echo "right output"
 	STDOUT:

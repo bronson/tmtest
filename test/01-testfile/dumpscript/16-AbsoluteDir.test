@@ -28,7 +28,7 @@ MKFILE tt2 "$di/tt.test" <<'EOL'
 EOL
 
 
-tmtest $args --dump-script "$do/di//../di" | REPLACE "$do" DIR | FIX_SCRIPT
+$tmtest --dump-script "$do/di//../di" | REPLACE "$do" DIR | FIX_SCRIPT
 
 
 STDOUT:

@@ -4,7 +4,7 @@
 # no stderr, and an exit code of 0.
 
 
-tmtest $CFG -q - <<-EOL
+$tmtest -q - <<-EOL
 EOL
 
 

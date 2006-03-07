@@ -20,7 +20,7 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-tmtest $CFG -q | REPLACE "$dir" /tmp/DIR
+$tmtest -q | REPLACE "$dir" /tmp/DIR
 rm tmtest.conf t1.test t2.test
 
 

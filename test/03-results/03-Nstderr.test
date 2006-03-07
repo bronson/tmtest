@@ -4,7 +4,7 @@
 # there's an extra space after the Howdy in the stderr.
 
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy 1>&2
 	STDERR:
 	Howdy 

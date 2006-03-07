@@ -5,7 +5,7 @@
 # The --config directive disables reading config files from the directory
 # containing the named config file and all its parent directories.
 
-tmtest $args --dump-script - <<-EOL | FIX_SCRIPT
+$tmtest --dump-script - <<-EOL | FIX_SCRIPT
 	this test is never run but we do need to specify a file so tmtest
 	knows what config files to include.
 EOL

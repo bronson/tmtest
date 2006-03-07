@@ -1,7 +1,7 @@
 # Ensure we don't leak fds to the running test.
 # Ideally, there would be NO open FDs.  This will be the case for tmtest 0.98.
 
-tmtest -o $CFG -q - <<-'EOL' | INDENT
+$tmtest -o -q - <<-'EOL' | INDENT
 	for i in `seq 3 255`; do
 		exec 2>/dev/null
 		echo -n >&$i && echo open: $i

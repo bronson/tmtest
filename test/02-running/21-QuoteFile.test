@@ -16,7 +16,7 @@ cat > '12".test' <<-EOs
 	hi
 EOs
 
-tmtest $CFG -q | REPLACE "$dir" /tmp/DIR
+$tmtest -q | REPLACE "$dir" /tmp/DIR
 rm "vl'hurg.test" '12".test'
 
 

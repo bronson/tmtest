@@ -29,7 +29,7 @@ EOL
 
 
 cd `dirname "$do"`
-tmtest $args --dump-script "$(basename $do)/di" | REPLACE "$(basename $do)" DIR | FIX_SCRIPT
+$tmtest --dump-script "$(basename $do)/di" | REPLACE "$(basename $do)" DIR | FIX_SCRIPT
 
 
 STDOUT:

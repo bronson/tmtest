@@ -4,7 +4,7 @@
 # Verifies what happens when a diff is aborted and gives a reason.
 
 
-tmtest -d - <<-EOL | FIX_DIFF
+$tmtest -d - <<-EOL | FIX_DIFF
 	ABORT: This is the reason
 	echo "right output"
 	STDOUT:

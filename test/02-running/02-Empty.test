@@ -2,6 +2,6 @@
 
 # Diff should produce no data since nothing differs from the default.
 
-tmtest $CFG -d - <<-EOL
+$tmtest -d - <<-EOL
 EOL
 

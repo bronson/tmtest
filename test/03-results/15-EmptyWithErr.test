@@ -1,7 +1,7 @@
 # A blank test with an empty stderr clause should succeed because
 # the stdout clause doesn't contain anything -- not even a newline.
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	STDERR:
 EOL
 STDOUT:

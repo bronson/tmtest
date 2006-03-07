@@ -33,7 +33,7 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-tmtest -d 2>&1 | REPLACE "$dir" /tmp/DIR | FIX_DIFF
+$tmtest -d 2>&1 | REPLACE "$dir" /tmp/DIR | FIX_DIFF
 rm tmtest.conf t1.test t2.test
 
 

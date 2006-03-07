@@ -4,7 +4,7 @@
 # there's an extra newline in the expected stdout.
 
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy 1>&2
 	STDERR:
 	Howdy

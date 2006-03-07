@@ -25,7 +25,7 @@ EOL
 
 while [ -f /tmp/s ]; do sleep 1; done
 
-tmtest $args -o "$dd" | INDENT
+$tmtest $args -o "$dd" | INDENT
 
 
 STDOUT:

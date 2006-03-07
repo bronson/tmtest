@@ -4,7 +4,7 @@
 
 
 cd "$TESTDIR"
-tmtest $CFG -q - <<-EOL
+$tmtest -q - <<-EOL
 	MKFILE sfn <<-EOS
 		FileContents
 	EOS

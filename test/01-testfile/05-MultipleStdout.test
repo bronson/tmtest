@@ -1,7 +1,7 @@
 # Ensure we emit a warning if we notice multiple STDOUT sections.
 
 
-tmtest $args -q - <<-EOL
+$tmtest -q - <<-EOL
 	# tmtest will use the empty section which comes first.
 	# Therefore, since the test actually does produce output,
 	# this test is expected to fail.

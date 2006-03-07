@@ -10,7 +10,7 @@ cat > .hidden.test <<-EOL
 	hidden
 EOL
 
-tmtest $CFG -q
+$tmtest -q
 rm .hidden.test
 
 

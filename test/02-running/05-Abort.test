@@ -5,7 +5,7 @@
 
 
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	ABORT
 	echo "right output"
 	STDOUT:

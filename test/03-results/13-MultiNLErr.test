@@ -2,7 +2,7 @@
 # test produces one newline, and the expected results end in two newlines,
 # one of the two newlines will match and the test will succeed.
 
-tmtest -q - <<-EOL
+$tmtest -q - <<-EOL
 	echo Howdy 1>&2
 	STDERR: -n
 	Howdy

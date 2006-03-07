@@ -11,7 +11,7 @@
 # See also the corresponding test in 03-Running/18-NeedNLWarn.test
 
 
-tmtest --diff -q - <<-EOL | FIX_DIFF
+$tmtest --diff -q - <<-EOL | FIX_DIFF
 	echo -n "right output"
 	echo -n "stderr text" 1>&2
 	STDOUT:

@@ -12,7 +12,7 @@
 # buggy and you should probably update them.
 
 
-tmtest -d - <<-EOL | FIX_DIFF
+$tmtest -d - <<-EOL | FIX_DIFF
     echo -n "right output"
     STDOUT:
     right output
