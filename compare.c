@@ -134,30 +134,21 @@ int compare_continue(scanstate *ss, const char *ptr, size_t len)
 
 
 /**
- * Returns true if the streams are both out of data and have matched
- * byte-for-byte up to this point, otherwise returns false.
+ * Returns an appropriate code for how well matched the two streams
+ * are.  Assumes that you're at EOF on the ptr stream.
  */
 
-compare_result compare_check(scanstate *ss, const char *ptr, size_t len)
+compare_result compare_check(scanstate *ss)
 {
-	int ptr_empty = (ptr == NULL || len == 0);
-	int ss_empty = scan_is_finished(ss);
-
-
 	if(STATE != cmp_in_progress) {
 		return STATE;
 	}
 
-	if(ptr_empty && ss_empty) {
-		// both streams are out of data
+	if(scan_is_finished(ss)) {
 		return cmp_full_match;
-	}
-
-	if(ptr_empty && !ss_empty) {
+	} else {
 		return cmp_ss_has_more_data;
 	}
-
-	return cmp_no_match;
 }
 
 
@@ -181,33 +172,19 @@ compare_result compare_check(scanstate *ss, const char *ptr, size_t len)
  * @returns the appropriate value from compare_result.
  */
 
-compare_result compare_check_newlines(scanstate *ss, const char *ptr, size_t len)
+compare_result compare_check_newlines(scanstate *ss)
 {
-	int ptr_empty = (ptr == NULL || len == 0);
-	int ss_empty = scan_is_finished(ss);
-
 	if(STATE != cmp_in_progress) {
 		return STATE;
 	}
 
-	if(ptr_empty && ss_empty) {
-		// both streams are out of data
+	if(scan_is_finished(ss)) {
 		return cmp_full_match;
-	}
-
-	if(!ptr_empty && ss_empty && has_extra_nl(ptr, len)) {
-		return cmp_ptr_has_extra_nl;
-	}
-
-	if(!ss_empty&&ptr_empty&&has_extra_nl(ss->cursor,ss->limit-ss->cursor)) {
+	} else if(has_extra_nl(ss->cursor,ss->limit-ss->cursor)) {
 		return cmp_ss_has_extra_nl;
-	}
-
-	if(ptr_empty && !ss_empty) {
+	} else {
 		return cmp_ss_has_more_data;
 	}
-
-	return cmp_no_match;
 }
 
 
@@ -222,12 +199,12 @@ static void test_empty(cutest *ct)
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
-	AssertEq(compare_check(ss,0,0), cmp_full_match);
+	AssertEq(compare_check(ss), cmp_full_match);
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
 	compare_continue(ss, "", 0);
-	AssertEq(compare_check(ss,0,0), cmp_full_match);
+	AssertEq(compare_check(ss), cmp_full_match);
 }
 
 
@@ -239,7 +216,7 @@ static void test_standard(cutest *ct)
 	compare_attach(ss);
 	compare_continue(ss, "12", 2);
 	compare_continue(ss, "3", 1);
-	AssertEq(compare_check(ss,0,0), cmp_full_match);
+	AssertEq(compare_check(ss), cmp_full_match);
 }
 
 
@@ -260,7 +237,7 @@ static void test_large(cutest *ct)
 
 	// compare_check will never return cmp_full_match because
 	// the random reader will never run out of data.
-	AssertEq(compare_check(ss,0,0), cmp_ss_has_more_data);
+	AssertEq(compare_check(ss), cmp_ss_has_more_data);
 }
 
 
@@ -276,7 +253,7 @@ static compare_result check_newlines(const char *s1, const char *s2)
 {
 	scanstate ssrec, *ss=&ssrec;
 	test_strings(ss, s1, s2);
-	return compare_check_newlines(ss, NULL, 0);
+	return compare_check_newlines(ss);
 }
 
 
@@ -288,7 +265,7 @@ static void test_newlines(cutest *ct)
 	AssertEq(check_newlines("Unix",     "Unix"    ), cmp_full_match);
 
 	AssertEq(check_newlines("Unix\n\n", "Unix\n"  ), cmp_ss_has_extra_nl);
-	AssertEq(check_newlines("Unix\n",   "Unix\n\n"), cmp_ptr_has_extra_nl);
+	AssertEq(check_newlines("Unix\n",   "Unix\n\n"), cmp_ptr_has_more_nls);
 
 	// empty buffers (except for newlines)
 	AssertEq(check_newlines("\n",   ""     ), cmp_ss_has_extra_nl);
@@ -308,18 +285,14 @@ static void test_inc(cutest *ct)
 	compare_continue(ss, "1", 1);
 	compare_continue(ss, "2", 1);
 	compare_continue(ss, "\n", 1);
-	AssertEq(compare_check(ss,0,0), cmp_ptr_has_extra_nl);
+	AssertEq(compare_check(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "123");
 	compare_attach(ss);
 	compare_continue(ss, "1", 1);
 	compare_continue(ss, "2", 1);
 	compare_continue(ss, "\n", 1);
-	AssertEq(compare_check(ss,0,0), cmp_no_match);
-
-	readmem_init_str(ss, "");
-	compare_attach(ss);
-	AssertEq(compare_check(ss,"\n",1), cmp_no_match);
+	AssertEq(compare_check(ss), cmp_no_match);
 }
 
 
@@ -335,27 +308,23 @@ static void test_inc_newlines(cutest *ct)
 	compare_continue(ss, "2", 1);
 	compare_continue(ss, "3", 1);
 	compare_continue(ss, "\n", 1);
-	AssertEq(compare_check_newlines(ss,0,0), cmp_ptr_has_extra_nl);
+	AssertEq(compare_check_newlines(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "123\n");
 	compare_attach(ss);
 	compare_continue(ss, "1", 1);
 	compare_continue(ss, "2", 1);
 	compare_continue(ss, "3", 1);
-	AssertEq(compare_check_newlines(ss,0,0), cmp_ss_has_extra_nl);
-
-	readmem_init_str(ss, "");
-	compare_attach(ss);
-	AssertEq(compare_check_newlines(ss,"\n",1), cmp_ptr_has_extra_nl);
+	AssertEq(compare_check_newlines(ss), cmp_ss_has_extra_nl);
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
 	compare_continue(ss, "\n", 1);
-	AssertEq(compare_check_newlines(ss,0,0), cmp_ptr_has_extra_nl);
+	AssertEq(compare_check_newlines(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "\n");
 	compare_attach(ss);
-	AssertEq(compare_check_newlines(ss,0,0), cmp_ss_has_extra_nl);
+	AssertEq(compare_check_newlines(ss), cmp_ss_has_extra_nl);
 }
 
 

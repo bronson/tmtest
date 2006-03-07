@@ -574,7 +574,7 @@ void warn_section_newline(struct test *test, const char *name)
 enum matchval end_output_section(struct test *test, scanstate *cmpscan,
         const char *name)
 {
-	compare_result cmp = compare_check_newlines(cmpscan,0,0);
+	compare_result cmp = compare_check_newlines(cmpscan);
 	int suppress_trailing_newline = cmpscan_suppress_newline;
 
 	if(cmp == cmp_ptr_has_extra_nl) {

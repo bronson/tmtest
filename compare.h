@@ -26,5 +26,5 @@ typedef enum {
 
 void compare_attach(scanstate *ss);
 int compare_continue(scanstate *ss, const char *ptr, size_t len);
-compare_result compare_check(scanstate *ss, const char *ptr, size_t len);
-compare_result compare_check_newlines(scanstate *ss, const char *ptr, size_t len);
+compare_result compare_check(scanstate *ss);
+compare_result compare_check_newlines(scanstate *ss);

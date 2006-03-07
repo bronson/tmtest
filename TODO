@@ -1,5 +1,5 @@
 0.96:
-- Get rid of all scan_is_finished() calls?
+- Rewrite the goddamn unit testing.
 - Make tmtest only execute config files owned by either the user or root.
   Print a big fat warning when the config file is skipped.  This prevents
   a malicious user from putting a config file in /tmp and having it
@@ -43,6 +43,7 @@
   http://pvanhoof.be/blog/index.php/2006/03/03/tinymail-unit-testing-and-creating-messages     Actually, this looks better: http://cutest.sourceforge.net/
   Potential units: curdir, path normalization
 - Get rid of -g, add -O2.  Make it easy to set these for compilation.
+- Get rid of all scan_is_finished() calls?  Deprecate scan_is_finished.
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
