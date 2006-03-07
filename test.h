@@ -87,7 +87,7 @@ void test_command_copy(struct test *test, FILE *fp);
 
 void test_results(struct test *test, const char *dispname);
 void dump_results(struct test *test);
-void print_test_summary();
+void print_test_summary(struct timeval *start, struct timeval *stop);
 
 void test_init(struct test *test);
 void test_free(struct test *test);

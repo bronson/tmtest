@@ -16,6 +16,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/time.h>
+#include <time.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -72,6 +74,9 @@ int g_outfd;
 int g_errfd;
 int g_statusfd;
 
+
+struct timeval test_start_time;
+struct timeval test_stop_time;
 
 
 // exit values:
@@ -885,6 +890,8 @@ static void checkerr(int err, const char *op, const char *name)
 
 static void stop_tests()
 {
+	gettimeofday(&test_stop_time, NULL);
+
 	checkerr(close(g_outfd), "closing", g_outname);
 	checkerr(close(g_errfd), "closing", g_errname);
 	checkerr(close(g_statusfd), "closing", g_statusname);
@@ -944,6 +951,8 @@ static void start_tests()
 		fprintf(stderr, "Could not chdir 2 to %s: %s\n", cp, strerror(errno));
 		exit(initialization_error);
 	}
+
+	gettimeofday(&test_start_time, NULL);
 }
 
 
@@ -1213,7 +1222,7 @@ int main(int argc, char **argv)
     stop_tests();
 
     if(outmode == outmode_test) {
-        print_test_summary();
+        print_test_summary(&test_start_time, &test_stop_time);
     }
 
 	free((char*)orig_cwd);

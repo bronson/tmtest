@@ -1044,19 +1044,20 @@ void dump_results(struct test *test)
 }
 
 
-void print_test_summary()
+void print_test_summary(struct timeval *start, struct timeval *stop)
 {
     printf("\n");
     printf("%d test%s run, ", test_runs, (test_runs != 1 ? "s" : ""));
-    printf("%d success%s, ", test_successes, (test_successes != 1 ? "es" : ""));
-    printf("%d failure%s.", test_failures, (test_failures != 1 ? "s" : ""));
+    printf("%d success%s, ", test_successes,
+			(test_successes != 1 ? "es" : ""));
+    printf("%d failure%s", test_failures, (test_failures != 1 ? "s" : ""));
 
 	if(!quiet) {
-		printf("    ");
-		print_rusage();
+		printf(", in ");
+		print_rusage(start, stop);
 	}
 	
-	printf("\n");
+	printf(".\n");
 }
 
 

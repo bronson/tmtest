@@ -43,7 +43,11 @@
   http://pvanhoof.be/blog/index.php/2006/03/03/tinymail-unit-testing-and-creating-messages     Actually, this looks better: http://cutest.sourceforge.net/
   Potential units: curdir, path normalization
 - Get rid of -g, add -O2.  Make it easy to set these for compilation.
-- Get rid of all scan_is_finished() calls?  Deprecate scan_is_finished.
+  Yes, have dev and prod modes.  dev would be -O0 and -g and include
+  unit tests.  Prod is -O2, stripped, and no unit tests (unless the
+  unit tests only add 12K or so, where might as well just leave em).
+- If there were failures, should highlight that in the test summary.
+	"%d FAILURES" or somesuch.
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
@@ -59,6 +63,7 @@
   buffer.  If your stderr is more than 100K or so in size, just redirect
   it to a file, then cat the file at the end.  We truncate stderr if it
   gets too big.
+  - When done, verify that netknife's tests that freeze with -d now pass.
 - Is there any way to record memory and swap usage for each test?
   sure, it's in the rusage. prolly add a "tmtest -v" to print it for each test.
 - stdin is all buggered up.  why is it that "cat" with no args will print
