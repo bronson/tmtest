@@ -858,11 +858,19 @@ static void write_exit_no(int fd, int exitno)
 }
 
 
-int write_file(int outfd, int infd)
+/**
+ * Reads all the data from infd and writes it onto outfd.
+ *
+ * @param endnl (optional) true if the data written ended with a newline,
+ *   false if not.  Pass NULL if you don't care.
+ * @returns the number of bytes written.
+ */
+
+size_t write_file(int outfd, int infd, int *endnl)
 {
     char buf[BUFSIZ];
-    int rcnt, wcnt;
-	int ending_newline;
+    size_t rcnt, wcnt;
+	size_t total = 0;
 
     // first rewind the input file
     if(lseek(infd, 0, SEEK_SET) < 0) {
@@ -876,7 +884,7 @@ int write_file(int outfd, int infd)
             rcnt = read(infd, buf, sizeof(buf));
         } while(rcnt < 0 && errno == EINTR);
         if(rcnt > 0) {
-			ending_newline = (buf[rcnt-1] == '\n');
+			if(endnl) *endnl = (buf[rcnt-1] == '\n');
             do {
                 wcnt = write(outfd, buf, rcnt);
             } while(wcnt < 0 && errno == EINTR);
@@ -885,6 +893,7 @@ int write_file(int outfd, int infd)
                 perror("writing in write_file");
                 break;
             }
+			total += rcnt;
         } else if (rcnt < 0) {
             // read error.  do something!
             perror("reading in write_file");
@@ -892,7 +901,7 @@ int write_file(int outfd, int infd)
         }
     } while(rcnt);
 
-	return ending_newline;
+	return total;
 }
 
 
@@ -900,6 +909,7 @@ static void write_section(struct test *test, const char *datap, int len,
 		int fd, const char *name)
 {
     int marked_no_nl = 0;
+	size_t cnt;
 	int has_nl;
 
 	parse_section_args(datap, len,
@@ -907,7 +917,7 @@ static void write_section(struct test *test, const char *datap, int len,
 			start_output_section_argproc, &marked_no_nl);
 
 	write(test->rewritefd, datap, len);
-	has_nl = write_file(test->rewritefd, fd);
+	cnt = write_file(test->rewritefd, fd, &has_nl);
 
 	if(marked_no_nl) {
 		// if a section is marked with --no-trailing-newline, we need
@@ -924,7 +934,9 @@ static void write_section(struct test *test, const char *datap, int len,
 			printf("\n");
 		}
 
-		warn_section_newline(test, name);
+		if(cnt > 0) {
+			warn_section_newline(test, name);
+		}
 	}
 }
 
@@ -1035,11 +1047,11 @@ void dump_results(struct test *test)
     }
     if(test->stderr_match == match_unknown && fd_has_data(test->errfd)) {
 		write_strconst(test->rewritefd, "STDERR:\n");
-        write_file(test->rewritefd, test->errfd);
+        write_file(test->rewritefd, test->errfd, NULL);
     }
     if(test->stdout_match == match_unknown && fd_has_data(test->outfd)) {
 		write_strconst(test->rewritefd, "STDOUT:\n");
-        write_file(test->rewritefd, test->outfd);
+        write_file(test->rewritefd, test->outfd, NULL);
     }
 }
 

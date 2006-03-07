@@ -95,5 +95,5 @@ void test_free(struct test *test);
 
 // random utility function for start_diff.  Return value is true if the
 // file ends in a newline, false if not.
-int write_file(int outfd, int infd);
+size_t write_file(int outfd, int infd, int *ending_nl);
 

@@ -288,7 +288,7 @@ static int write_stdin_to_tmpfile(struct test *test)
 	test->diffname = buf;
 	fd = open_file(buf, DIFFNAME, 0);
 	assert(strlen(buf) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
-	write_file(fd, 0);
+	write_file(fd, 0, NULL);
 	close(fd);
 
 	return fd;
@@ -1161,6 +1161,8 @@ static void process_argv(char **argv)
 	for(i=0; i<n; i++) { normalize_path(argv[i], &ents[i]); }
 	process_ents(ents, 1);
 	for(i=0; i<n; i++) { normalize_free(argv[i], ents[i]); }
+
+	free(ents);
 }
 
 
