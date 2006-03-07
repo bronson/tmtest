@@ -21,7 +21,7 @@ EOL
 # This is a little exotic...  Patch needs the CWD to be the directory
 # containing the file to patch.  "dirname $(tt.test)" gives that dir.
 
-tmtest --all-files -d "$tt" | (cd `dirname "$tt"` && patch | FIX_PATCH)
+tmtest --ignore-extension -d "$tt" | (cd `dirname "$tt"` && patch | FIX_PATCH)
 echo "And the patched file:"
 INDENT < "$tt"
 echo "<<DONE>>"

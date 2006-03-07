@@ -27,7 +27,7 @@ EOL
 # Pipe STDERR to /dev/null because we want to ignore the warning that
 # tmtest prints (other tests ensure the warning works)
 
-tmtest --all-files -d "$tt" 2>/dev/null | (cd `dirname "$tt"` && patch | FIX_PATCH)
+tmtest --ignore-extension -d "$tt" 2>/dev/null | (cd `dirname "$tt"` && patch | FIX_PATCH)
 echo "And the patched file:"
 INDENT < "$tt"
 echo "<<DONE>>"

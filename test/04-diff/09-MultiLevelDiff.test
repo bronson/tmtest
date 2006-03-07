@@ -51,7 +51,7 @@ cat > two/one/t.test <<-EOL
 EOL
 
 
-tmtest --all-files -d | FIX_DIFF
+tmtest --ignore-extension -d | FIX_DIFF
 
 rm -rf t.test one two
 

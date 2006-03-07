@@ -1013,7 +1013,7 @@ static void process_args(int argc, char **argv)
 	optidx = 0;
 	static struct option longopts[] = {
 		// name, has_arg (1=reqd,2=opt), flag, val
-		{"all-files", 0, &allfiles, 1},
+		{"ignore-extension", 0, &allfiles, 1},
 		{"config", 1, 0, 'c'},
 		{"diff", 0, 0, 'd'},
 		{"dump-script", 0, &dumpscript, 1},

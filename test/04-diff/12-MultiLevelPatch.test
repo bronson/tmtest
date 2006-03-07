@@ -51,7 +51,7 @@ cat > two/one/t.test <<-EOL
 EOL
 
 
-tmtest --all-files -d | patch -p0 | FIX_PATCH
+tmtest --ignore-extension -d | patch -p0 | FIX_PATCH
 echo
 INDENT "\t" < t.test
 echo

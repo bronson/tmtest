@@ -11,13 +11,15 @@
   That's probably the most agreeable.
   We will not read either config or test files from a world-writable directory.
   Ever.
-- Put $args into EVERY test we run.
+- Put $args into EVERY test we run.  NO!  This is not as useful.
+  Get rid of $args and turn every invocation of tmtest into $tmtest.
+  This allows us to run the entire suite under i.e. "valgrind tmtest"
+  - Figure out how to ensure that we run the binary in the project tree
+    when testing rather than the globally installed one.  What happened?
+	(this is how -- specify the executable and args using $tmtest).
 - Write a test to ensure we can run tests named "-.test"
-- Write tests to verify what FDs are still open when we run
-  config files, test files, and diff.
 - Add --diff and --shell to change the executables that get launched.
-- Get rid of MODIFY clauses.  It's unnecessary complexity.
-  And it's a LOT.  First remove it from the tests, then from the code.
+  No, that clutters the arguments up.  Take them from $DIFF and $SHELL.
 - Add the ability to specify test arguments on the command line.
   I'm picturing something where VAR=val on the command line would be
   inserted without change into the template.  That way you can use the
@@ -33,15 +35,12 @@
   abort the test.
   should get rid of a whole bunch in main.c as well.
   this should prevent us from dropping turds in /tmp all the time too.
-- Rename --all-files to --ignore-extension.
-- Move newline suppressing out of compare.c.  If it can't be moved out,
-  at least clean it up!   (maybe?)
-- Figure out how to ensure that we run the binary in the project tree
-  when testing rather than the globally installed one.  What happened?
 - Ensure it compiles and runs on freebsd.
 - Add some unit tests.  http://kooditakomo.cs.tut.fi/projects/gunit/
   http://pvanhoof.be/blog/index.php/2006/03/03/tinymail-unit-testing-and-creating-messages     Actually, this looks better: http://cutest.sourceforge.net/
   Potential units: curdir, path normalization
+    Need to rewrite curdir before it's worth unit testing it.
+	Path normalization definitely deserves it.
 - Get rid of -g, add -O2.  Make it easy to set these for compilation.
   Yes, have dev and prod modes.  dev would be -O0 and -g and include
   unit tests.  Prod is -O2, stripped, and no unit tests (unless the
