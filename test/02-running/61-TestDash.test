@@ -1,0 +1,20 @@
+# author: Scott Bronson
+# date:   14 Nov 2004
+
+# Verifies what happens when a test is aborted.
+
+MKDIR dir
+
+MKFILE file "$dir/-" <<-EOL
+	echo Howdy pardner.
+	STDOUT:
+	Howdy pardner.
+EOL
+
+tmtest -q --ignore-extension "$file" | REPLACE "$dir" /tmp/DIR
+
+
+STDOUT:
+ok   /tmp/DIR/- 
+
+1 test run, 1 success, 0 failures.

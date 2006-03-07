@@ -17,15 +17,22 @@
   - Figure out how to ensure that we run the binary in the project tree
     when testing rather than the globally installed one.  What happened?
 	(this is how -- specify the executable and args using $tmtest).
-- Write a test to ensure we can run tests named "-.test"
 - Add --diff and --shell to change the executables that get launched.
   No, that clutters the arguments up.  Take them from $DIFF and $SHELL.
+  No, obviously that's a bad idea.  That prevents people using tcsh
+  from running tmtest.  It *has* to be --shell.  $DIFF is fine.
+  And we need to make sure that we ignore the SHELL envar.
+  	(write a test for this)
 - Add the ability to specify test arguments on the command line.
   I'm picturing something where VAR=val on the command line would be
   inserted without change into the template.  That way you can use the
   command line to override default settings in the testfile.
   - This would allow us to test almost every test to ensure it
     supports the --config argument (make them DISABLED or something).
+  - How it will work: we insert each value at the start of the testscript.
+    That way the config files can pick up on them.  We ALSO insert them
+	just before we run the test.  That way we can override the config files.
+	True, we can't override what's in the test script, but that's OK.
 - write tests for nesting testfiles with --config.
         // If the user specifies a config file, we only check directories
         // not above the given config file.  i.e. if user specifies
@@ -84,6 +91,9 @@
   see if any of your tests have intermittent failures.
 - Reomve as many TODOs as possible.
 - Make zutest take the names of tests to run on stdin?
+- Make MKFILE take a path as the first argument too.  If the first arg
+  is [0-9a-zA-Z_] then it's an identifier and we'll make a tempfile.
+  Otherwise, we'll use the arg as a filename.  ER, IS THIS A GOOD IDEA?
 
 1.0!
 

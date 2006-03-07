@@ -1,3 +1,4 @@
+- Changed --all-files to be the much more understandable --ignore-extension.
 - If an output section is marked -n but ends with multiple newlines, we print
   a warning and fail it automatically.  We used to let this nonsense pass.
 - Added the Cutest unit test framework.  Refactored compare.c.
