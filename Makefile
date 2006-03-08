@@ -40,8 +40,8 @@ CHDR+=re2c/read.h re2c/read-fd.h re2c/read-mem.h re2c/read-rand.h \
 CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c template.c
 CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h
 # unit test files
-CSRC+=cutest.c
-CHDR+=cutest.h
+CSRC+=units.c zutest.c
+CHDR+=units.h zutest.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
@@ -62,7 +62,11 @@ template.c: template.sh cstrfy
 
 .PHONY: test
 test: tmtest
-	./tmtest --run-tests
+	./tmtest --run-unit-tests
+	tmtest test
+
+unit: tmtest
+	./tmtest --run-unit-tests
 
 install: tmtest
 	install -d -m755 $(bindir)
@@ -93,7 +97,7 @@ else
 endif
 
 clean:
-	rm -f tmtest template.c tags
+	rm -f tmtest template.c tags zutest
 
 distclean: clean
 	rm -f stscan.[co]
@@ -117,3 +121,6 @@ rediff:
 	
 reupdate:
 	ls re2c/*.[ch] | (ODIR=`pwd`; cd ../oe; xargs cp --target-directory $$ODIR/re2c)
+
+zutest: zutest.c zutest-tests.c zutest.h
+	gcc -Wall -Werror -g zutest.c zutest-tests.c -o zutest

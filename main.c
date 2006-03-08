@@ -32,6 +32,7 @@
 #include "vars.h"
 #include "tfscan.h"
 #include "pathconv.h"
+#include "units.h"
 
 
 #define DIFFPROG "/usr/bin/diff"
@@ -48,7 +49,6 @@ int outmode = outmode_test;
 int allfiles = 0;
 int dumpscript = 0;
 int quiet = 0;
-int run_unit_tests = 0;
 const char *orig_cwd;		// tmtest runs with the cwd pointed to /tmp
 char *config_file;	// absolute path to the user-specified config file
 					// null if user didn't specify a config file.
@@ -1020,7 +1020,7 @@ static void process_args(int argc, char **argv)
 		{"help", 0, 0, 'h'},
 		{"output", 0, 0, 'o'},
 		{"quiet", 0, 0, 'q'},
-		{"run-tests", 0, 0, 'U'},
+		{"run-unit-tests", 0, 0, 'U'},
 		{"version", 0, 0, 'V'},
 		{0, 0, 0, 0},
 	};
@@ -1060,10 +1060,6 @@ static void process_args(int argc, char **argv)
 
 			case 'q':
 				quiet++;
-				break;
-
-			case 'U':
-				run_unit_tests++;
 				break;
 
 			case 'V':
@@ -1183,34 +1179,12 @@ static const char* dup_cwd()
 }
 
 
-#include "cutest.h"
-
-static int cumain(int argc, char **argv)
-{
-	extern cusuite* compare_suite();
-
-	CuString *output = CuStringNew();
-
-	CuSuite *suite = CuSuiteNew();
-	CuSuiteAddSuite(suite, compare_suite());
-
-	CuSuiteRun(suite);
-	CuSuiteSummary(suite, output);
-	CuSuiteDetails(suite, output);
-	printf("%s\n", output->buffer);
-
-	return 0;
-}
-
-
 int main(int argc, char **argv)
 {
+	unit_test_check(argc, argv, all_unit_tests);
+
 	orig_cwd = dup_cwd();
 	process_args(argc, argv);
-
-	if(run_unit_tests) {
-		return cumain(argc, argv);
-	}
 
     start_tests();
     if(optind < argc) {

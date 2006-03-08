@@ -188,12 +188,12 @@ compare_result compare_check_newlines(scanstate *ss)
 }
 
 
-#include "cutest.h"
+#include "zutest.h"
 #include "re2c/read-mem.h"
 #include "re2c/read-rand.h"
 #include <stdlib.h>
 
-static void test_empty(cutest *ct)
+static void test_empty()
 {
 	scanstate ssrec, *ss=&ssrec;
 
@@ -208,7 +208,7 @@ static void test_empty(cutest *ct)
 }
 
 
-static void test_standard(cutest *ct)
+static void test_standard()
 {
 	scanstate ssrec, *ss=&ssrec;
 
@@ -220,7 +220,7 @@ static void test_standard(cutest *ct)
 }
 
 
-static void test_large(cutest *ct)
+static void test_large()
 {
 	char buf[BUFSIZ];
 	scanstate ssrec, *ss=&ssrec;
@@ -257,7 +257,7 @@ static compare_result check_newlines(const char *s1, const char *s2)
 }
 
 
-static void test_newlines(cutest *ct)
+static void test_newlines()
 {
 	AssertEq(check_newlines("Unix\n",   "Unix\n"  ), cmp_full_match);
 	AssertEq(check_newlines("Unix",     "Unix\n"  ), cmp_ptr_has_extra_nl);
@@ -274,7 +274,7 @@ static void test_newlines(cutest *ct)
 	AssertEq(check_newlines("",     "\n\n" ), cmp_no_match);
 }
 
-static void test_inc(cutest *ct)
+static void test_inc()
 {
 	// Tries to ensure that packetization won't mess us up.
 
@@ -296,7 +296,7 @@ static void test_inc(cutest *ct)
 }
 
 
-static void test_inc_newlines(cutest *ct)
+static void test_inc_newlines()
 {
 	// Tries to ensure packetization won't mess up the newline checking.
 
@@ -335,18 +335,13 @@ static void test_tiny_buffer(cutest *ct)
 }
 */
 
-
-cusuite* compare_suite()
-{
-	cusuite* suite = CuSuiteNew();
-
-	suite_add(suite, test_empty);
-	suite_add(suite, test_standard);
-	suite_add(suite, test_large);
-	suite_add(suite, test_newlines);
-	suite_add(suite, test_inc);
-	suite_add(suite, test_inc_newlines);
-
-	return suite;
-}
+zutest_proc compare_tests[] = {
+	test_empty,
+	test_standard,
+	test_large,
+	test_newlines,
+	test_inc,
+	test_inc_newlines,
+	NULL
+};
 
