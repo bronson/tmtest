@@ -134,9 +134,6 @@ No longer a problem when we dump pcrs:
 - Unify the line modifier in compare.c and test.c.  It's hackish now.
 - Wow, the pcrs error messages truly suck.  Is there any way to improve them?
   "(pcrs:) Syntax error while parsing command (-11)."
-- add a CLEAR_EACHLINE or CLEAR_MODIFY option to to turn off all substitutions.
-  It would be easy to do.  I'm just not convinced that anyone would find it
-  useful.
 
 ????:
 - There should be a way to repeatedly run a single test with only tiny

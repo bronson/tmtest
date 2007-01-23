@@ -22,4 +22,4 @@ STDOUT:
     echo -n >&$i && echo open: $i
     done | wc -l
     STDOUT:
-    4
+    3

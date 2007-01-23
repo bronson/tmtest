@@ -21,15 +21,9 @@
 // 		And a keyword without a NL is still the keyword.
 // 		But it must always start at the beginning of a new line.
 // exit clauses with invalid numbers
-// What happens with a MODIFY larger than BUFSIZ.
 // DOS/Mac/Unix line endings.
 // 		What happes when platform doesn't match the testfile?
 // 	Get rid of rewrite_command_section
-
-// NOTE: because we linebuffer the MODIFY clause, a single MODIFY
-// may not be larger than the BUFSIZ on your system (usually 8192 bytes).
-// Technically this is true of RESULT as well but when are you ever going
-// to run into an 8K result code?
 
 #include "tfscan.h"
 
@@ -56,7 +50,6 @@ ANYN    = [\000-\377]\[\n];
 "STDOUT" WS* ":" ANYN* "\n"  { START(exSTDOUT); return exNEW|exSTDOUT; }
 "STDERR" WS* ":" ANYN* "\n"  { START(exSTDERR); return exNEW|exSTDERR; }
 "RESULT" WS* ":" ANYN* "\n"  { START(exRESULT); return exNEW|exRESULT; }
-"MODIFY" WS* ":" ANYN* "\n"  { START(exMODIFY); return exNEW|exMODIFY; }
 
 ANYN* "\n"                  { return (int)ss->scanref; }
 
@@ -215,14 +208,6 @@ int tfscan_tok_start(scanstate *ss)
 				{
                     YYCURSOR += 6;
 					return scan_to_end_of_keyword(ss, exRESULT);
-				}
-				break;
-			case 'M':
-				if(YYCURSOR[1]=='O' && YYCURSOR[2]=='D' &&
-					YYCURSOR[3]=='I' && YYCURSOR[4]=='F' && YYCURSOR[5]=='Y')
-				{
-                    YYCURSOR += 6;
-					return scan_to_end_of_keyword(ss, exMODIFY);
 				}
 				break;
 			default:
