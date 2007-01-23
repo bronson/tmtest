@@ -15,8 +15,6 @@ MKFILE cc1 "$do/tmtest.conf" <<'EOL'
 	config="yes!"
 EOL
 
-echo "$di/tmtest.conf" >> /tmp/tt
-
 MKFILE cc2 "$di/tmtest.conf" <<'EOL'
 	config="yes!"
 EOL

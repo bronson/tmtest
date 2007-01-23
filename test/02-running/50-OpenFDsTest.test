@@ -1,20 +1,25 @@
 # Ensure we don't leak fds to the running test.
 # Ideally, there would be NO open FDs.  This will be the case for tmtest 0.98.
 
+# This used to output the following text but platforms just differ too
+# much exactly what fds they leave open.  So, just so long as there's 4
+# fds open, we're as happy as we can be.
+#    open: 4
+#    open: 6
+#    open: 7
+#    open: 10
+
 $tmtest -o -q - <<-'EOL' | INDENT
 	for i in `seq 3 255`; do
 		exec 2>/dev/null
 		echo -n >&$i && echo open: $i
-	done
+	done | wc -l
 EOL
 
 STDOUT:
     for i in `seq 3 255`; do
     exec 2>/dev/null
     echo -n >&$i && echo open: $i
-    done
+    done | wc -l
     STDOUT:
-    open: 4
-    open: 6
-    open: 7
-    open: 10
+    4

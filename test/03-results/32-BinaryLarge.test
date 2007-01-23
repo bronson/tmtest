@@ -1,7 +1,7 @@
 # Ensures that a testfile can contain some arbitrary binary
 # data and the test will still work.  This just tests control chars.
 
-# We need to manuall create the testfile because Bash will screw 
+# We need to manually create the testfile because Bash will screw 
 # things up if we use a heredoc.
 
 MKFILE tt <<-'EOL'
