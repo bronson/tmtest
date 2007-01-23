@@ -34,7 +34,7 @@
 #include "tfscan.h"
 
 
-#define START(x) (ss->scanref=(void*)(x))
+#define START(x) (ss->scanref=(void*)(long int)(x))
 
 #ifndef NULL
 #define NULL ((void*)0)
@@ -93,7 +93,7 @@ static int nontok_start(scanstate *ss)
 		// We have to assume that we previously read as much data as
 		// possible.  So the entire buffer is just data with no tokens
 		// and no CR/LF.
-		return (int)ss->scanref;
+		return (long int)ss->scanref;
 	}
 
 	if(*YYCURSOR == '\r') YYCURSOR++;
@@ -103,7 +103,7 @@ static int nontok_start(scanstate *ss)
 
 	// We have potential for finding a token at this point.
 	ss->state = tfscan_tok_start;
-	return (int)ss->scanref;
+	return (long int)ss->scanref;
 }
 
 
@@ -123,7 +123,7 @@ static int scan_to_end_of_keyword(scanstate *ss, int tok)
         r = (*ss->read)(ss);
         if(r < 0) return r;
         // if we're at eof, then the current token is just data.
-        if(r == 0) return (int)ss->scanref;
+        if(r == 0) return (long int)ss->scanref;
     }
 
     if(*YYCURSOR != '\r' && *YYCURSOR != '\n' && *YYCURSOR != ':' &&
@@ -142,7 +142,7 @@ static int scan_to_end_of_keyword(scanstate *ss, int tok)
             r = (*ss->read)(ss);
             if(r < 0) return r;
             // if we're at eof, then the current token is just data.
-            if(r == 0) return (int)ss->scanref;
+            if(r == 0) return (long int)ss->scanref;
 		}
 	}
 

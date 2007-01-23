@@ -252,6 +252,7 @@ void scanstate_reset(scanstate *ss);
 #define current_token_end(ss) ((ss)->cursor)
 
 /** Returns the length of the most recently scanned token.
+ *  (on all compilers this should be a signed long int)
  */
 
 #define token_length(ss) ((ss)->cursor - (ss)->token)

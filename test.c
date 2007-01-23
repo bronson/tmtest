@@ -168,7 +168,7 @@ void scan_status_file(struct test *test)
             exit(10);
         } else if(tok == stGARBAGE) {
 			fprintf(stderr, "Garbage on line %d in the status file: '%.*s'\n",
-					ss.line, token_length(&ss)-1, token_start(&ss));
+					ss.line, (int)token_length(&ss)-1, token_start(&ss));
 		} else {
 			state = tok;
 		}
@@ -185,11 +185,11 @@ void scan_status_file(struct test *test)
 						lastfile_good = 1;
 					} else {
 						fprintf(stderr, "CONFIG needs arg on line %d of the status file: '%.*s'\n",
-								ss.line, token_length(&ss)-1, token_start(&ss));
+								ss.line, (int)token_length(&ss)-1, token_start(&ss));
 					}
 				} else {
 					fprintf(stderr, "CONFIG but status (%d) wasn't pending on line %d of the status file: '%.*s'\n",
-							test->status, ss.line, token_length(&ss)-1, token_start(&ss));
+							test->status, ss.line, (int)token_length(&ss)-1, token_start(&ss));
 				}
 				break;
 
@@ -204,11 +204,11 @@ void scan_status_file(struct test *test)
 						lastfile_good = 1;
 					} else {
 						fprintf(stderr, "RUNNING needs arg on line %d of the status file: '%.*s'\n",
-								ss.line, token_length(&ss)-1, token_start(&ss));
+								ss.line, (int)token_length(&ss)-1, token_start(&ss));
 					}
 				} else {
 					fprintf(stderr, "RUNNING but status (%d) wasn't pending on line %d of the status file: '%.*s'\n",
-							test->status, ss.line, token_length(&ss)-1, token_start(&ss));
+							test->status, ss.line, (int)token_length(&ss)-1, token_start(&ss));
 				}
 				break;
 
@@ -217,7 +217,7 @@ void scan_status_file(struct test *test)
 					test->status = test_was_completed;
 				} else {
 					fprintf(stderr, "DONE but status (%d) wasn't RUNNING on line %d of the status file: '%.*s'\n",
-							test->status, ss.line, token_length(&ss)-1, token_start(&ss));
+							test->status, ss.line, (int)token_length(&ss)-1, token_start(&ss));
 				}
 				break;
 			
@@ -233,7 +233,7 @@ void scan_status_file(struct test *test)
 
 			default:
 				fprintf(stderr, "Unknown token (%d) on line %d of the status file: '%.*s'\n",
-						tok, ss.line, token_length(&ss)-1, token_start(&ss));
+						tok, ss.line, (int)token_length(&ss)-1, token_start(&ss));
 		}
     } while(!scan_is_finished(&ss));
 
@@ -494,7 +494,7 @@ int start_output_section_argproc(int i, const char *cp, const char *ce,
         *(int*)refcon = 1;
     } else if(cp < ce) {
         fprintf(stderr, "%s line %d: unknown arguments \"%.*s\"\n",
-                file, line, ce-cp, cp);
+                file, line, (int)(ce-cp), cp);
     }
 
     return 0;

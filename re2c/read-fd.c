@@ -33,7 +33,7 @@ static ssize_t readfd_read(scanstate *ss)
 
     // ensure we get a full read
     do {
-        n = read((int)ss->readref, (void*)ss->limit, avail);
+        n = read((long int)ss->readref, (void*)ss->limit, avail);
     } while(n < 0 && errno == EINTR);
     ss->limit += n;
 
@@ -58,7 +58,7 @@ scanstate* readfd_attach(scanstate *ss, int fd)
         return 0;
     }
 
-    ss->readref = (void*)fd;
+    ss->readref = (void*)(long int)fd;
     ss->read = readfd_read;
     return ss;
 }
@@ -101,7 +101,7 @@ scanstate* readfd_open(const char *path, size_t bufsiz)
 
 void readfd_close(scanstate *ss)
 {
-    close((int)ss->readref);
+    close((long int)ss->readref);
     dynscan_free(ss);
 }
 
