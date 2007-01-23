@@ -1,6 +1,6 @@
 NOTE: If you are looking for examples of testfiles, this is NOT the
-directory for you!  Due to the recursive nature of tmtest testing
-itself, many of these testfiles are very difficult to understand.
+place to go!  Due to the recursive nature of testing tmtest using tmtest,
+many of these testfiles can be quite difficult to understand.
 
 See the examples directory instead.
 

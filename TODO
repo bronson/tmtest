@@ -1,4 +1,7 @@
 0.96:
+- MKFILE should just create the file that the user names.
+- MKTMPFILE should create a filename and store that in the user's variable.
+
 - Write unit tests for path normalization.
 - Make tmtest only execute config files owned by either the user or root.
   Print a big fat warning when the config file is skipped.  This prevents
@@ -63,6 +66,7 @@
   it to a file, then cat the file at the end.  We truncate stderr if it
   gets too big.
   - When done, verify that netknife's tests that freeze with -d now pass.
+- get rid of MKFILE_EMPTY, deprecated in favor of TOUCH.
 - Is there any way to record memory and swap usage for each test?
   sure, it's in the rusage. prolly add a "tmtest -v" to print it for each test.
 - Well, piping the result of a command to a function destroys the the

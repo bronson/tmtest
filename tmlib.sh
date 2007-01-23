@@ -144,6 +144,7 @@ MKFILE ()
 
 #
 # MKFILE_EMPTY
+# TODO: this call is deprecated and will go away.
 #
 # I can't figure out how to get bash to bail instead of blocking.
 # Therefore, if you just want to create an empty file, you either
@@ -153,6 +154,16 @@ MKFILE ()
 MKFILE_EMPTY ()
 {
 	MKFILE "$*" < /dev/null
+}
+
+
+TOUCH ()
+{
+	while [ "$1" != "" ]; do
+		touch $1
+		ATEXIT "rm '$1'"
+		shift
+	done
 }
 
 
