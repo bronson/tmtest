@@ -19,8 +19,6 @@ STDOUT () { exit 0; }
 STDOUT: () { exit 0; }
 STDERR () { exit 0; }
 STDERR: () { exit 0; }
-RESULT () { exit 0; }
-RESULT: () { exit 0; }
 
 echo 'RUNNING: %(TESTFILE)' >&%(STATUSFD)
 MYDIR='%(TESTDIR)'

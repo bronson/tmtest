@@ -134,6 +134,8 @@ How do I indent my stdout section?  My test prints the word "STDOUT" at
 the beginning of a line, causing tmtest to complain about multiple STDOUT
 sections.
 
+=over 4
+
 Answer: run your command's output through indent.
 
 	mycmd | INDENT
@@ -144,6 +146,27 @@ output:
 	(	cmd1
 		cmd2
 	) 2>&1 | INDENT
+
+=back
+
+How do I retrieve my test program's exit result?
+
+=over 4
+
+Answer: use the shell variable $?:
+
+    myprogram
+	echo RESULT: $?
+
+tmtest used to provide a RESULT section that automatically checked a
+command's result value.  The problem is, most testfiles contain
+multiple commands, with cleanup code, etc.  To ensure that tmtest
+reads the correct value of $? would require drastic restrictions
+on the things a testfile may do.  We decided that it was much better
+to force the user to insert $? in the proper spot rather than add
+a whole bunch of arbitrary restrictions.
+
+=back
 
 =head1 HISTORY
 

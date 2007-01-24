@@ -49,7 +49,6 @@ ANYN    = [\000-\377]\[\n];
 
 "STDOUT" WS* ":" ANYN* "\n"  { START(exSTDOUT); return exNEW|exSTDOUT; }
 "STDERR" WS* ":" ANYN* "\n"  { START(exSTDERR); return exNEW|exSTDERR; }
-"RESULT" WS* ":" ANYN* "\n"  { START(exRESULT); return exNEW|exRESULT; }
 
 ANYN* "\n"                  { return (int)ss->scanref; }
 
@@ -201,14 +200,6 @@ int tfscan_tok_start(scanstate *ss)
 					}
 				}
 				// else it wasn't a token so we can just keep scanning.
-				break;
-			case 'R':
-				if(YYCURSOR[1]=='E' && YYCURSOR[2]=='S' &&
-					YYCURSOR[3]=='U' && YYCURSOR[4]=='L' && YYCURSOR[5]=='T')
-				{
-                    YYCURSOR += 6;
-					return scan_to_end_of_keyword(ss, exRESULT);
-				}
 				break;
 			default:
 				break;

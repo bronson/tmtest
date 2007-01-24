@@ -1,3 +1,4 @@
+- Got rid of RESULT and all its code.  echo $? from within your test instead.
 - Got rid of Cutest since it was very non-cute.  Wrote zutest instead.
 - Changed --all-files to be the much more understandable --ignore-extension.
 - If an output section is marked -n but ends with multiple newlines, we print

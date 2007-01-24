@@ -1,7 +1,12 @@
 0.96:
+- Add a cmdline option that prints only tests that fail, and prints their
+  full path.
+- Is it possible to separate STDOUT and STDERR?  Maybe stderr comes first
+  in the testfile with each line prefixed by :.  Then STDOUT.  No need
+  for this delimiter craziness.
+  YES, stderr ALWAYS comes first in the testfile, followed by stdout.
 - MKFILE should just create the file that the user names.
 - MKTMPFILE should create a filename and store that in the user's variable.
-
 - Write unit tests for path normalization.
 - Make tmtest only execute config files owned by either the user or root.
   Print a big fat warning when the config file is skipped.  This prevents

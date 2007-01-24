@@ -550,7 +550,7 @@ static int run_test(const char *name, const char *dispname, int warn_suffix)
         i = wait_for_child(child, "test");
         test.exitsignal = (WIFSIGNALED(i) ? WTERMSIG(i) : 0);
         test.exitcored = (WIFSIGNALED(i) ? WCOREDUMP(i) : 0);
-        test.exitno = (WIFEXITED(i) ? WEXITSTATUS(i) : 256);
+        // test.exitno = (WIFEXITED(i) ? WEXITSTATUS(i) : 256);
 
         // read the status file to determine what happened
         // and store the information in the test struct.

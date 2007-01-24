@@ -23,7 +23,6 @@ enum {
     // result sections are numbered from 64 through 127.
     exSTDOUT = 64,			///< marks a line in the stdout section.
     exSTDERR,				///< marks a line in the stderr section.
-    exRESULT,				///< marks a line in the result (exit value) section.
     exRESULT_TOKEN_END,		///< never returned.  this token is always one higher than the highest-numbered section token.
 
     exNEW = 0x100,			///< flag added to the section token that specifies that this is the start of a new section.

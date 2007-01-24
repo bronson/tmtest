@@ -354,53 +354,6 @@ void compare_section_start(scanstate *cmpscan, int fd,
 }
 
 
-/** Returns true if the given buffer contains non-whitespace characters,
- * false if the buffer consists entirely of whitespace. */
-
-static int contains_nws(const char *cp, int len)
-{
-	const char *ce = cp + len;
-
-	while(cp < ce) {
-		if(!isspace(*cp)) {
-			return 1;
-		}
-	}
-
-	return 0;
-}
-
-
-/** Scans the given buffer for the exit value.
- *
- * Ignores everything except for the first digit and any digits that
- * follow it.
- *
- * If digits are found, then it updates the test structure with
- * whether the exit values match or not.
- * If no digits are found, then this routine does nothing.
- */
-
-void parse_exit_clause(struct test *test, const char *cp, int len)
-{
-	const char *ce = cp + len;
-	unsigned int num = 0;
-
-	// skip to the first digit in the buffer
-	while(!isdigit(*cp) && cp < ce) cp++;
-	if(cp >= ce) return;
-
-	// scan the number
-	while(isdigit(*cp)) {
-		num = 10*num + (*cp - '0');
-		cp++;
-	}
-
-	test->expected_exitno = num;
-	test->exitno_match = (test->exitno == num ? match_yes : match_no);
-}
-
-
 /** Increments cp past the section name.
  *
  * Will not increment cp by more than len bytes.
@@ -675,9 +628,6 @@ void parse_section_compare(struct test *test, int sec,
                     cmpscan_state = 0;
                 }
                 break;
-            case exRESULT:
-				parse_exit_clause(test, datap, len);
-                break;
         }
     } else {
         // we're continuing an already started section.
@@ -690,14 +640,6 @@ void parse_section_compare(struct test *test, int sec,
             case exSTDOUT:
             case exSTDERR:
 				compare_continue(cmpscan, datap, len);
-                break;
-            case exRESULT:
-				if(contains_nws(datap, len)) {
-					fprintf(stderr, "%s line %d Error: RESULT clause "
-                            "contains garbage.\n",
-							get_testfile_name(test), test->testfile.line);
-                    // Harmless to continue.  The testfile needs to be fixed.
-				}
                 break;
             case exCOMMAND:
                 break;
@@ -771,7 +713,7 @@ void test_results(struct test *test, const char *dispname)
 {
     scanstate scanner;
     char scanbuf[BUFSIZ];
-	int stdo, stde, exno;	// true if there are differences.
+	int stdo, stde;	// true if there are differences.
 	
 	if(was_aborted(test->status)) {
 		print_reason(test, "ABRT", "by");
@@ -791,7 +733,6 @@ void test_results(struct test *test, const char *dispname)
         return;
     }
 
-    test->exitno_match = match_unknown;
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
@@ -801,11 +742,6 @@ void test_results(struct test *test, const char *dispname)
     assert(test->stdout_match != match_inprogress);
     assert(test->stderr_match != match_inprogress);
 
-    // convert any unknowns into a solid yes/no
-    if(test->exitno_match == match_unknown) {
-		test->expected_exitno = 0;
-        test->exitno_match = (test->exitno == 0 ? match_yes : match_no);
-    }
     if(test->stdout_match == match_unknown) {
         test->stdout_match = (fd_has_data(test->outfd) ? match_no : match_yes);
     }
@@ -815,9 +751,8 @@ void test_results(struct test *test, const char *dispname)
 
     stdo = (test->stdout_match != match_yes);
     stde = (test->stderr_match != match_yes);
-    exno = (test->exitno_match != match_yes);
 
-    if(!stdo && !stde && !exno) {
+    if(!stdo && !stde && !test->exitsignal) {
         test_successes++;
         printf("ok   %s \n", convert_testfile_name(dispname));
     } else {
@@ -827,34 +762,20 @@ void test_results(struct test *test, const char *dispname)
             printf("terminated by signal %d%s", test->exitsignal,
                     (test->exitcored ? " with core" : ""));
         } else {
-            printf("%c%c%c  ",
+            printf("%c%c  ",
                     (stdo ? 'O' : '.'),
-                    (stde ? 'E' : '.'),
-                    (exno ? 'X' : '.'));
+                    (stde ? 'E' : '.'));
             if(stdo || stde) {
                 if(stdo) printf("stdout ");
                 if(stdo && stde) printf("and ");
                 if(stde) printf("stderr ");
                 printf("differed");
             }
-            if((stdo || stde) && exno) printf(", ");
-            if(exno) printf("result was %d not %d",
-                    test->exitno, test->expected_exitno);
         }
 		printf("\n");
     }
 
     return;
-}
-
-
-static void write_exit_no(int fd, int exitno)
-{
-    char buf[512];
-    int cnt;
-
-    cnt = snprintf(buf, sizeof(buf), "RESULT: %d\n", exitno);
-    write(fd, buf, cnt);
 }
 
 
@@ -970,15 +891,6 @@ void parse_section_output(struct test *test, int sec,
             // ignore all data in the expected stderr
             break;
 
-        case exRESULT|exNEW:
-            test->exitno_match = match_yes;
-            write_exit_no(test->rewritefd, test->exitno);
-            break;
-        case exRESULT:
-            // allow random garbage in result section to pass
-            write(test->rewritefd, datap, len);
-            break;
-
         default:
             write(test->rewritefd, datap, len);
     }
@@ -1033,7 +945,6 @@ void dump_results(struct test *test)
     // that we need to dump them in the same order as they occur
     // in the testfile otherwise the diff will be all screwed up.
 
-    test->exitno_match = match_unknown;
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
@@ -1041,10 +952,6 @@ void dump_results(struct test *test)
 
     // if any sections haven't been output, but they differ from
     // the default, then they need to be output here at the end.
-
-    if(test->exitno_match == match_unknown && test->exitno != 0) {
-        write_exit_no(test->rewritefd, test->exitno);
-    }
     if(test->stderr_match == match_unknown && fd_has_data(test->errfd)) {
 		write_strconst(test->rewritefd, "STDERR:\n");
         write_file(test->rewritefd, test->errfd, NULL);

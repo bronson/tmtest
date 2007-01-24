@@ -60,9 +60,9 @@ struct test {
     int outfd;				///< the file that receives the test's stdout.
     int errfd;				///< the file that receives the test's stderr.
     int statusfd;			///< receives the runtime test status messages.
-    int exitno;				///< the test's actual exit value (WEXITSTATUS).
     int exitsignal;         ///< the value returned for the test by waitpid(2)
     int exitcored;          ///< if exitsignal is true, true if child core dumped.
+
 
 	char *diffname;			///< if we're diffing against stdin, this contains the name of the required tempfile.
 	int diff_fd;			///< if diffname is set, then this is the fd of the tempfile we're using to store stdin.
@@ -74,9 +74,6 @@ struct test {
 	char *last_file_processed; ///< if it could be discovered, this contains the name of the last file to be started.  must be freed.
 	int aborted;			///< true if the test was aborted (and therefore no further tests should be run).
 
-	int expected_exitno;	///< the test's expected exit value.  this is only valid when stderr_match != match_unknown.
-
-    enum matchval exitno_match;	///< tells whether the expected and actual exit values match.
     enum matchval stdout_match;	///< tells whether the expected and actual stdout matches.
     enum matchval stderr_match;	///< tells whether the expected and actual stderr matches.
 };
