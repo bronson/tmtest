@@ -229,12 +229,11 @@ MKDIR ()
 INDENT ()
 {
     # sed appears more binary transparent than bash's builtins so I'm
-    # using sed instead of builtin read.  It might even be faster.
-
+    # using it instead of builtin read.  It might even be faster.
     sed -e "s/^/${1-    }/"
 
-    # even though this might be faster, it mucks things up.
-    #
+    # even though it would probably be faster to do it with the
+	# Bash built-in, the following mucks things up.  Bash is sloppy.
     #	while read LINE; do
     #		echo $'\t'"$LINE"
     #	done
@@ -244,10 +243,13 @@ INDENT ()
 # 
 # REPLACE
 #
-# Replaces all occurrences of the first argument with the second
-# argument.  Both should be regex-safe.  Use sed if you want to
-# replace with regexes.  NOTE: replace does not work if a newline
-# is embedded in either argument.
+# Replaces all occurrences of the first argument with the second argument.
+# Takes any number of arguments:
+#   REPLACE abc ABC def DEF ghi GHI
+# converts the first nine characters of the alphabet to upper case
+# All non-control characters are safe: quotes, slashes, etc.
+# Use sed if you want to replace with regexes.
+# NOTE: replace does not work if a newline is embedded in either argument.
 #
 # Three layers of escaping!  (bash, perlvar, perlre)  This is insane.
 # I wish sed or awk would work with raw strings instead of regexes.
@@ -256,28 +258,8 @@ INDENT ()
 
 REPLACE()
 {
-    # unfortunately bash can't handle this substitution because it
-    # must work on ' and \ simultaneously.  So, send it to perl for
-    # processing.  Until ' and \ have been escaped, Perl can't 
-    
+    # unfortunately bash can't handle this substitution itself because it
+    # must work on ' and \ simultaneously. Send it to perl for processing.
 
-#    echo "got: '$1' '${1//[\'\\]/\'}'"
-#    perl -e "print \"in: \" . quotemeta('${1//\'/\'}') . \"\\n\";"
-
-#     (echo "$1"; echo "$2"; cat) | cat
-#     (echo "$1"; echo "$2"; cat) | perl -e "my \$in = <>; chomp \$in; my \$out = <>; chomp \$out; print '  in: <<' . \$in . \">>\n out: <<\" . \$out . \">>\n\"; while(<>) { print \"DATA: \$_\" }"
-#     (echo "$1"; echo "$2"; cat) | perl -e "my \$in = <>; chomp \$in; \$in=quotemeta(\$in); my \$out = <>; chomp \$out; print '  in: <<' . \$in . \">>\n out: <<\" . \$out . \">>\n\"; while(<>) { print \"DATA: \$_\" }"
-
-     (echo "$1"; echo "$2"; cat) | perl -e "my \$in = <>; chomp \$in; \$in=quotemeta(\$in); my \$out = <>; chomp \$out; while(<>) { s/\$in/\$out/g; print or die \"Could not print: \$!\\\\n\"; }"
-
-
-# this scheme also works but it's much better to feed the vars on stdin
-# along with the data.  Less process overhead, simpler script.  This
-# does mean that REPLACE won't work with embedded newlines though.
-#
-#    local in=$(perl -p -e "s/([\\'\\\\])/\\\\\$1/g" <<< $1);
-#    local out=$(perl -p -e "s/([\\'\\\\])/\\\\\$1/g" <<< $2);
-#
-#     perl -e "<>; my \$in = quotemeta(chomp); <>; my \$out = chomp; while(<>) { s/\$in/\$out/g; print or die \"Could not print: \$!\\\\n\"; }"
-#    perl -e "my \$in = quotemeta('${1//\'/\'}'); my \$out = '${2//\'/\'}'; while(<>) { s/\$in/\$out/g; print or die \"Could not print: \$!\\\\n\"; }"
+     ( while [ "$1" != "" ]; do echo "$1"; shift; done; echo; cat) | perl -e "my %ops; while(<>) { chomp; last if \$_ eq ''; \$_ = quotemeta(\$_); \$ops{\$_} = <>; chomp(\$ops{\$_}); warn 'odd number of arguments to REPLACE', last if \$ops{\$_} eq ''; } while(<>) { for my \$k (keys %ops) { s/\$k/\$ops{\$k}/g } print or die \"REPLACE: Could not print: \$!\\\\n\"; }"
 }

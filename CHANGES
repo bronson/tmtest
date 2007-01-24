@@ -1,3 +1,4 @@
+- Made REPLACE handle multiple text substitutions; could only handle 1 before.
 - Got rid of RESULT and all its code.  echo $? from within your test instead.
 - Got rid of Cutest since it was very non-cute.  Wrote zutest instead.
 - Changed --all-files to be the much more understandable --ignore-extension.
