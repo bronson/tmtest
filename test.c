@@ -705,30 +705,24 @@ static void print_reason(struct test *test, const char *name, const char *prep)
 }
 
 
-/** Checks the actual results against the expected results.
- * dispname is the name we should display for the test.
- */
-
-void test_results(struct test *test, const char *dispname)
+static void test_analyze_results(struct test *test, int *stdo, int *stde)
 {
     scanstate scanner;
     char scanbuf[BUFSIZ];
-	int stdo, stde;	// true if there are differences.
 	
+	*stdo = *stde = -1;
+
 	if(was_aborted(test->status)) {
-		print_reason(test, "ABRT", "by");
 		test_failures++;
 		test->aborted = 1;
 		return;
 	}
 
 	if(was_disabled(test->status)) {
-		print_reason(test, "dis ", "by");
 		return;
 	}
 
     if(!was_started(test->status)) {
-		print_reason(test, "ERR ", "error in");
         test_failures++;
         return;
     }
@@ -749,14 +743,45 @@ void test_results(struct test *test, const char *dispname)
         test->stderr_match = (fd_has_data(test->errfd) ? match_no : match_yes);
     }
 
-    stdo = (test->stdout_match != match_yes);
-    stde = (test->stderr_match != match_yes);
+    *stdo = (test->stdout_match != match_yes);
+    *stde = (test->stderr_match != match_yes);
 
-    if(!stdo && !stde && !test->exitsignal) {
+    if(!*stdo && !*stde && !test->exitsignal) {
         test_successes++;
-        printf("ok   %s \n", convert_testfile_name(dispname));
     } else {
         test_failures++;
+	}
+}
+
+
+/** Checks the actual results against the expected results.
+ * dispname is the name we should display for the test.
+ */
+
+void test_results(struct test *test, const char *dispname)
+{
+	int stdo, stde;	// true if there are differences.
+
+	test_analyze_results(test, &stdo, &stde);
+	
+	if(test->aborted) {
+		print_reason(test, "ABRT", "by");
+		return;
+	}
+
+	if(was_disabled(test->status)) {
+		print_reason(test, "dis ", "by");
+		return;
+	}
+
+    if(!was_started(test->status)) {
+		print_reason(test, "ERR ", "error in");
+        return;
+    }
+
+    if(!stdo && !stde && !test->exitsignal) {
+        printf("ok   %s \n", convert_testfile_name(dispname));
+    } else {
         printf("FAIL %-25s ", convert_testfile_name(dispname));
         if(test->exitsignal) {
             printf("terminated by signal %d%s", test->exitsignal,
@@ -776,6 +801,24 @@ void test_results(struct test *test, const char *dispname)
     }
 
     return;
+}
+
+
+/** Like test_results() except that it returns 1 if the test failed
+ *  and 0 if it was disabled or succeeded.
+ */
+
+int check_for_failure(struct test *test, const char *testpath)
+{
+	int stdo, stde;	// true if there are differences.
+	int oldfailures = test_failures;
+
+	test_analyze_results(test, &stdo, &stde);
+	if(oldfailures+1 == test_failures) {
+		return 1;
+	}
+
+	return 0;
 }
 
 

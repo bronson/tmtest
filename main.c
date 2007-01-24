@@ -42,7 +42,8 @@
 enum {
     outmode_test,
     outmode_dump,
-    outmode_diff
+    outmode_diff,
+	outmode_failures_only
 };
 
 int outmode = outmode_test;
@@ -395,6 +396,29 @@ static void finish_diff(struct test *test, int diffpid)
 }
 
 
+/* Prints the relative path from the original cwd to the current testfile */
+
+static void print_test_path(struct test *test)
+{
+	char result[PATH_MAX];
+
+	int keep = curpush(test->testfilename);
+	if(keep <= 0) {
+		printf("print_test_path: path is too long!\n");
+		return;
+	}
+
+	if(abs2rel(curabsolute(), orig_cwd, result, sizeof(result))) {
+		printf("%s\n", result);
+	} else {
+		printf("print_test_path: abs2rel error: %s relto %s\n",
+			curabsolute(), orig_cwd);
+	}
+
+	curpop(keep);
+}
+
+
 /** Runs the named testfile.
  *
  * If warn_suffix is true and the ffilename doesn't end in ".test"
@@ -451,6 +475,7 @@ static int run_test(const char *name, const char *dispname, int warn_suffix)
     // initialize the test mode
     switch(outmode) {
         case outmode_test:
+		case outmode_failures_only:
             // nothing to do
             break;
         case outmode_dump:
@@ -561,6 +586,11 @@ static int run_test(const char *name, const char *dispname, int warn_suffix)
             case outmode_test:
                 test_results(&test, dispname);
                 break;
+			case outmode_failures_only:
+				if(check_for_failure(&test, dispname)) {
+					print_test_path(&test);
+				}
+				break;
             case outmode_dump:
                 dump_results(&test);
                 break;
@@ -1017,6 +1047,7 @@ static void process_args(int argc, char **argv)
 		{"config", 1, 0, 'c'},
 		{"diff", 0, 0, 'd'},
 		{"dump-script", 0, &dumpscript, 1},
+		{"failures-only", 0, 0, 'f'},
 		{"help", 0, 0, 'h'},
 		{"output", 0, 0, 'o'},
 		{"quiet", 0, 0, 'q'},
@@ -1049,6 +1080,10 @@ static void process_args(int argc, char **argv)
             case 'd':
                 outmode = outmode_diff;
                 break;
+
+			case 'f':
+				outmode = outmode_failures_only;
+				break;
 
 			case 'h':
 				usage();

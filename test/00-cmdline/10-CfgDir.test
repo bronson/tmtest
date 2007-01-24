@@ -1,3 +1,9 @@
+# Test opening a directory as if it were a config file.
+
+# Our tests run with -e by default.  Therefore, if we want to see
+# the test result, if it's nonzero, we need to turn that off.
+set +e
+
 $tmtest --config=/tmp - <<-EOL
 	echo Test!
 EOL

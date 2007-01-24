@@ -8,8 +8,6 @@ B<tmtest> [B<-d>|B<-o>] [I<dir>|I<testfile>...]
 
 =head1 DESCRIPTION
 
-
-
 =head1 OPTIONS
 
 =over 8
@@ -41,6 +39,12 @@ DANGER!!!  This is the perfect way to let subtle bugs slip
 into your test deck.  Make sure you know exactly what you
 changed, right down to the whitespace.
 
+=item B<-f> B<--failures-only>
+
+Runs the given tests and prints the paths of the tests that fail.
+If you're struggling with a few failing tests, this will give you
+a concise report of exactly what testfiles need to be investigated.
+
 =item B<--ignore-extension>
 
 Normally tmtest only runs files with names that end in ".test".
@@ -54,10 +58,6 @@ test results, and a final passed/failed/disabled summary.  So, it's
 quieter than it normally is but it certainly isn't silent.
 
 =back
-
-=head1 TESTFILE
-
-=over 8
 
 =head1 CONFIGURATION
 
@@ -107,23 +107,59 @@ tmtest returns a nonzero error code only if one or more tests
 could not be run for some reason.  If all tests are successfully run,
 even if they all fail, tmtest returns 0.
 
-=head1 SUGGESTIONS
+TODO: this is an anachronism.  It should return the number of failing
+tests or 99, whichever is less.  If no tests fail then it returns
+of course 0.
+
+=head1 TESTFILE
+
+=over 8
+
+=back
+
+=head1 TEST RESULTS
+
+There are two schools of thought on how testfiles should be written:
+- like a shell script, where you need to manually check after the
+commands that matter if they failed or not.
+
+	command
+	[ $? != 0 ] && echo got $? from command && exit $?
+
+- like a makefile, where the first command that returns a nonzero
+exit status causes the whole process to bail out.
+
+	command
+	# no need to check; if it returned nonzero, the script already exited.
+
+tmtest uses the first technique by default; it treats testfiles like
+shell scripts.
+
+To make your testfile bail the instant it encounters an error, add
+the command "set -e" to it.  If any subsequent command returns an
+error, everything will bail out.  Add "set +e" to turn this behavior
+back off.  You may also want to "set -o pipefail" as well.
+
+If your testfiles are trivial, it probably makes sens to use -e to
+save yourself a lot of manual checking.  Otherwise, the default of
++e is probably the safest, most understandable way to write tests.
+
+=head1 TESTFILE SUGGESTIONS
 
 Look in the "examples" directory that came with this distribution.
 You may find some helpful utilities.
 
-If you want to be more pedantic, you might want to "set -e" in your
-test file or configuration file.  This will make it so the test will
-stop at the very first command that returns a nonzero exit status.
-
 If you can't figure out what your test is doing, you might want
-to add "set -v" or "set -x" to the top of the testfile.  This will
-show you line-by-line what is happening.  You can also put them in
+to add "set -x" to the top of the testfile.  This will
+show you line-by-line what is happening (use "set -v" if "set -x"'s
+command-line substitution produces hard-to-read results).
+You can also put them in
 a config file if you're having configuration issues.
 
 Never create files in /tmp with static or easily predictable file names.
 This opens you up to symlink attacks.  Instead, use mktemp(1)
-or tempfile(1).  Also check the examples directory for functions
+or tempfile(1) (tmtest's built-in helpers use mktemp).
+Also check the examples directory for functions
 to make working with files easier.
 
 	file=`mktemp -t 02-XXXXXX` || ABORT can't mktemp.

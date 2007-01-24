@@ -1,3 +1,10 @@
+# Test specifying nothing for config
+
+# tmtest runs -e by default, so we need to turn that off if we
+# want to be able to read the result of the command (else the
+# script just exits immediately and the echo never fires).
+set +e
+
 $tmtest --config= - <<-EOL
 	echo Howdy
 	STDOUT:

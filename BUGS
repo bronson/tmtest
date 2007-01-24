@@ -13,8 +13,8 @@ These are bugs that tmtest inherits from Bash:
 Bash3 has removed the ability to set LINENO, so you may see the
 wrong line number be printed if there's an error.  If you want to
 see the correct line numbers, use Bash2.  It's an unfortunate
-regression but since it only affects tests scripts being piped
-on stdin it won't affect many people.
+regression.  I've worked around it so that it only affects tests
+piped in on stdin.
 
 
 The <<-EOL operator strips ALL tabs from the front of each line.
@@ -53,3 +53,8 @@ redirect both stdout and stderr to a pipe?
 Why is the unset command totally unrelated to the set command?
 
 Why can I "exec > file" but I can't "exec | prog"?
+	I have to exec > >(prog).  Seems asymmetrical.
+
+Why oh why can't I get the pid of the most recent process substitution?
+	(exec > >(tr a-z A-Z); pid=$!; echo howdy; wait $pid)
+	Except that $! is not set for process substitutions.
