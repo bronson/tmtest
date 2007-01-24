@@ -15,6 +15,5 @@ $tmtest --config="$MYDIR/zzyzx" - <<-EOL 2>&1 | SANIFY
 	Howdy
 EOL
 
-RESULT: 0
 STDOUT:
 Could not locate ...zzyzx: No such file or directory

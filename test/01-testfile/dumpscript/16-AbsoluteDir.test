@@ -67,8 +67,6 @@ STDOUT:
 	STDOUT: () { exit 0; }
 	STDERR () { exit 0; }
 	STDERR: () { exit 0; }
-	RESULT () { exit 0; }
-	RESULT: () { exit 0; }
 	
 	echo 'RUNNING: DIR/di/tt.test' >&FD
 	MYDIR='DIR/di'
@@ -77,5 +75,4 @@ STDOUT:
 	. 'DIR/di/tt.test'
 	
 	echo DONE >&FD
-RESULT: 0
 STDERR:

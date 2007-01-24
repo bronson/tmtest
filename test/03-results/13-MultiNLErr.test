@@ -9,7 +9,7 @@ $tmtest -q - <<-EOL
 
 EOL
 STDOUT: 
-FAIL (STDIN)                   .E.  stderr differed
+FAIL (STDIN)                   .E  stderr differed
 
 1 test run, 0 successes, 1 failure.
 STDERR:

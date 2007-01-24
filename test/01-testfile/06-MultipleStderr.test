@@ -12,7 +12,6 @@ EOL
 
 STDERR:
 (STDIN) line 5 Error: duplicate STDERR section.  Ignored.
-RESULT: 0
 STDOUT:
 ok   (STDIN) 
 

@@ -15,6 +15,6 @@ EOL
 STDERR:
 (STDIN) line 7 Error: duplicate STDOUT section.  Ignored.
 STDOUT:
-FAIL (STDIN)                   O..  stdout differed
+FAIL (STDIN)                   O.  stdout differed
 
 1 test run, 0 successes, 1 failure.

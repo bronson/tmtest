@@ -46,8 +46,6 @@ STDOUT:
 	STDOUT: () { exit 0; }
 	STDERR () { exit 0; }
 	STDERR: () { exit 0; }
-	RESULT () { exit 0; }
-	RESULT: () { exit 0; }
 	
 	echo 'RUNNING: /tmp/DIR/tt.test' >&FD
 	MYDIR='/tmp/DIR'

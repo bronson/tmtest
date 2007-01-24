@@ -11,6 +11,6 @@ $tmtest -q - <<-EOL
 EOL
 
 STDOUT: 
-FAIL (STDIN)                   O..  stdout differed
+FAIL (STDIN)                   O.  stdout differed
 
 1 test run, 0 successes, 1 failure.

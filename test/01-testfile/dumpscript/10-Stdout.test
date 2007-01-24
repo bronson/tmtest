@@ -36,8 +36,6 @@ STDOUT:
 	STDOUT: () { exit 0; }
 	STDERR () { exit 0; }
 	STDERR: () { exit 0; }
-	RESULT () { exit 0; }
-	RESULT: () { exit 0; }
 	
 	echo 'RUNNING: (STDIN)' >&FD
 	MYDIR='/tmp'

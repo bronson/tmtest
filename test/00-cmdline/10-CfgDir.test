@@ -1,7 +1,9 @@
 $tmtest --config=/tmp - <<-EOL
 	echo Test!
 EOL
+echo RESULT: $?
 
-RESULT: 2
 STDERR:
 Could not open /tmp: not a file!
+STDOUT:
+RESULT: 2

@@ -1,5 +1,8 @@
 # Sees what happens when we're in pedantic mode and there's an error
 # in the test file.
+#
+# Now that we no longer have a RESULT section, I'm not sure this test
+# means much...   leaving it in anyway.
 
 $tmtest $args -o - <<-EOL | sed -re "s/: line [0-9]+:/: line BLAH:/" | INDENT "  "
 	set -e
@@ -15,6 +18,5 @@ STDOUT:
   iusedtobullseyewompratsinmypants
   echo it ran
   STDOUT:
-  RESULT: 127
   STDERR:
   /bin/bash: line BLAH: iusedtobullseyewompratsinmypants: command not found

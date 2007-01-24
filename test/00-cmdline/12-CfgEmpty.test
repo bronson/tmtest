@@ -3,7 +3,9 @@ $tmtest --config= - <<-EOL
 	STDOUT:
 	Howdy
 EOL
+echo RESULT: $?
 
-RESULT: 1
 STDERR:
 You must specify a directory for --config.
+STDOUT:
+RESULT: 1
