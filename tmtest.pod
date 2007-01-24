@@ -103,13 +103,13 @@ You can supply a reason string too
 
 =head1 EXIT VALUE
 
-tmtest returns a nonzero error code only if one or more tests
-could not be run for some reason.  If all tests are successfully run,
-even if they all fail, tmtest returns 0.
+tmtest exits with the number of tests that failed or were aborted.
+If the entire test deck succeeds or is disabled, tmtest returns 0.
+If more than 99 tests fail, tmtest just returns 99.
 
-TODO: this is an anachronism.  It should return the number of failing
-tests or 99, whichever is less.  If no tests fail then it returns
-of course 0.
+Generally, if something else prevented tests from running (say,
+lack of memory or disk space), tmtest will return a number
+between 100 and 199.  TODO: this isn't true yet.
 
 =head1 TESTFILE
 

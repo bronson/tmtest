@@ -95,9 +95,7 @@ int compare_continue(scanstate *ss, const char *ptr, size_t len)
             ss->line += n;
             if(n < 0) {
                 // there was an error while trying to fill the buffer
-                // TODO: this should be propagated to the client somehow?
-                perror("compare_continue_bytes");
-                exit(10);
+				return -1;
             }
             if(n == 0) {
 				// banged into the EOF
@@ -196,6 +194,7 @@ compare_result compare_check_newlines(scanstate *ss)
 static void test_empty()
 {
 	scanstate ssrec, *ss=&ssrec;
+	int val;
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
@@ -203,7 +202,8 @@ static void test_empty()
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
-	compare_continue(ss, "", 0);
+	val = compare_continue(ss, "", 0);
+	AssertNonNegative(val);
 	AssertEq(compare_check(ss), cmp_full_match);
 }
 
@@ -211,11 +211,14 @@ static void test_empty()
 static void test_standard()
 {
 	scanstate ssrec, *ss=&ssrec;
+	int val;
 
 	readmem_init_str(ss, "123");
 	compare_attach(ss);
-	compare_continue(ss, "12", 2);
-	compare_continue(ss, "3", 1);
+	val = compare_continue(ss, "12", 2);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "3", 1);
+	AssertNonNegative(val);
 	AssertEq(compare_check(ss), cmp_full_match);
 }
 
@@ -225,14 +228,15 @@ static void test_large()
 	char buf[BUFSIZ];
 	scanstate ssrec, *ss=&ssrec;
 	unsigned int seed = 47;
-	int num, i;
+	int num, i, val;
 
 	scanstate_init(ss, buf, BUFSIZ);
 	readrand_attach(ss, seed);
 	compare_attach(ss);
 	for(i=0; i<10; i++) {
 		num = rand_r(&seed);
-		compare_continue(ss, (char*)&num, sizeof(num));
+		val = compare_continue(ss, (char*)&num, sizeof(num));
+		AssertNonNegative(val);
 	}
 
 	// compare_check will never return cmp_full_match because
@@ -243,9 +247,12 @@ static void test_large()
 
 static void test_strings(scanstate *ss, const char *s1, const char *s2)
 {
+	int val;
+
 	readmem_init(ss, s1, strlen(s1));
 	compare_attach(ss);
-	compare_continue(ss, s2, strlen(s2));
+	val = compare_continue(ss, s2, strlen(s2));
+	AssertNonNegative(val);
 }
 
 
@@ -279,19 +286,26 @@ static void test_inc()
 	// Tries to ensure that packetization won't mess us up.
 
 	scanstate ssrec, *ss=&ssrec;
+	int val;
 
 	readmem_init_str(ss, "12");
 	compare_attach(ss);
-	compare_continue(ss, "1", 1);
-	compare_continue(ss, "2", 1);
-	compare_continue(ss, "\n", 1);
+	val = compare_continue(ss, "1", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "2", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "\n", 1);
+	AssertNonNegative(val);
 	AssertEq(compare_check(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "123");
 	compare_attach(ss);
-	compare_continue(ss, "1", 1);
-	compare_continue(ss, "2", 1);
-	compare_continue(ss, "\n", 1);
+	val = compare_continue(ss, "1", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "2", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "\n", 1);
+	AssertNonNegative(val);
 	AssertEq(compare_check(ss), cmp_no_match);
 }
 
@@ -301,25 +315,34 @@ static void test_inc_newlines()
 	// Tries to ensure packetization won't mess up the newline checking.
 
 	scanstate ssrec, *ss=&ssrec;
+	int val;
 
 	readmem_init_str(ss, "123");
 	compare_attach(ss);
-	compare_continue(ss, "1", 1);
-	compare_continue(ss, "2", 1);
-	compare_continue(ss, "3", 1);
-	compare_continue(ss, "\n", 1);
+	val = compare_continue(ss, "1", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "2", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "3", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "\n", 1);
+	AssertNonNegative(val);
 	AssertEq(compare_check_newlines(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "123\n");
 	compare_attach(ss);
-	compare_continue(ss, "1", 1);
-	compare_continue(ss, "2", 1);
-	compare_continue(ss, "3", 1);
+	val = compare_continue(ss, "1", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "2", 1);
+	AssertNonNegative(val);
+	val = compare_continue(ss, "3", 1);
+	AssertNonNegative(val);
 	AssertEq(compare_check_newlines(ss), cmp_ss_has_extra_nl);
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
-	compare_continue(ss, "\n", 1);
+	val = compare_continue(ss, "\n", 1);
+	AssertNonNegative(val);
 	AssertEq(compare_check_newlines(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "\n");

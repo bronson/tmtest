@@ -1,12 +1,12 @@
 0.96:
-- Change exit value.
+- Clean up zutest.h.
 - Is it possible to separate STDOUT and STDERR?  Maybe stderr comes first
   in the testfile with each line prefixed by :.  Then STDOUT.  No need
   for this delimiter craziness.
   YES, stderr ALWAYS comes first in the testfile, followed by stdout.
 - MKFILE should just create the file that the user names.
 - MKTMPFILE should create a filename and store that in the user's variable.
-- Write unit tests for path normalization.
+- Write unit tests for path normalization.  Maybe for CURPATH too.
 - Make tmtest only execute config files owned by either the user or root.
   Print a big fat warning when the config file is skipped.  This prevents
   a malicious user from putting a config file in /tmp and having it
@@ -43,10 +43,7 @@
         // not above the given config file.  i.e. if user specifies
         // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
         // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
-- get rid of all the exit(10) calls in test.c.  We need a better way to
-  abort the test.
-  should get rid of a whole bunch in main.c as well.
-  this should prevent us from dropping turds in /tmp all the time too.
+- Get rid of all the exit() calls from main.c.
 - Ensure it compiles and runs on freebsd.
 - Get rid of -g, add -O2.  Make it easy to set these for compilation.
   Yes, have dev and prod modes.  dev would be -O0 and -g and include
@@ -54,6 +51,14 @@
   unit tests only add 12K or so, where might as well just leave em).
 - If there were failures, should highlight that in the test summary.
 	"%d FAILURES" or somesuch.
+- Write a sample tmtest.conf that walks you through setting -e or not,
+  indenting STDERR or not, etc.
+- Make zutest recursive: there should be no need for zutest_battery.
+  a zutest_suite should be able to contain any number of other
+  zutest_suites.
+- Add the zutest unit tests to the tmtest test battery.
+- Make zutest able to run both quiet (only failures printed) and verbose
+  (everything printed and then some).
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
@@ -64,6 +69,8 @@
   - This also allows us to get rid of STATUSFD so that NO other fds are open
     when running the test.  OUTFD and ERRFD still need to be open when
 	running the config files though.
+- Allow running more than one test at once.  Add -j option like gmake.
+  Maybe should also read MAKEFLAGS from the environment?
 - Use i/o lib for everything.  No need for temp files.
   This means that we stream everything EXCEPT stderr, which we memory
   buffer.  If your stderr is more than 100K or so in size, just redirect
@@ -100,6 +107,8 @@
 - Make MKFILE take a path as the first argument too.  If the first arg
   is [0-9a-zA-Z_] then it's an identifier and we'll make a tempfile.
   Otherwise, we'll use the arg as a filename.  ER, IS THIS A GOOD IDEA?
+
+rc series...
 
 1.0!
 

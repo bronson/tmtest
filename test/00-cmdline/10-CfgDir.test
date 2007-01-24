@@ -12,4 +12,4 @@ echo RESULT: $?
 STDERR:
 Could not open /tmp: not a file!
 STDOUT:
-RESULT: 2
+RESULT: 101

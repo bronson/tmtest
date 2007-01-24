@@ -106,7 +106,7 @@ static int var_statusfd(struct test *test, FILE *fp, const char *var)
 /** Returns the full path to the user's home directory.
  */
 
-static char* get_home_dir()
+static char* get_home_dir(struct test *test)
 {
 	char *cp;
 	struct passwd *entry;
@@ -122,8 +122,8 @@ static char* get_home_dir()
 		if(cp) return cp;
 	}
 
-	fprintf(stderr, "Could not locate your home directory!\n");
-	exit(10);
+	test_abort(test, "Could not locate your home directory!  Please set $HOME.\n");
+	return NULL; // will never be executed
 }
 
 
@@ -215,8 +215,7 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
 		buf[sizeof(buf)-1] = '\0';
 		cp = strrchr(buf, '/');
 		if(cp == NULL) {
-			fprintf(stderr, "Illegal config_file: '%s'\n", buf); 
-			exit(1);
+			test_abort(test, "Illegal config_file: '%s'\n", buf); 
 		}
 		*cp = '\0';
 		check_config_str(test, fp, buf, cp+1);
@@ -224,7 +223,7 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
 	} else {
 		check_config_str(test, fp, "/etc", CONFIG_FILE);
 		check_config_str(test, fp, "/etc/tmtest", CONFIG_FILE);
-		check_config_str(test, fp, get_home_dir(), HOME_CONFIG_FILE);
+		check_config_str(test, fp, get_home_dir(test), HOME_CONFIG_FILE);
 	}
 
 	// check config files in the current hierarchy

@@ -15,4 +15,4 @@ echo RESULT: $?
 STDERR:
 You must specify a directory for --config.
 STDOUT:
-RESULT: 1
+RESULT: 100

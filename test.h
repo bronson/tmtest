@@ -7,6 +7,7 @@
  */
 
 #include "compare.h"
+#include <setjmp.h>
 
 
 /**
@@ -31,7 +32,7 @@ typedef enum {
 
 	test_was_started=16,	///< test was started but we haven't received an exit status yet.
 	test_was_completed,		///< test completed normally.  tests may abort prematurely but still consider it a successful run, so use test_was_started.  this status is largely useless.
-	test_was_aborted,		///< somebody called abort in the middle of the test.
+	test_was_aborted,		///< somebody called abort in the middle of the test
 	test_was_disabled,		///< the test was disabled by somebody.
 } test_status;
 
@@ -60,6 +61,7 @@ struct test {
     int outfd;				///< the file that receives the test's stdout.
     int errfd;				///< the file that receives the test's stderr.
     int statusfd;			///< receives the runtime test status messages.
+	int exitno;				///< the testfile exited with this value
     int exitsignal;         ///< the value returned for the test by waitpid(2)
     int exitcored;          ///< if exitsignal is true, true if child core dumped.
 
@@ -72,10 +74,11 @@ struct test {
 
 	int num_config_files;	///< the number of config files we started processing.  If the status is higher than test_was_started, then this gives the total number of config files processed.
 	char *last_file_processed; ///< if it could be discovered, this contains the name of the last file to be started.  must be freed.
-	int aborted;			///< true if the test was aborted (and therefore no further tests should be run).
 
     enum matchval stdout_match;	///< tells whether the expected and actual stdout matches.
     enum matchval stderr_match;	///< tells whether the expected and actual stderr matches.
+
+	jmp_buf abort_jump;
 };
 
 
@@ -86,12 +89,14 @@ void test_results(struct test *test, const char *dispname);
 void dump_results(struct test *test);
 void print_test_summary(struct timeval *start, struct timeval *stop);
 int check_for_failure(struct test *test, const char *testpath);
+int test_get_exit_value();
 
 void test_init(struct test *test);
 void test_free(struct test *test);
+void test_abort(struct test *test, const char *fmt, ...);
 
 
 // random utility function for start_diff.  Return value is true if the
 // file ends in a newline, false if not.
-size_t write_file(int outfd, int infd, int *ending_nl);
+size_t write_file(struct test *test, int outfd, int infd, int *ending_nl);
 

@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <dirent.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "re2c/read-fd.h"
 
@@ -57,12 +58,11 @@ const char* get_testfile_name(struct test *test)
  * Actually, it just returns the file's length.
  */
 
-int fd_has_data(int fd)
+int fd_has_data(struct test *test, int fd)
 {
     off_t pos = lseek(fd, 0, SEEK_END);
     if(pos < 0) {
-        perror("lseek in fd_has_data");
-        exit(10);   // todo: consolidate with error codes in main
+		test_abort(test, "fd_has_data lseek error: %s", strerror(errno));
     }
 
     return pos;
@@ -146,8 +146,8 @@ void scan_status_file(struct test *test)
 
     // first rewind the status file
     if(lseek(test->statusfd, 0, SEEK_SET) < 0) {
-        fprintf(stderr, "read_file lseek for status file: %s\n", strerror(errno));
-        exit(10);   // todo: consolidate with error codes in main
+        test_abort(test, "read_file lseek on status file: %s\n",
+			strerror(errno));
     }
 
     // then create our scanner
@@ -163,9 +163,8 @@ void scan_status_file(struct test *test)
 
 		// look for errors...
         if(tok < 0) {
-            fprintf(stderr, "Error %d pulling status tokens: %s\n", 
-                    tok, strerror(errno));
-            exit(10);
+            test_abort(test, "Error %d pulling status tokens: %s\n",
+				tok, strerror(errno));
         } else if(tok == stGARBAGE) {
 			fprintf(stderr, "Garbage on line %d in the status file: '%.*s'\n",
 					ss.line, (int)token_length(&ss)-1, token_start(&ss));
@@ -292,9 +291,8 @@ void test_command_copy(struct test *test, FILE *fp)
         oldline = test->testfile.line;
         int tokno = scan_next_token(&test->testfile);
         if(tokno < 0) {
-            fprintf(stderr, "Error %d pulling status tokens: %s\n", 
+            test_abort(test, "Error %d pulling status tokens: %s\n", 
                     tokno, strerror(errno));
-            exit(10);
         } else if(tokno == 0) {
 			// if the test file is totally empty.
 			break;
@@ -336,13 +334,14 @@ void test_command_copy(struct test *test, FILE *fp)
  * it up.
  */
 
-void compare_section_start(scanstate *cmpscan, int fd,
-		const char *filename, const char *sectionname)
+void compare_section_start(struct test *test,
+	scanstate *cmpscan, int fd,
+	const char *sectionname)
 {
     // rewind the file
     if(lseek(fd, 0, SEEK_SET) < 0) {
-        fprintf(stderr, "read_file lseek for status file: %s\n", strerror(errno));
-        exit(10);   // todo: consolidate with error codes in main
+        test_abort(test, "compare_section_start lseek compare: %s\n",
+			strerror(errno));
     }
 
     scanstate_reset(cmpscan);
@@ -487,8 +486,7 @@ int start_output_section(struct test *test, const char *tok,
     }
 
 	scanstate_reset(cmpscan);
-    compare_section_start(cmpscan, fd,
-        get_testfile_name(test), secname);
+    compare_section_start(test, cmpscan, fd, secname);
 
 	// store the newline flag in the cmpscan structure
 	cmpscan_suppress_newline = suppress_trailing_newline;
@@ -585,6 +583,7 @@ void parse_section_compare(struct test *test, int sec,
 {
     // cmpscan is the scanner used to perform the diff.
     scanstate *cmpscan = refcon;
+	int val;
 
     // the section that we're processing (without the NEW flag attached)
     int newsec = EX_TOKEN(sec);
@@ -639,7 +638,10 @@ void parse_section_compare(struct test *test, int sec,
                 break;
             case exSTDOUT:
             case exSTDERR:
-				compare_continue(cmpscan, datap, len);
+				val = compare_continue(cmpscan, datap, len);
+				if(val < 0) {
+					test_abort(test, "compare_continue error: %d\n", val);
+				}
                 break;
             case exCOMMAND:
                 break;
@@ -672,9 +674,8 @@ void scan_sections(struct test *test, scanstate *scanner,
     do {
         int tokno = scan_next_token(scanner);
         if(tokno < 0) {
-            fprintf(stderr, "Error %d pulling status tokens: %s\n", 
+            test_abort(test, "scan_sections error %d pulling status tokens: %s\n", 
                     tokno, strerror(errno));
-            exit(10);
         } else if(tokno == 0) {
 			break;
 		}
@@ -714,7 +715,6 @@ static void test_analyze_results(struct test *test, int *stdo, int *stde)
 
 	if(was_aborted(test->status)) {
 		test_failures++;
-		test->aborted = 1;
 		return;
 	}
 
@@ -737,10 +737,10 @@ static void test_analyze_results(struct test *test, int *stdo, int *stde)
     assert(test->stderr_match != match_inprogress);
 
     if(test->stdout_match == match_unknown) {
-        test->stdout_match = (fd_has_data(test->outfd) ? match_no : match_yes);
+        test->stdout_match = (fd_has_data(test, test->outfd) ? match_no : match_yes);
     }
     if(test->stderr_match == match_unknown) {
-        test->stderr_match = (fd_has_data(test->errfd) ? match_no : match_yes);
+        test->stderr_match = (fd_has_data(test, test->errfd) ? match_no : match_yes);
     }
 
     *stdo = (test->stdout_match != match_yes);
@@ -764,7 +764,7 @@ void test_results(struct test *test, const char *dispname)
 
 	test_analyze_results(test, &stdo, &stde);
 	
-	if(test->aborted) {
+	if(was_aborted(test->status)) {
 		print_reason(test, "ABRT", "by");
 		return;
 	}
@@ -830,7 +830,7 @@ int check_for_failure(struct test *test, const char *testpath)
  * @returns the number of bytes written.
  */
 
-size_t write_file(int outfd, int infd, int *endnl)
+size_t write_file(struct test *test, int outfd, int infd, int *endnl)
 {
     char buf[BUFSIZ];
     size_t rcnt, wcnt;
@@ -838,8 +838,7 @@ size_t write_file(int outfd, int infd, int *endnl)
 
     // first rewind the input file
     if(lseek(infd, 0, SEEK_SET) < 0) {
-        fprintf(stderr, "write_file lseek on %d: %s\n", infd, strerror(errno));
-        exit(10);   // todo: consolidate with error codes in main
+		test_abort(test, "write_file lseek on %d: %s\n", infd, strerror(errno));
     }
 
     // then write the file.
@@ -853,14 +852,14 @@ size_t write_file(int outfd, int infd, int *endnl)
                 wcnt = write(outfd, buf, rcnt);
             } while(wcnt < 0 && errno == EINTR);
             if(wcnt < 0) {
-                // write error.  do something!
-                perror("writing in write_file");
+                test_abort(test, "write_file got %s while writing!",
+					strerror(errno));
                 break;
             }
 			total += rcnt;
         } else if (rcnt < 0) {
-            // read error.  do something!
-            perror("reading in write_file");
+			test_abort(test, "write_file got %s while reading!",
+				strerror(errno));
             break;
         }
     } while(rcnt);
@@ -881,7 +880,7 @@ static void write_section(struct test *test, const char *datap, int len,
 			start_output_section_argproc, &marked_no_nl);
 
 	write(test->rewritefd, datap, len);
-	cnt = write_file(test->rewritefd, fd, &has_nl);
+	cnt = write_file(test, test->rewritefd, fd, &has_nl);
 
 	if(marked_no_nl) {
 		// if a section is marked with --no-trailing-newline, we need
@@ -966,7 +965,6 @@ void dump_results(struct test *test)
 
 	if(was_aborted(test->status)) {
 		dump_reason(test, "was aborted");
-		test->aborted = 1;
 		return;
 	}
 
@@ -995,13 +993,13 @@ void dump_results(struct test *test)
 
     // if any sections haven't been output, but they differ from
     // the default, then they need to be output here at the end.
-    if(test->stderr_match == match_unknown && fd_has_data(test->errfd)) {
+    if(test->stderr_match == match_unknown && fd_has_data(test, test->errfd)) {
 		write_strconst(test->rewritefd, "STDERR:\n");
-        write_file(test->rewritefd, test->errfd, NULL);
+        write_file(test, test->rewritefd, test->errfd, NULL);
     }
-    if(test->stdout_match == match_unknown && fd_has_data(test->outfd)) {
+    if(test->stdout_match == match_unknown && fd_has_data(test, test->outfd)) {
 		write_strconst(test->rewritefd, "STDOUT:\n");
-        write_file(test->rewritefd, test->outfd, NULL);
+        write_file(test, test->rewritefd, test->outfd, NULL);
     }
 }
 
@@ -1031,6 +1029,21 @@ void test_init(struct test *test)
 }
 
 
+void test_abort(struct test *test, const char *fmt, ...)
+{
+	char buf[BUFSIZ];
+	va_list ap;
+
+	va_start(ap, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, ap);
+	va_end(ap);
+
+	test->status = test_was_aborted;
+	test->status_reason = strdup(buf);
+	longjmp(test->abort_jump, 1);
+}
+
+
 void test_free(struct test *test)
 {
 	int err;
@@ -1056,4 +1069,9 @@ void test_free(struct test *test)
 	}
 }
 
+
+int test_get_exit_value()
+{
+	return test_failures < 99 ? test_failures : 99;
+}
 
