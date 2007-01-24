@@ -1062,6 +1062,10 @@ static void process_args(int argc, char **argv)
 				quiet++;
 				break;
 
+			case 'U':
+				run_unit_tests(all_unit_tests);
+				exit(0);
+
 			case 'V':
 				printf("tmtest version %s\n", stringify(VERSION));
 				exit(0);
@@ -1181,8 +1185,6 @@ static const char* dup_cwd()
 
 int main(int argc, char **argv)
 {
-	unit_test_check(argc, argv, all_unit_tests);
-
 	orig_cwd = dup_cwd();
 	process_args(argc, argv);
 

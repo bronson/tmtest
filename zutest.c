@@ -86,7 +86,7 @@ void run_unit_tests(const zutest_battery battery)
 {
 	run_zutest_battery(battery);
 	print_zutest_results();
-	exit(failures < 100 ? failures : 100);
+	exit(failures < 99 ? failures : 99);
 }
 
 

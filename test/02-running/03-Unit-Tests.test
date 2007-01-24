@@ -1,0 +1,6 @@
+# Ensures that all unit tests pass
+
+$tmtest --run-unit-tests
+
+STDOUT:
+6 tests run, 6 successes.
