@@ -48,7 +48,7 @@ INTERMED=stscan.c
 
 
 tmtest: $(CSRC) $(CHDR) $(INTERMED)
-	$(CC) $(COPTS) $(CSRC) -o tmtest -DVERSION="$(VERSION)"
+	$(CC) $(COPTS) $(CSRC) -o tmtest -DVERSION="$(VERSION)" -DZUTEST
 
 template.c: template.sh cstrfy
 	./cstrfy -n exec_template < template.sh > template.c
