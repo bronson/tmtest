@@ -48,9 +48,8 @@ void zutest_fail(const char *file, int line, const char *func,
 		const char *msg, ...)
 {
 	va_list ap;
-
 	if(!inversion || show_failures) {
-		fprintf(stderr, "FAIL %s at %s line %d:\n\t", func, file, line);
+		fprintf(stderr, "%s:%d: In %s, assert ", file, line, func);
 		va_start(ap, msg);
 		vfprintf(stderr, msg, ap);
 		va_end(ap);
@@ -116,6 +115,13 @@ void run_unit_tests(const zutest_suites suites)
 	run_zutest_suites(suites);
 	print_zutest_results();
 	exit(failures < 100 ? failures : 100);
+}
+
+
+void run_unit_tests_showing_failures(const zutest_suites suites)
+{
+	show_failures = 1;
+	run_unit_tests(suites);
 }
 
 
@@ -406,9 +412,11 @@ int main(int argc, char **argv)
 	if(argc > 1) {
 		// "zutest -f" prints all the failures in the zutest unit tests.
 		// This allows you to check the output of each macro.
-		show_failures = 1;
+		run_unit_tests_showing_failures(all_zutests);
+	} else {
+		run_unit_tests(all_zutests);
 	}
-	run_unit_tests(all_zutests);
+	// this will never be reached
 	return 0;
 }
 #endif

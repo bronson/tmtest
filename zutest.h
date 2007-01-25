@@ -38,6 +38,9 @@
 #ifndef ZUTEST_H
 #define ZUTEST_H
 
+//#define ZUTBECAUSE " failed because "
+#define ZUTBECAUSE " failed. "
+
 // Note that Fail doesn't increment zutest_assertions (the number of assertions
 // that have been made) because it doesn't assert anything.  It only fails.
 // If you call fail, you might want to increment zutest_assertions
@@ -88,9 +91,9 @@
 
 // Pointers...
 #define AssertPtr(p)  AssertFmt(p != NULL, \
-		#p" != NULL but "#p"==0x%lX!", (unsigned long)p)
+		#p" != NULL" ZUTBECAUSE #p"==0x%lX!", (unsigned long)p)
 #define AssertNull(p) AssertFmt(p == NULL, \
-		#p" == NULL but "#p"==0x%lX!", (unsigned long)p)
+		#p" == NULL" ZUTBECAUSE #p"==0x%lX!", (unsigned long)p)
 #define AssertNonNull(p) AssertPtr(p)
 
 #define AssertPtrNull(p) AssertNull(p)
@@ -128,13 +131,13 @@
 
 // ensures a string is non-null but zero-length
 #define AssertStrEmpty(p) do { zutest_assertions++; \
-		if(!(p)) { Fail(#p" should be empty but it is NULL!"); } \
-		if((p)[0]) { Fail(#p" should be empty but it is: %s",p); } \
+		if(!(p)) { Fail(#p" is empty" ZUTBECAUSE #p " is NULL!"); } \
+		if((p)[0]) { Fail(#p" is empty" ZUTBECAUSE #p " is: %s",p); } \
 	} while(0)
 // ensures a string is non-null and non-zero-length
 #define AssertStrNonEmpty(p) do { zutest_assertions++; \
-		if(!(p)) { Fail(#p" should be nonempty but it is NULL!"); } \
-		if(!(p)[0]) { Fail(#p" should be nonempty but "#p"[0] is 0"); } \
+		if(!(p)) { Fail(#p" is nonempty" ZUTBECAUSE #p " is NULL!"); } \
+		if(!(p)[0]) { Fail(#p" is nonempty" ZUTBECAUSE #p"[0] is 0!"); } \
 	} while(0)
 
 
@@ -144,12 +147,12 @@
 //
 
 #define AssertExpType(x,y,op,type,fmt) \
-	AssertFmt((type)x op (type)y, #x" "#op" "#y" failed because " \
+	AssertFmt((type)x op (type)y, #x" "#op" "#y ZUTBECAUSE \
 	#x"=="fmt" and "#y"=="fmt"!", (type)x,(type)y)
 // The failure "x==0 failed because x==1 and 0==0" s too wordy so we'll
 // special-case checking against 0: x==0 failed because x==1).
 #define AssertExpToZero(x,op,type,fmt) \
-	AssertFmt((type)x op 0,#x" "#op" 0 failed because "#x"=="fmt"!", (type)x)
+	AssertFmt((type)x op 0,#x" "#op" 0" ZUTBECAUSE #x"=="fmt"!", (type)x)
 
 #define AssertOp(x,y,op) AssertExpType(x,y,op,long,"%ld")
 #define AssertHexOp(x,y,op) AssertExpType(x,y,op,long,"0x%lX")
@@ -158,7 +161,7 @@
 #define AssertPtrOp(x,y,op) AssertExpType(x,y,op,unsigned long,"0x%lX")
 #define AssertFloatOp(x,y,op) AssertExpType(x,y,op,double,"%lf")
 #define AssertStrOp(x,y,opn,op) AssertFmt(strcmp(x,y) op 0, \
-	#x" "#opn" "#y" but "#x" is \"%s\" and "#y" is \"%s\"!",x,y)
+	#x" "#opn" "#y ZUTBECAUSE #x" is \"%s\" and "#y" is \"%s\"!",x,y)
 
 
 
@@ -249,6 +252,7 @@ void unit_test_check(int argc, char **argv, const zutest_suites suites);
  */
 
 void run_unit_tests(const zutest_suites suites);
+void run_unit_tests_showing_failures(const zutest_suites suites);
 
 
 /** Zutest's built-in test suite.

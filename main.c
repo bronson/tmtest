@@ -1059,6 +1059,7 @@ static void process_args(int argc, char **argv)
 		{"output", 0, 0, 'o'},
 		{"quiet", 0, 0, 'q'},
 		{"run-unit-tests", 0, 0, 'U'},
+		{"show-unit-fails", 0, 0, 257},
 		{"version", 0, 0, 'V'},
 		{0, 0, 0, 0},
 	};
@@ -1106,6 +1107,10 @@ static void process_args(int argc, char **argv)
 
 			case 'U':
 				run_unit_tests(all_unit_tests);
+				exit(0);
+
+			case 257:
+				run_unit_tests_showing_failures(all_unit_tests);
 				exit(0);
 
 			case 'V':

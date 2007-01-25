@@ -1,0 +1,86 @@
+# This shows all the failure messages tested by zutest.
+# This tests zutest, not tmtest.  Oh well, it's worth keeping an
+# eye on our unit tester.
+
+# This won't work until we're fully event-based.
+# exec 2> >(sed s/0x[A-Z0-9][A-Z0-9]*/0xHEXDIGIT/g 1>&2)
+#  ... run commands ...
+# exec 2>&-
+
+# This doesn't work either
+# $tmtest --show-unit-fails > >(sed s/0x[A-Z0-9][A-Z0-9]*/0xHEXDIGIT/g) 2>&1
+
+$tmtest --show-unit-fails 2>&1 | sed s/0x[A-Z0-9][A-Z0-9]*/0xHEXDIGIT/g
+
+STDOUT:
+zutest.c:197: In test_assert_int, assert a == b failed. a==4 and b==3!
+zutest.c:198: In test_assert_int, assert a != c failed. a==4 and c==4!
+zutest.c:199: In test_assert_int, assert a > c failed. a==4 and c==4!
+zutest.c:200: In test_assert_int, assert b > c failed. b==3 and c==4!
+zutest.c:201: In test_assert_int, assert b >= a failed. b==3 and a==4!
+zutest.c:202: In test_assert_int, assert c < a failed. c==4 and a==4!
+zutest.c:203: In test_assert_int, assert c < b failed. c==4 and b==3!
+zutest.c:204: In test_assert_int, assert a <= b failed. a==4 and b==3!
+zutest.c:207: In test_assert_int, assert a == 0 failed. a==4!
+zutest.c:209: In test_assert_int, assert z != 0 failed. z==0!
+zutest.c:212: In test_assert_int, assert z > 0 failed. z==0!
+zutest.c:213: In test_assert_int, assert n > 0 failed. n==-1!
+zutest.c:217: In test_assert_int, assert a <= 0 failed. a==4!
+zutest.c:220: In test_assert_int, assert z < 0 failed. z==0!
+zutest.c:221: In test_assert_int, assert a < 0 failed. a==4!
+zutest.c:225: In test_assert_int, assert n >= 0 failed. n==-1!
+zutest.c:242: In test_assert_hex, assert a == b failed. a==0xHEXDIGIT and b==0xHEXDIGIT!
+zutest.c:243: In test_assert_hex, assert a != c failed. a==0xHEXDIGIT and c==0xHEXDIGIT!
+zutest.c:244: In test_assert_hex, assert a > c failed. a==0xHEXDIGIT and c==0xHEXDIGIT!
+zutest.c:245: In test_assert_hex, assert b > c failed. b==0xHEXDIGIT and c==0xHEXDIGIT!
+zutest.c:246: In test_assert_hex, assert b >= a failed. b==0xHEXDIGIT and a==0xHEXDIGIT!
+zutest.c:247: In test_assert_hex, assert c < a failed. c==0xHEXDIGIT and a==0xHEXDIGIT!
+zutest.c:248: In test_assert_hex, assert c < b failed. c==0xHEXDIGIT and b==0xHEXDIGIT!
+zutest.c:249: In test_assert_hex, assert a <= b failed. a==0xHEXDIGIT and b==0xHEXDIGIT!
+zutest.c:252: In test_assert_hex, assert a == 0 failed. a==0xHEXDIGIT!
+zutest.c:254: In test_assert_hex, assert z != 0 failed. z==0xHEXDIGIT!
+zutest.c:257: In test_assert_hex, assert z > 0 failed. z==0xHEXDIGIT!
+zutest.c:258: In test_assert_hex, assert n > 0 failed. n==0xHEXDIGIT!
+zutest.c:262: In test_assert_hex, assert a <= 0 failed. a==0xHEXDIGIT!
+zutest.c:265: In test_assert_hex, assert z < 0 failed. z==0xHEXDIGIT!
+zutest.c:266: In test_assert_hex, assert a < 0 failed. a==0xHEXDIGIT!
+zutest.c:270: In test_assert_hex, assert n >= 0 failed. n==0xHEXDIGIT!
+zutest.c:285: In test_assert_ptr, assert n != NULL failed. n==0xHEXDIGIT!
+zutest.c:286: In test_assert_ptr, assert ap == NULL failed. ap==0xHEXDIGIT!
+zutest.c:297: In test_assert_ptr, assert ap == bp failed. ap==0xHEXDIGIT and bp==0xHEXDIGIT!
+zutest.c:298: In test_assert_ptr, assert ap != cp failed. ap==0xHEXDIGIT and cp==0xHEXDIGIT!
+zutest.c:299: In test_assert_ptr, assert ap > cp failed. ap==0xHEXDIGIT and cp==0xHEXDIGIT!
+zutest.c:300: In test_assert_ptr, assert bp > cp failed. bp==0xHEXDIGIT and cp==0xHEXDIGIT!
+zutest.c:301: In test_assert_ptr, assert bp >= ap failed. bp==0xHEXDIGIT and ap==0xHEXDIGIT!
+zutest.c:302: In test_assert_ptr, assert cp < ap failed. cp==0xHEXDIGIT and ap==0xHEXDIGIT!
+zutest.c:303: In test_assert_ptr, assert cp < bp failed. cp==0xHEXDIGIT and bp==0xHEXDIGIT!
+zutest.c:304: In test_assert_ptr, assert ap <= bp failed. ap==0xHEXDIGIT and bp==0xHEXDIGIT!
+zutest.c:321: In test_assert_float, assert a == b failed. a==0.000400 and b==0.000300!
+zutest.c:322: In test_assert_float, assert a != c failed. a==0.000400 and c==0.000400!
+zutest.c:323: In test_assert_float, assert a > c failed. a==0.000400 and c==0.000400!
+zutest.c:324: In test_assert_float, assert b > c failed. b==0.000300 and c==0.000400!
+zutest.c:325: In test_assert_float, assert b >= a failed. b==0.000300 and a==0.000400!
+zutest.c:326: In test_assert_float, assert c < a failed. c==0.000400 and a==0.000400!
+zutest.c:327: In test_assert_float, assert c < b failed. c==0.000400 and b==0.000300!
+zutest.c:328: In test_assert_float, assert a <= b failed. a==0.000400 and b==0.000300!
+zutest.c:339: In test_assert_float, assert a == b failed. a==0.000400 and b==0.000300!
+zutest.c:340: In test_assert_float, assert a != c failed. a==0.000400 and c==0.000400!
+zutest.c:341: In test_assert_float, assert a > c failed. a==0.000400 and c==0.000400!
+zutest.c:342: In test_assert_float, assert b > c failed. b==0.000300 and c==0.000400!
+zutest.c:343: In test_assert_float, assert b >= a failed. b==0.000300 and a==0.000400!
+zutest.c:344: In test_assert_float, assert c < a failed. c==0.000400 and a==0.000400!
+zutest.c:345: In test_assert_float, assert c < b failed. c==0.000400 and b==0.000300!
+zutest.c:346: In test_assert_float, assert a <= b failed. a==0.000400 and b==0.000300!
+zutest.c:367: In test_assert_strings, assert a eq b failed. a is "Bogozity" and b is "Arclamp"!
+zutest.c:368: In test_assert_strings, assert a ne c failed. a is "Bogozity" and c is "Bogozity"!
+zutest.c:369: In test_assert_strings, assert a gt c failed. a is "Bogozity" and c is "Bogozity"!
+zutest.c:370: In test_assert_strings, assert b gt c failed. b is "Arclamp" and c is "Bogozity"!
+zutest.c:371: In test_assert_strings, assert b ge a failed. b is "Arclamp" and a is "Bogozity"!
+zutest.c:372: In test_assert_strings, assert c lt a failed. c is "Bogozity" and a is "Bogozity"!
+zutest.c:373: In test_assert_strings, assert c lt b failed. c is "Bogozity" and b is "Arclamp"!
+zutest.c:374: In test_assert_strings, assert a le b failed. a is "Bogozity" and b is "Arclamp"!
+zutest.c:377: In test_assert_strings, assert a is empty failed. a is: Bogozity
+zutest.c:378: In test_assert_strings, assert n is empty failed. n is NULL!
+zutest.c:381: In test_assert_strings, assert e is nonempty failed. e[0] is 0!
+zutest.c:382: In test_assert_strings, assert n is nonempty failed. n is NULL!
+All OK.  11 tests run, 11 successes (195 assertions).
