@@ -35,12 +35,13 @@
  */
 
 
-static jmp_buf test_bail;	///< If a test fails, this is where we end up.
-int zutest_assertions;		///< A goofy statistic, updated by the assertion macros
-static int tests_run;		///< The number of tests that we have run.  successes+failures==tests_run (if not, then there's a bug somewhere).
-static int successes;		///< The number of successful tests run
-static int failures;		///< The number of failed tests run.
-static jmp_buf *inversion;	///< Where to go if the assertion fails.  This is NULL except when running Zutest's internal unit tests.  See test_fail().
+int zutest_assertions = 0;		///< A goofy statistic, updated by the assertion macros
+static int tests_run = 0;		///< The number of tests that we have run.  successes+failures==tests_run (if not, then there's a bug somewhere).
+static int successes = 0;		///< The number of successful tests run
+static int failures = 0;		///< The number of failed tests run.
+static jmp_buf test_bail;		///< If an assertion fails, and we're not inverted, this is where we end up.
+static jmp_buf *inversion;		///< If an assertion fails, and we're inverted, this is where we end up.  This is NULL except when running Zutest's internal unit tests.  See test_fail().
+static int show_failures = 0; 	///< Set this to 1 to print the failures.  This allows you to view the output of each failure to ensure it looks OK.
 
 
 void zutest_fail(const char *file, int line, const char *func, 
@@ -48,16 +49,18 @@ void zutest_fail(const char *file, int line, const char *func,
 {
 	va_list ap;
 
+	if(!inversion || show_failures) {
+		fprintf(stderr, "FAIL %s at %s line %d:\n\t", func, file, line);
+		va_start(ap, msg);
+		vfprintf(stderr, msg, ap);
+		va_end(ap);
+		fputc('\n', stderr);
+	}
+
 	// If inversion is set, then an assert correctly failed.
 	if(inversion) {
 		longjmp(*inversion, 1);
 	}
-
-	fprintf(stderr, "FAIL %s at %s line %d:\n\t", func, file, line);
-	va_start(ap, msg);
-	vfprintf(stderr, msg, ap);
-	va_end(ap);
-	fputc('\n', stderr);
 
 	longjmp(test_bail, 1);
 }
@@ -400,6 +403,11 @@ zutest_suite all_zutests[] = {
 #ifdef ZUTEST_MAIN
 int main(int argc, char **argv)
 {
+	if(argc > 1) {
+		// "zutest -f" prints all the failures in the zutest unit tests.
+		// This allows you to check the output of each macro.
+		show_failures = 1;
+	}
 	run_unit_tests(all_zutests);
 	return 0;
 }

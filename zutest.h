@@ -119,22 +119,22 @@
 #define AssertDoubleLe(x,y) AssertFloatOp(x,y,<=)
 
 // Strings (uses strcmp)...
-#define AssertStrEq(x,y) AssertStrOp(x,y,EQ,==)
-#define AssertStrNe(x,y) AssertStrOp(x,y,NE,!=)
-#define AssertStrGt(x,y) AssertStrOp(x,y,GT,>)
-#define AssertStrGe(x,y) AssertStrOp(x,y,GE,>=)
-#define AssertStrLt(x,y) AssertStrOp(x,y,LT,<)
-#define AssertStrLe(x,y) AssertStrOp(x,y,LE,<=)
+#define AssertStrEq(x,y) AssertStrOp(x,y,eq,==)
+#define AssertStrNe(x,y) AssertStrOp(x,y,ne,!=)
+#define AssertStrGt(x,y) AssertStrOp(x,y,gt,>)
+#define AssertStrGe(x,y) AssertStrOp(x,y,ge,>=)
+#define AssertStrLt(x,y) AssertStrOp(x,y,lt,<)
+#define AssertStrLe(x,y) AssertStrOp(x,y,le,<=)
 
 // ensures a string is non-null but zero-length
 #define AssertStrEmpty(p) do { zutest_assertions++; \
-		if(!(p)) { Fail(#p" is empty but "#p" is NULL!"); } \
-		if((p)[0]) { Fail(#p" is empty but "#p" is: %s",p); } \
+		if(!(p)) { Fail(#p" should be empty but it is NULL!"); } \
+		if((p)[0]) { Fail(#p" should be empty but it is: %s",p); } \
 	} while(0)
 // ensures a string is non-null and non-zero-length
 #define AssertStrNonEmpty(p) do { zutest_assertions++; \
-		if(!(p)) { Fail(#p" is nonempty but "#p" is NULL!"); } \
-		if(!(p)[0]) { Fail(#p" is nonempty but "#p"[0] is 0"); } \
+		if(!(p)) { Fail(#p" should be nonempty but it is NULL!"); } \
+		if(!(p)[0]) { Fail(#p" should be nonempty but "#p"[0] is 0"); } \
 	} while(0)
 
 
@@ -143,15 +143,13 @@
 // helper macros, not intended to be called directly.
 //
 
-// On failure the expression is printed followed by the format string.
-#define AssertExp(ex,...) AssertFmt(ex,#ex __VA_ARGS__)
-// Like AssertExp but enforces a type while performing the comparison.
 #define AssertExpType(x,y,op,type,fmt) \
-	AssertExp((type)x op (type)y," failed because "#x"=="fmt" and "#y"=="fmt"!", (type)x,(type)y)
-// It's weird hearing "x==0 failed because x==1 and 0==0" so we'll
+	AssertFmt((type)x op (type)y, #x" "#op" "#y" failed because " \
+	#x"=="fmt" and "#y"=="fmt"!", (type)x,(type)y)
+// The failure "x==0 failed because x==1 and 0==0" s too wordy so we'll
 // special-case checking against 0: x==0 failed because x==1).
 #define AssertExpToZero(x,op,type,fmt) \
-	AssertExp((type)x op 0," failed because "#x"=="fmt"!", (type)x)
+	AssertFmt((type)x op 0,#x" "#op" 0 failed because "#x"=="fmt"!", (type)x)
 
 #define AssertOp(x,y,op) AssertExpType(x,y,op,long,"%ld")
 #define AssertHexOp(x,y,op) AssertExpType(x,y,op,long,"0x%lX")
