@@ -122,5 +122,5 @@ rediff:
 reupdate:
 	ls re2c/*.[ch] | (ODIR=`pwd`; cd ../oe; xargs cp --target-directory $$ODIR/re2c)
 
-zutest: zutest.c zutest-tests.c zutest.h
-	gcc -Wall -Werror -g zutest.c zutest-tests.c -o zutest
+zutest: zutest.c zutest.h Makefile
+	gcc -Wall -Werror -g zutest.c -DZUTEST_MAIN -o zutest
