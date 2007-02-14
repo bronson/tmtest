@@ -46,6 +46,7 @@ CHDR+=units.h zutest.h
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
 
+all: tmtest
 
 tmtest: $(CSRC) $(CHDR) $(INTERMED)
 	$(CC) $(COPTS) $(CSRC) -o tmtest -DVERSION="$(VERSION)" -DZUTEST
