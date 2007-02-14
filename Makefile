@@ -29,8 +29,8 @@ endif
 COPTS=-g -Wall -Werror
 
 # utilities:
-CSRC+=curdir.c qscandir.c pathconv.c
-CHDR+=curdir.h qscandir.h pathconv.h
+CSRC+=qscandir.c pathconv.c pathstack.c
+CHDR+=qscandir.h pathconv.h pathstack.h
 # scanner files
 CSRC+=re2c/read.c re2c/read-fd.c re2c/read-mem.c re2c/read-rand.c \
 	re2c/scan.c re2c/scan-dyn.c
