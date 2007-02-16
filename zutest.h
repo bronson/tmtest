@@ -58,12 +58,12 @@
 		if(!(x)) { Fail(__VA_ARGS__); } } while(0)
 
 // integers, longs, chars...
-#define AssertEq(x,y) AssertOp(x,y,==)
-#define AssertNe(x,y) AssertOp(x,y,!=)
-#define AssertGt(x,y) AssertOp(x,y,>)
-#define AssertGe(x,y) AssertOp(x,y,>=)
-#define AssertLt(x,y) AssertOp(x,y,<)
-#define AssertLe(x,y) AssertOp(x,y,<=)
+#define AssertEq(x,y) AssertOp(x,==,y)
+#define AssertNe(x,y) AssertOp(x,!=,y)
+#define AssertGt(x,y) AssertOp(x,>,y)
+#define AssertGe(x,y) AssertOp(x,>=,y)
+#define AssertLt(x,y) AssertOp(x,<,y)
+#define AssertLe(x,y) AssertOp(x,<=,y)
 
 #define AssertZero(x) AssertOpToZero(x,==)
 #define AssertNonzero(x) AssertOpToZero(x,!=)
@@ -74,12 +74,12 @@
 #define AssertNonPositive(x) AssertOpToZero(x,<=);
 
 // Also integers but failure values are printed in hex rather than decimal.
-#define AssertEqHex(x,y) AssertHexOp(x,y,==)
-#define AssertNeHex(x,y) AssertHexOp(x,y,!=)
-#define AssertGtHex(x,y) AssertHexOp(x,y,>)
-#define AssertGeHex(x,y) AssertHexOp(x,y,>=)
-#define AssertLtHex(x,y) AssertHexOp(x,y,<)
-#define AssertLeHex(x,y) AssertHexOp(x,y,<=)
+#define AssertEqHex(x,y) AssertHexOp(x,==,y)
+#define AssertNeHex(x,y) AssertHexOp(x,!=,y)
+#define AssertGtHex(x,y) AssertHexOp(x,>,y)
+#define AssertGeHex(x,y) AssertHexOp(x,>=,y)
+#define AssertLtHex(x,y) AssertHexOp(x,<,y)
+#define AssertLeHex(x,y) AssertHexOp(x,<=,y)
 
 #define AssertZeroHex(x) AssertHexOpToZero(x,==)
 #define AssertNonzeroHex(x) AssertHexOpToZero(x,!=)
@@ -98,36 +98,36 @@
 
 #define AssertPtrNull(p) AssertNull(p)
 #define AssertPtrNonNull(p) AssertNonNull(p)
-#define AssertPtrEq(x,y) AssertPtrOp(x,y,==)
-#define AssertPtrNe(x,y) AssertPtrOp(x,y,!=)
-#define AssertPtrGt(x,y) AssertPtrOp(x,y,>)
-#define AssertPtrGe(x,y) AssertPtrOp(x,y,>=)
-#define AssertPtrLt(x,y) AssertPtrOp(x,y,<)
-#define AssertPtrLe(x,y) AssertPtrOp(x,y,<=)
+#define AssertPtrEq(x,y) AssertPtrOp(x,==,y)
+#define AssertPtrNe(x,y) AssertPtrOp(x,!=,y)
+#define AssertPtrGt(x,y) AssertPtrOp(x,>,y)
+#define AssertPtrGe(x,y) AssertPtrOp(x,>=,y)
+#define AssertPtrLt(x,y) AssertPtrOp(x,<,y)
+#define AssertPtrLe(x,y) AssertPtrOp(x,<=,y)
 
 // These work with floats and doubles
 // (everything is handled internally as double)
-#define AssertFloatEq(x,y) AssertFloatOp(x,y,==)
-#define AssertFloatNe(x,y) AssertFloatOp(x,y,!=)
-#define AssertFloatGt(x,y) AssertFloatOp(x,y,>)
-#define AssertFloatGe(x,y) AssertFloatOp(x,y,>=)
-#define AssertFloatLt(x,y) AssertFloatOp(x,y,<)
-#define AssertFloatLe(x,y) AssertFloatOp(x,y,<=)
+#define AssertFloatEq(x,y) AssertFloatOp(x,==,y)
+#define AssertFloatNe(x,y) AssertFloatOp(x,!=,y)
+#define AssertFloatGt(x,y) AssertFloatOp(x,>,y)
+#define AssertFloatGe(x,y) AssertFloatOp(x,>=,y)
+#define AssertFloatLt(x,y) AssertFloatOp(x,<,y)
+#define AssertFloatLe(x,y) AssertFloatOp(x,<=,y)
 // supply Doubles so people don't worry about precision when they see Float
-#define AssertDoubleEq(x,y) AssertFloatOp(x,y,==)
-#define AssertDoubleNe(x,y) AssertFloatOp(x,y,!=)
-#define AssertDoubleGt(x,y) AssertFloatOp(x,y,>)
-#define AssertDoubleGe(x,y) AssertFloatOp(x,y,>=)
-#define AssertDoubleLt(x,y) AssertFloatOp(x,y,<)
-#define AssertDoubleLe(x,y) AssertFloatOp(x,y,<=)
+#define AssertDoubleEq(x,y) AssertFloatOp(x,==,y)
+#define AssertDoubleNe(x,y) AssertFloatOp(x,!=,y)
+#define AssertDoubleGt(x,y) AssertFloatOp(x,>,y)
+#define AssertDoubleGe(x,y) AssertFloatOp(x,>=,y)
+#define AssertDoubleLt(x,y) AssertFloatOp(x,<,y)
+#define AssertDoubleLe(x,y) AssertFloatOp(x,<=,y)
 
 // Strings (uses strcmp)...
-#define AssertStrEq(x,y) AssertStrOp(x,y,eq,==)
-#define AssertStrNe(x,y) AssertStrOp(x,y,ne,!=)
-#define AssertStrGt(x,y) AssertStrOp(x,y,gt,>)
-#define AssertStrGe(x,y) AssertStrOp(x,y,ge,>=)
-#define AssertStrLt(x,y) AssertStrOp(x,y,lt,<)
-#define AssertStrLe(x,y) AssertStrOp(x,y,le,<=)
+#define AssertStrEq(x,y) AssertStrOp(x,eq,==,y)
+#define AssertStrNe(x,y) AssertStrOp(x,ne,!=,y)
+#define AssertStrGt(x,y) AssertStrOp(x,gt,>,y)
+#define AssertStrGe(x,y) AssertStrOp(x,ge,>=,y)
+#define AssertStrLt(x,y) AssertStrOp(x,lt,<,y)
+#define AssertStrLe(x,y) AssertStrOp(x,le,<=,y)
 
 // ensures a string is non-null but zero-length
 #define AssertStrEmpty(p) do { zutest_assertions++; \
@@ -146,7 +146,7 @@
 // helper macros, not intended to be called directly.
 //
 
-#define AssertExpType(x,y,op,type,fmt) \
+#define AssertExpType(x,op,y,type,fmt) \
 	AssertFmt((type)x op (type)y, #x" "#op" "#y ZUTBECAUSE \
 	#x"=="fmt" and "#y"=="fmt"!", (type)x,(type)y)
 // The failure "x==0 failed because x==1 and 0==0" s too wordy so we'll
@@ -154,13 +154,13 @@
 #define AssertExpToZero(x,op,type,fmt) \
 	AssertFmt((type)x op 0,#x" "#op" 0" ZUTBECAUSE #x"=="fmt"!", (type)x)
 
-#define AssertOp(x,y,op) AssertExpType(x,y,op,long,"%ld")
-#define AssertHexOp(x,y,op) AssertExpType(x,y,op,long,"0x%lX")
+#define AssertOp(x,op,y) AssertExpType(x,op,y,long,"%ld")
+#define AssertHexOp(x,op,y) AssertExpType(x,op,y,long,"0x%lX")
 #define AssertOpToZero(x,op) AssertExpToZero(x,op,long,"%ld")
 #define AssertHexOpToZero(x,op) AssertExpToZero(x,op,long,"0x%lX")
-#define AssertPtrOp(x,y,op) AssertExpType(x,y,op,unsigned long,"0x%lX")
-#define AssertFloatOp(x,y,op) AssertExpType(x,y,op,double,"%lf")
-#define AssertStrOp(x,y,opn,op) AssertFmt(strcmp(x,y) op 0, \
+#define AssertPtrOp(x,op,y) AssertExpType(x,op,y,unsigned long,"0x%lX")
+#define AssertFloatOp(x,op,y) AssertExpType(x,op,y,double,"%lf")
+#define AssertStrOp(x,opn,op,y) AssertFmt(strcmp(x,y) op 0, \
 	#x" "#opn" "#y ZUTBECAUSE #x" is \"%s\" and "#y" is \"%s\"!",x,y)
 
 
