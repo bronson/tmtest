@@ -54,6 +54,7 @@ extern char *config_file;
 
 struct test {
     const char *testfilename;   ///< name of the test file.  does not include any directories.  will be "-" if reading from stdin.
+    const char *testfiledir;	///< full path to the directory containing the testfile.  should never end in a '/'.
     scanstate testfile;         ///< scans the testfile.  may be stdin so seeking is not allowed.
 
     int rewritefd;          ///< where to dump the rewritten test.  -1 if we're just running the tests, or the fd of the file that should receive the test contents.

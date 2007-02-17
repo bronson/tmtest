@@ -27,11 +27,11 @@
 #include "re2c/read-fd.h"
 
 #include "test.h"
-#include "curdir.h"
 #include "qscandir.h"
 #include "vars.h"
 #include "tfscan.h"
 #include "pathconv.h"
+#include "pathstack.h"
 #include "units.h"
 
 
@@ -47,15 +47,12 @@ enum {
 };
 
 int outmode = outmode_test;
-int allfiles = 0;
-int dumpscript = 0;
+int allfiles = 0;			// run a testfile even if it begins with a dash
+int dumpscript = 0;			// print the script instead of running it
 int quiet = 0;
 const char *orig_cwd;		// tmtest runs with the cwd pointed to /tmp
 char *config_file;	// absolute path to the user-specified config file
 					// null if user didn't specify a config file.
-
-int arg_was_absolute;	// this is an absolutely awful hack.  it's true
-		// if the current path is absolute, false if it's relative.
 
 #define TESTDIR "/tmp/tmtest-XXXXXX"
 char g_testdir[sizeof(TESTDIR)];
@@ -304,8 +301,10 @@ static int start_diff(struct test *test)
     int pipes[2];
     int child;
 	const char *filename = NULL;
+	char buf[PATH_MAX];
+	struct pathstack stack;
 
-    assert(test->testfilename);
+	assert(test->testfilename);
 	// if the test is coming from stdin, we need to copy it to a
 	// real file before we can diff against it.
     if(is_dash(test->testfilename)) {
@@ -314,13 +313,14 @@ static int start_diff(struct test *test)
 		// then, read the test from this file instead of stdin.
 		filename = test->diffname;
 		assert(filename);
+		assert(filename[0]);
     }
-
+		
     if(pipe(pipes) < 0) {
         perror("creating diff pipe");
         exit(runtime_error);
     }
-
+    
     child = fork();
     if(child < 0) {
         perror("forking diff");
@@ -333,28 +333,23 @@ static int start_diff(struct test *test)
         }
         close(pipes[0]);
         close(pipes[1]);
-
-		if(!filename) {
-			// figure out the filename that diff will use
-			if(test->testfilename[0] == '/') {
+        
+        if (!filename) {
+			// need to figure out the filename to pass to diff
+        	if (test->testfilename[0] == '/') {
+        		// if the path is absolute, we can just use it straight away.
 				filename = test->testfilename;
 			} else {
-				// since we don't have an absolute path, we need to
-				// cd to the original wd and run the diff with
-				// a relative path.  it takes a bit of computation...
-				curpush(test->testfilename);
-				filename = strdup(currelative());
-				if(!filename) {
-					perror("strdup in start_diff");
-					exit(runtime_error);
-				}
-				curpop(1);
-				if(0 != chdir(curabsolute())) {
-					fprintf(stderr, "Could not chdir 1 to %s: %s\n",
-							curabsolute(), strerror(errno));
-					exit(runtime_error);
-				}
+				pathstack_init(&stack, buf, sizeof(buf), test->testfiledir);
+				pathstack_push(&stack, test->testfilename, NULL);
+				filename = pathstack_absolute(&stack);
 			}
+		}
+
+		if(0 != chdir(test->testfiledir)) {
+			fprintf(stderr, "Could not chdir 1 to %s: %s\n",
+					test->testfiledir, strerror(errno));
+			exit(runtime_error);
 		}
 
         execl(DIFFPROG, DIFFPROG, "-u", filename, "-", (char*)NULL);
@@ -396,26 +391,60 @@ static void finish_diff(struct test *test, int diffpid)
 }
 
 
+/* Combines testfiledir and testfilename into a single absolute path for the testfile.
+ * The caller must supply a buffer to fill with the result. */
+
+static void assemble_absolute_testpath(struct test *test, char *buf, int bufsiz)
+{
+	buf[0] = '\0';
+	strncat(buf, test->testfiledir, bufsiz-1);
+	strncat(buf, "/", bufsiz-1);
+	strncat(buf, test->testfilename, bufsiz-1);
+}
+
+
 /* Prints the relative path from the original cwd to the current testfile */
 
 static void print_test_path(struct test *test)
 {
 	char result[PATH_MAX];
+	char testfile[PATH_MAX];
+	
+	assemble_absolute_testpath(test, testfile, sizeof(testfile));
 
-	int keep = curpush(test->testfilename);
-	if(keep <= 0) {
-		printf("print_test_path: path is too long!\n");
-		return;
-	}
-
-	if(abs2rel(curabsolute(), orig_cwd, result, sizeof(result))) {
+	if(abs2rel(testfile, orig_cwd, result, sizeof(result))) {
 		printf("%s\n", result);
 	} else {
-		printf("print_test_path: abs2rel error: %s relto %s\n",
-			curabsolute(), orig_cwd);
+		printf("print_test_path: abs2rel error: %s relto %s\n", testfile, orig_cwd);
 	}
+}
 
-	curpop(keep);
+static int open_test_file(struct test *test)
+{
+	char buf[PATH_MAX];
+	int fd;
+	
+	// If the filename is a dash then we just use stdin.
+	if(is_dash(test->testfilename)) {
+        return STDIN_FILENO;
+    }
+    
+	if(test->testfilename[0] == '/') {
+	    // If the filename is absolute, we use it directly.
+	    strncpy(buf, test->testfilename, sizeof(buf));
+	    buf[sizeof(buf)-1] = 0;
+	} else {
+		// Otherwise we need to make an absolute path
+		assemble_absolute_testpath(test, buf, sizeof(buf));
+	}
+	
+	fd = open(buf, O_RDONLY);
+    if(fd < 0) {
+        fprintf(stderr, "Could not open %s: %s\n", buf, strerror(errno));
+        exit(runtime_error);
+    }
+    
+    return fd;
 }
 
 
@@ -438,7 +467,7 @@ static void print_test_path(struct test *test)
  * @returns 1 if we should keep testing, 0 if we should stop now.
  */
 
-static int run_test(const char *name, const char *dispname, int warn_suffix)
+static int run_test(const char *path, const char *name, const char *dispname, int warn_suffix)
 {
     struct test test;
     char buf[BUFSIZ];   // scan buffer for the testfile
@@ -475,6 +504,7 @@ static int run_test(const char *name, const char *dispname, int warn_suffix)
 	}
 
     test.testfilename = name;
+    test.testfiledir = path;
     test.outfd = g_outfd;
     test.errfd = g_errfd;
     test.statusfd = g_statusfd;
@@ -537,26 +567,8 @@ static int run_test(const char *name, const char *dispname, int warn_suffix)
 			exit(runtime_error);
 		}
         readfd_attach(&test.testfile, test.diff_fd);
-	} else if(is_dash(name)) {
-        readfd_attach(&test.testfile, STDIN_FILENO);
-    } else {
-		if(name[0] == '/') {
-			fd = open(name, O_RDONLY);
-		} else {
-			int keep = curpush(name);
-			if(keep <= 0) {
-				fprintf(stderr, "Path is too long.");
-				exit(runtime_error);
-			}
-			fd = open(curabsolute(), O_RDONLY);
-			curpop(keep);
-		}
-        if(fd < 0) {
-            fprintf(stderr, "Could not open %s: %s\n",
-                    curabsolute(), strerror(errno));
-            exit(runtime_error);
-        }
-        readfd_attach(&test.testfile, fd);
+	} else {
+        readfd_attach(&test.testfile, open_test_file(&test));
     }
     tfscan_attach(&test.testfile);
 
@@ -625,44 +637,6 @@ static int run_test(const char *name, const char *dispname, int warn_suffix)
 }
 
 
-/** This routine filters out any dirents that begin with '.'.
- *  We don't want to process any hidden files or special directories.
- */
-
-static int select_nodots(const struct dirent *d)
-{
-    return d->d_name[0] != '.';
-}
-
-
-/**
- * Sucks the dirname from an absolute file path and calls curinit with it.
- */
-
-static void init_absolute_filepath(const char *path)
-{
-	const char *cp;
-	int loc;
-	char buf[PATH_MAX];
-	
-	cp = strrchr(path, '/');
-	if(cp == NULL) {
-		fprintf(stderr, "Illegal absolute path '%s'\n", path);
-		exit(runtime_error);
-	}
-
-	strncpy(buf, path, sizeof(buf));
-
-	loc = cp - path;
-	if(sizeof(buf)-1 < loc) {
-		loc = sizeof(buf)-1;
-	}
-
-	buf[loc] = '\0';
-	curinit(buf);
-}
-
-
 /** Processes a directory specified using an absolute or deep
  * path.  We need to save and restore curpath to do this.
  *
@@ -672,93 +646,70 @@ static void init_absolute_filepath(const char *path)
  * @returns 1 if we should continue testing, 0 if we should abort.
  */
 
-static int process_absolute_file(const char *path, int warn_suffix)
-{
-	struct cursave save;
-	int keepontruckin;
-
-	cursave(&save);
-	init_absolute_filepath(path);
-
-	keepontruckin = run_test(strrchr(path,'/')+1, path, warn_suffix);
-
-	currestore(&save);
-	return keepontruckin;
-}
-
-
-static void init_path(const char *base, const char *path)
+static int process_absolute_file(const char *abspath, const char *origpath, int warn_suffix)
 {
 	char buf[PATH_MAX];
+	struct pathstack stack;
+	char *file, *dir;
 
-	strncpy(buf, curabsolute(), PATH_MAX);
-	strncat(buf, "/", PATH_MAX);
-	strncat(buf, path, PATH_MAX);
-	buf[PATH_MAX-1] = '\0';
-
-	normalize_absolute_path(buf);
-
-	curinit(buf);
-}
-
-
-
-/**
- * This is actually a hassle.  The user may have specified
- * "../.." which means we need to normalize an absolute path
- * and use that.
- */
-
-static int process_deep_file(const char *path, int warn_suffix)
-{
-	struct cursave save;
-	int keepontruckin;
-
-	cursave(&save);
-	init_path(orig_cwd, path);
-	curpop(1);	// get rid of the filename
-
-	keepontruckin = run_test(strrchr(path,'/')+1, path, warn_suffix);
-
-	currestore(&save);
-	return keepontruckin;
+	pathstack_init(&stack, buf, sizeof(buf), abspath);
+	pathstack_normalize(&stack);
+	
+	dir = pathstack_absolute(&stack);
+	file = strrchr(dir, '/');
+	if(!file) {
+		fprintf(stderr, "Path wasn't absolute in process_absolute file!?  %s\n", abspath);
+		return 0;
+	}
+	
+	*file++ = '\0';		// separate the path and the filename
+	// If the file was in the root directory, ensure we don't blow away
+	// the leading slash.
+	if(dir[0] == '\0') {
+		dir = "/";
+	}
+	
+	return run_test(dir, file, origpath, warn_suffix);
 }
 
 
 // forward declaration for recursion
-int process_dir();
+int process_dir(struct pathstack *ps, int print_absolute);
 
-static int process_absolute_dir(const char *path)
+
+static int process_absolute_dir(const char *abspath, const char *origpath, int print_absolute)
 {
-	struct cursave save;
-	int keepontruckin;
-
-	cursave(&save);
-	curinit(path);
-
-	// we are certain the fullpath has already been normalized.
-	// no need to do it again.
+	char buf[PATH_MAX];
+	struct pathstack stack;
 
 	if(outmode == outmode_test) {
-		printf("\nProcessing %s\n", path);
+		if(print_absolute) {
+			printf("\nProcessing %s\n", abspath);
+		} else {
+			printf("\nProcessing ./%s\n", origpath);
+		}
 	}
-	keepontruckin = process_dir();
-
-	currestore(&save);
-
-	return keepontruckin;
+	
+	pathstack_init(&stack, buf, sizeof(buf), abspath);
+	pathstack_normalize(&stack);
+	return process_dir(&stack, print_absolute);
 }
 
 
-static void print_relative_dir()
+static void print_relative_dir(struct pathstack *ps, int print_absolute)
 {
 	char buf[PATH_MAX];
+	
+	// Don't print anything unless we're actually testing.
+    if(outmode != outmode_test) {
+    	return;
+    }
 
-	if(arg_was_absolute) {
-		printf("\nProcessing %s\n", curabsolute());
+	if(print_absolute) {
+		printf("\nProcessing %s\n", pathstack_absolute(ps));
 	} else {
-		if(!abs2rel(curabsolute(), orig_cwd, buf, PATH_MAX)) {
-			printf("Path couldn't be converted \"\%s\"\n", curabsolute());
+		if(!abs2rel(pathstack_absolute(ps), orig_cwd, buf, PATH_MAX)) {
+			printf("Path couldn't be converted \"\%s\"\n", pathstack_absolute(ps));
 			exit(runtime_error);
 		}
 		printf("\nProcessing ./%s\n", buf);
@@ -766,49 +717,25 @@ static void print_relative_dir()
 }
 
 
-/**
- * This routine used to be a simple "push the dir onto curpath,
- * run, and pop" affair.  Now, with ".." being fairly nontrivial,
- * we just need to save and restore.  Arg.  But at least this
- * works.
- *
- * The relative path can't be normalied because it might be
- * simply "..".  Therefore, it's one above whatever the cwd
- * is.  Gotta figure that out at runtime.
- */
-
-static int process_relative_dir(const char *path)
-{
-	struct cursave save;
-	int keepontruckin;
-
-	cursave(&save);
-	init_path(curabsolute(), path);
-
-	if(outmode == outmode_test) {
-		print_relative_dir();
-	}
-	keepontruckin = process_dir();
-
-	currestore(&save);
-
-	return keepontruckin;
-}
-
-
 /** Process all entries in a directory.
  *
- * @param is_topmost True if we are not recursing.  This allows us to
- * tell whether we should display pathnames absolute or relative
- * (if the user specified them relative on the command line, we
- * show them relative, and vice versa).
+ * @param ps The pathstack to use.  It comes pre-set-up with whatever
+ * basedir we should be running from (where the ents are found).
+ * This will be used during processing but is guaranteed to be
+ * returned in exactly the same state as it was passed in.
+ * @param ents The list of entries to process.
+ * @param print_absolute tells if you want the user-visible path to
+ * be printed absolute or relative.  -1 means that you don't know,
+ * and process_ents should decide on its own for each ent (if the
+ * ent is absolute then all paths will be absolute).
  */
 
-static int process_ents(char **ents, int is_topmost)
+static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
 {
 	struct stat st;
+	struct pathstate save;
     mode_t *modes;
-    int i, n;
+    int i, n, ret;
 	int keepontruckin;
 
     for(n=0; ents[n]; n++)
@@ -820,18 +747,17 @@ static int process_ents(char **ents, int is_topmost)
         exit(runtime_error);
     }
     
-    // first collect the stat info for each entry
+    // first collect the stat info for each entry and perform a quick sanity check
     for(i=0; i<n; i++) {
         if(!is_dash(ents[i])) {
 			const char *cp = ents[i];
-			int keep = 0;
 			if(ents[i][0] != '/') {
-				keep = curpush(ents[i]);
-				if(keep <= 0) {
-					fprintf(stderr, "Path is too long.");
+				ret = pathstack_push(ps, ents[i], &save);
+				if(ret != 0) {
+					fprintf(stderr, "Paths are too long:\n   %s\n   %s\n", pathstack_absolute(ps), ents[i]);
 					exit(runtime_error);
 				}
-				cp = curabsolute();
+				cp = pathstack_absolute(ps);
 			}
 			// Need to be careful to test that file does exist.
 			// Bash opens it, not us, so the error message might
@@ -839,21 +765,29 @@ static int process_ents(char **ents, int is_topmost)
 			if(!verify_readable(cp,&st,0)) {
                 exit(runtime_error);
             }
-			if(ents[i][0] != '/') curpop(keep);
+			if(ents[i][0] != '/') {
+				pathstack_pop(ps, &save);
+			}
             modes[i] = st.st_mode;
         }
     }
-
+    
     // process all files in dir
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || S_ISREG(modes[i])) {
 			if(ents[i][0] == '/') {
 				// we know the path has already been fully normalized.
-				keepontruckin = process_absolute_file(ents[i], is_topmost);
-			} else if(strchr(ents[i], '/')) {
-				keepontruckin = process_deep_file(ents[i], is_topmost);
+				assert(print_absolute == -1);	// it should be impossible to get here if we've already recursed
+				keepontruckin = process_absolute_file(ents[i], ents[i], 1);
 			} else {
-				keepontruckin = run_test(ents[i], ents[i], is_topmost);
+				if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
+					// if there are potential non-normals in the path, we need to normalize it.
+					ret = pathstack_push(ps, ents[i], &save);
+					keepontruckin = process_absolute_file(pathstack_absolute(ps), ents[i], print_absolute == -1);
+					pathstack_pop(ps, &save);
+				} else {
+					keepontruckin = run_test(pathstack_absolute(ps), ents[i], ents[i], print_absolute == -1);
+				}
 			}
 			if(!keepontruckin) {
 				goto abort;
@@ -866,16 +800,23 @@ static int process_ents(char **ents, int is_topmost)
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || modes[i] == 0) continue;
         if(S_ISDIR(modes[i])) {
-			if(is_topmost) {
-				// this is an unfortunate hack.  we display the path the same
-				// way the user specified (absolute or relative) so we need
-				// to remember which one it is.
-				arg_was_absolute = (ents[i][0] == '/');
-			}
 			if(ents[i][0] == '/') {
-				keepontruckin = process_absolute_dir(ents[i]);
+				assert(print_absolute == -1);	// it should be impossible to get here if we've already recursed
+				keepontruckin = process_absolute_dir(ents[i], ents[i], 1);
 			} else {
-				keepontruckin = process_relative_dir(ents[i]);
+				if(print_absolute == -1) print_absolute = 0;
+				if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
+					// if there are potential non-normals in the path, we need to normalize it.
+					ret = pathstack_push(ps, ents[i], &save);
+					keepontruckin = process_absolute_dir(pathstack_absolute(ps), ents[i], print_absolute);
+					pathstack_pop(ps, &save);
+				} else {
+					// Otherwise, we just push the path and chug.
+					ret = pathstack_push(ps, ents[i], &save);
+					print_relative_dir(ps, print_absolute);
+					keepontruckin = process_dir(ps, print_absolute);
+					pathstack_pop(ps, &save);
+				}
 			}
 			if(!keepontruckin) {
 				goto abort;
@@ -889,22 +830,31 @@ abort:
 }
 
 
+/** This routine filters out any dirents that begin with '.'.
+ *  We don't want to process any hidden files or special directories.
+ */
+
+static int select_nodots(const struct dirent *d)
+{
+    return d->d_name[0] != '.';
+}
+
+
 /** Runs all tests in the current directory and all its subdirectories.
  */
 
-int process_dir()
+int process_dir(struct pathstack *ps, int print_absolute)
 {
     char **ents;
-    int i;
-	int keepontruckin;
+    int i, keepontruckin;
 
-    ents = qscandir(curabsolute(), select_nodots, qdirentcoll);
+    ents = qscandir(pathstack_absolute(ps), select_nodots, qdirentcoll);
     if(!ents) {
         // qscandir has already printed the error message
         exit(runtime_error);
     }
 
-    keepontruckin = process_ents(ents, 0);
+    keepontruckin = process_ents(ps, ents, print_absolute);
 
     for(i=0; ents[i]; i++) {
         free(ents[i]);
@@ -975,11 +925,6 @@ static void start_tests()
 	assert(strlen(g_errname) == sizeof(g_errname)-1);
     g_statusfd = open_file(g_statusname, STATUSNAME, O_APPEND);
 	assert(strlen(g_statusname) == sizeof(g_statusname)-1);
-
-	if(curinit(NULL) != 0) {
-		fprintf(stderr, "Could not get the cwd: %s\n", strerror(errno));
-		exit(initialization_error);
-	}
 
 	// tmtest always runs with the CWD pointed to the temporary directory
 	cp = getenv("TMPDIR");
@@ -1106,11 +1051,11 @@ static void process_args(int argc, char **argv)
 				break;
 
 			case 'U':
-				run_unit_tests(all_unit_tests);
+				run_unit_tests(run_all_unit_tests);
 				exit(0);
 
 			case 257:
-				run_unit_tests_showing_failures(all_unit_tests);
+				run_unit_tests_showing_failures(run_all_unit_tests);
 				exit(0);
 
 			case 'V':
@@ -1133,7 +1078,8 @@ static void process_args(int argc, char **argv)
 }
 
 
-/*
+/* normalize_path
+ * 
  * I wish I could use canonicalize_path(3), but that routine resolves
  * symbolic links and provides no way to turn that behavior off.
  * How stupid!  This isn't as much of a hack as it looks because
@@ -1142,9 +1088,11 @@ static void process_args(int argc, char **argv)
  * @param original: the path to be normalized
  * @param outpath: the normalized path.  this may or may not be the same
  *     as original.
+ * 
+ * TODO: how about hitting this routine with some unit tests?
  */
 
-static void normalize_path(char *original, char **outpath)
+static void normalize_path(struct pathstack *ps, char *original, char **outpath)
 {
     char buf[PATH_MAX];
     char normalized[PATH_MAX];
@@ -1157,7 +1105,7 @@ static void normalize_path(char *original, char **outpath)
 		strcpy(normalized, original);
 		normalize_absolute_path(normalized);
     } else {
-        strncpy(buf, curabsolute(), PATH_MAX);
+        strncpy(buf, pathstack_absolute(ps), PATH_MAX);
 		strncat(buf, "/", PATH_MAX);
 		strncat(buf, original, PATH_MAX);
 		buf[PATH_MAX-1] = '\0';
@@ -1166,7 +1114,7 @@ static void normalize_path(char *original, char **outpath)
 		// convert it back to a relative path so it prints the
 		// way the user intends.  We need to beware later on
 		// to trim .. from the leading path.
-		if(!abs2rel(buf, curabsolute(), normalized, PATH_MAX)) {
+		if(!abs2rel(buf, pathstack_absolute(ps), normalized, PATH_MAX)) {
             fprintf(stderr, "Could not reabsize %s: %s\n",
 				original, strerror(errno));
 			exit(runtime_error);
@@ -1195,18 +1143,20 @@ static void normalize_free(const char *original, char *outpath)
  * and modify that.
  */
 
-static void process_argv(char **argv)
+static void process_argv(struct pathstack *ps, char **argv)
 {
 	char **ents;
-	int i, n;
+	int i, n, oldlen;
 
     for(n=0; argv[n]; n++) { }
 
 	ents = malloc((n+1)*sizeof(*ents));
 	ents[n] = NULL;
-
-	for(i=0; i<n; i++) { normalize_path(argv[i], &ents[i]); }
-	process_ents(ents, 1);
+	
+	for(i=0; i<n; i++) { normalize_path(ps, argv[i], &ents[i]); }
+	oldlen = ps->curlen;
+	process_ents(ps, ents, -1);
+	assert(oldlen == ps->curlen);	// process_ents needs to not modify the pathstack.
 	for(i=0; i<n; i++) { normalize_free(argv[i], ents[i]); }
 
 	free(ents);
@@ -1232,17 +1182,22 @@ static const char* dup_cwd()
 
 int main(int argc, char **argv)
 {
+	char buf[PATH_MAX];
+	struct pathstack pathstack;
+	
 	orig_cwd = dup_cwd();
 	process_args(argc, argv);
 
+	pathstack_init(&pathstack, buf, sizeof(buf), orig_cwd);
+
     start_tests();
     if(optind < argc) {
-		process_argv(argv+optind);
+		process_argv(&pathstack, argv+optind);
     } else {
         if(outmode == outmode_test) {
             printf("\nProcessing .\n");
         }
-        process_dir();
+        process_dir(&pathstack, 0);
     }
     stop_tests();
 

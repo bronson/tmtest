@@ -19,7 +19,7 @@
 
 #include "test.h"
 #include "vars.h"
-#include "curdir.h"
+#include "pathstack.h"
 
 #define CONFIG_FILE "tmtest.conf"
 #define HOME_CONFIG_FILE ".tmtestrc"
@@ -48,7 +48,7 @@ static int var_testfile(struct test *test, FILE* fp, const char *var)
 	} else if(test->testfilename[0] == '/') {
 		fprintf(fp, "%s", test->testfilename);
 	} else {
-		fprintf(fp, "%s/%s", curabsolute(), test->testfilename);
+		fprintf(fp, "%s/%s", test->testfiledir, test->testfilename);
 	}
 
     return 0;
@@ -56,7 +56,7 @@ static int var_testfile(struct test *test, FILE* fp, const char *var)
 
 static int var_testdir(struct test *test, FILE* fp, const char *var)
 {
-	fputs(curabsolute(), fp);
+	fputs(test->testfiledir, fp);
     return 0;
 }
 
@@ -76,7 +76,7 @@ static int var_testexec(struct test *test, FILE* fp, const char *var)
 		if(test->testfilename[0] == '/') {
 			fprintf(fp, ". %s", test->testfilename);
 		} else {
-			fprintf(fp, ". '%s/%s'", curabsolute(), test->testfilename);
+			fprintf(fp, ". '%s/%s'", test->testfiledir, test->testfilename);
 		}
     }
 
@@ -227,7 +227,7 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
 	}
 
 	// check config files in the current hierarchy
-	strncpy(buf, curabsolute(), sizeof(buf));
+	strncpy(buf, test->testfiledir, sizeof(buf));
 	buf[sizeof(buf)-1] = '\0';
 	if(config_file) {
 		confbaselen = strrchr(config_file, '/') - config_file;

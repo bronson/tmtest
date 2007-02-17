@@ -28,14 +28,13 @@ endif
 
 COPTS=-g -Wall -Werror
 
+# scanner files
+SCANC=re2c/read.c re2c/read-fd.c re2c/read-mem.c re2c/read-rand.c re2c/scan.c re2c/scan-dyn.c
+SCANH=re2c/read.h re2c/read-fd.h re2c/read-mem.h re2c/read-rand.h re2c/scan.h re2c/scan-dyn.h
+	
 # utilities:
 CSRC+=qscandir.c pathconv.c pathstack.c
 CHDR+=qscandir.h pathconv.h pathstack.h
-# scanner files
-CSRC+=re2c/read.c re2c/read-fd.c re2c/read-mem.c re2c/read-rand.c \
-	re2c/scan.c re2c/scan-dyn.c
-CHDR+=re2c/read.h re2c/read-fd.h re2c/read-mem.h re2c/read-rand.h \
-	re2c/scan.h re2c/scan-dyn.h
 # program files:
 CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c template.c
 CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h
@@ -48,8 +47,8 @@ INTERMED=stscan.c
 
 all: tmtest
 
-tmtest: $(CSRC) $(CHDR) $(INTERMED)
-	$(CC) $(COPTS) $(CSRC) -o tmtest -DVERSION="$(VERSION)" -DZUTEST
+tmtest: $(CSRC) $(SCANH) $(SCANC) $(CHDR) $(INTERMED)
+	$(CC) $(COPTS) $(CSRC) $(SCANC) -o tmtest -DVERSION="$(VERSION)"
 
 template.c: template.sh cstrfy
 	./cstrfy -n exec_template < template.sh > template.c
@@ -65,9 +64,17 @@ template.c: template.sh cstrfy
 test: tmtest
 	./tmtest --run-unit-tests
 	tmtest test
+	
+# Sometimes the app won't compile but we still want to run the unit tests...
+units: compare.c pathstack.c units.c units.h zutest.c zutest.h $(SCANH) $(SCANC) Makefile
+	$(CC) -g -Wall compare.c pathstack.c pathconv.c units.c zutest.c $(SCANC) -o units -DUNITS_MAIN
 
-unit: tmtest
-	./tmtest --run-unit-tests
+run-units: units
+	./units
+
+# todo -- when global variables are worked out, just compile everything
+#units: $(CSRC) $(CHDR) $(SCANH) $(SCANC) Makefile
+#	$(CC) $(COPTS) $(CSRC) $(SCANC) -o units -DUNITS_MAIN
 
 install: tmtest
 	install -d -m755 $(bindir)

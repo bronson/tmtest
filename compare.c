@@ -186,7 +186,7 @@ compare_result compare_check_newlines(scanstate *ss)
 }
 
 
-#include "zutest.h"
+#include "units.h"
 #include "re2c/read-mem.h"
 #include "re2c/read-rand.h"
 #include <stdlib.h>
@@ -358,13 +358,13 @@ static void test_tiny_buffer(cutest *ct)
 }
 */
 
-zutest_proc compare_tests[] = {
-	test_empty,
-	test_standard,
-	test_large,
-	test_newlines,
-	test_inc,
-	test_inc_newlines,
-	NULL
+void compare_tests()
+{
+	zutest( test_empty() );
+	zutest( test_standard() );
+	zutest( test_large() );
+	zutest( test_newlines() );
+	zutest( test_inc() );
+	zutest( test_inc_newlines() );
 };
 

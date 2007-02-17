@@ -1,3 +1,4 @@
+- Rewrote the path handling code and gave it some unit tests.
 - Added -f command-line option to print only the failed tests.
 - Made REPLACE handle multiple text substitutions; could only handle 1 before.
 - Got rid of RESULT and all its code.  echo $? from within your test instead.

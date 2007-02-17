@@ -1,13 +1,13 @@
 /* zutest.h
  * Scott Bronson
  * 6 Mar 2006
- *
- * TODO: make tests self-documenting.  The test name is the same as the
- * function name, but they should also have a short and long description.
- * TODO: make zutest suites able to be arranged in a hierarchy.
- *
- * Version 0.62, 22 Jan 2007
- * Version 0.61, 30 Apr 2006
+ * 
+ * This file is released under the MIT License.
+ * See http://en.wikipedia.org/wiki/MIT_License for more.
+ * 
+ * Version 0.7,  16 Feb 2007 -- turn dependency tree into functions
+ * Version 0.62, 22 Jan 2007 -- clean up failure messages
+ * Version 0.61, 30 Apr 2006 -- first version worth releasing
  */
 
 
@@ -17,7 +17,6 @@
  * required to use Zutest in your own applications.
  *
  * Zutest is a ground-up rewrite of Asim Jalis's "CuTest" library.
- * It is released under the MIT License.
  *
  * To compile Zutest to run its own unit tests, do this:
  * 
@@ -37,6 +36,10 @@
 
 #ifndef ZUTEST_H
 #define ZUTEST_H
+
+// This include is unfortunate...  TODO: try to get this out of here.
+#include <setjmp.h>
+
 
 //#define ZUTBECAUSE " failed because "
 #define ZUTBECAUSE " failed. "
@@ -140,7 +143,14 @@
 		if(!(p)[0]) { Fail(#p" is nonempty" ZUTBECAUSE #p"[0] is 0!"); } \
 	} while(0)
 
-
+// I think that "Equal" looks better than "Eq".
+// This is probably proof that these macros need to be totally overhauled...
+#define AssertEqual(x,y) AssertEq(x,y)
+#define AssertEqualHex(x,y) AssertHexEq(x,y)
+#define AssertPtrEqual(x,y) AssertPtrEq(x,y)
+#define AssertFloatEqual(x,y) AssertFloatEq(x,y)
+#define AssertDoubleEqual(x,y) AssertFloatEq(x,y)
+#define AssertStrEqual(x,y) AssertStrEq(x,y)
 
 //
 // helper macros, not intended to be called directly.
@@ -165,44 +175,6 @@
 
 
 
-/** Keeps track of how many assertions have been made.
- * This needs to be updated manually each time an assertion
- * is made.  The Zutest built-in assertion macros all
- * update this variable properly.
- */
-
-extern int zutest_assertions;
-
-
-/** A single test
- *
- * This routine is called to run the test.  If it returns, the test
- * succeeds.  If zutest_fail() is called (either directly or indirectly
- * via an Assert macro), then the test fails.
- */
-typedef void (*zutest_proc)();
-
-
-/** A suite of tests
- *
- * A zutest_suite is simply a list of tests.  Generally, each .c file
- * in your project will include a test suite that ensures all the tests
- * contained in the .c file are run.  A suite is just a NULL-terminated
- * list of tests.
- */
-typedef zutest_proc *zutest_suite;
-
-
-/** A suite of test suites
- *
- * Zutests runs through each test suite in your project, running all the
- * tests in each suite.  A suite of suites is just a NULL-terminated list
- * of suites.  This is the topmost data structure used by zutest.
- * TODO: make it so zutest chan handle an arbitrary hierarchy of suites.
- * That way this data structure can go away.
- */
-typedef zutest_suite *zutest_suites;
-
 
 /** Fails the current test.
  *
@@ -224,12 +196,42 @@ typedef zutest_suite *zutest_suites;
 
 void zutest_fail(const char *file, int line, const char *func,
 		const char *msg, ...);
+		
+		
+#define zutest(test) do { zutest_tests_run += 1; 	\
+		if(!setjmp(zutest_test_bail)) { 			\
+			do { test; } while(0); 					\
+			zutest_successes += 1; 					\
+		} else { 									\
+			zutest_failures += 1; 					\
+		} } while(0)
+		
 
+/* above this line is stuff only needed within the tests */
+/* ------------------ */
+/* below this line is stuff only needed to run the tests */
+
+
+
+
+/** Keeps track of how many assertions have been made.
+ * This needs to be updated manually each time an assertion
+ * is made.  The Zutest built-in assertion macros all
+ * update this variable properly.
+ */
+
+extern int zutest_assertions;
+extern int zutest_tests_run;
+extern int zutest_successes;
+extern int zutest_failures;
+extern jmp_buf zutest_test_bail;
+
+typedef void (*zutest_proc)();
 
 /** Runs all the tests in a suite. */
-void run_zutest_suite(const zutest_suite suite);
+void run_zutest_suite(zutest_proc proc);
 /** Runs all the tests in all the suites passed in. */
-void run_zutest_suites(const zutest_suites suites);
+void run_zutest_suites(zutest_proc proc);
 
 void print_zutest_results();
 
@@ -243,7 +245,7 @@ void print_zutest_results();
  * run_zutest_suites() directly.
  */
 
-void unit_test_check(int argc, char **argv, const zutest_suites suites);
+void unit_test_check(int argc, char **argv, zutest_proc proc);
 
 /**
  *
@@ -251,8 +253,8 @@ void unit_test_check(int argc, char **argv, const zutest_suites suites);
  * if you want to handle the arguments yourself.
  */
 
-void run_unit_tests(const zutest_suites suites);
-void run_unit_tests_showing_failures(const zutest_suites suites);
+void run_unit_tests(zutest_proc proc);
+void run_unit_tests_showing_failures(zutest_proc proc);
 
 
 /** Zutest's built-in test suite.
@@ -268,6 +270,7 @@ void run_unit_tests_showing_failures(const zutest_suites suites);
  * compile and run its unit tests as described in zutest.h.
  */
 
-extern zutest_proc zutest_tests[];
+void zutest_tests();
+
 
 #endif

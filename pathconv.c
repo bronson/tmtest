@@ -32,12 +32,7 @@
  *	r)		!= NULL: relative path
  *			== NULL: error
  */
-char *
-abs2rel(path, base, result, size)
-	const char *path;
-	const char *base;
-	char *result;
-	const size_t size;
+char* abs2rel(const char *path, const char *base, char *result, const size_t size)
 {
 	const char *pp, *bp, *branch;
 	/*
@@ -108,7 +103,7 @@ erange:
 }
 
 
-// Copyright (c) 2006 Scott Bronson
+// The following code is Copyright (c) 2006 Scott Bronson
 // The following code can be distributed under the LGPL as above
 // or, at your option, the much simpler MIT license.
 
@@ -120,7 +115,8 @@ erange:
  * to walk two pointers through the string copying bits from the
  * src to the dst so I don't spend so much time moving the same
  * bytes over and over.  Alas, I'm out of time so I'm going to
- * resort to this loathesome coding style for less chance of bugs.
+ * resort to this loathesome memmove coding style so I can spend
+ * less time debugging.
  *
  * @returns 1 if this was a relative path and therefore the function
  * did nothing.  Otherwise returns 0.

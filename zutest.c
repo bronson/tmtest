@@ -1,15 +1,18 @@
 /* zutest.c
  * Scott Bronson
  * 6 Mar 2006
+ * 
+ * This file is released under the MIT License.
+ * See http://en.wikipedia.org/wiki/MIT_License for more.
  *
- * Version 0.6, 26 Apr 2006
+ * Version 0.7,  16 Feb 2007 -- turn dependency tree into functions
+ * Version 0.6,  26 Apr 2006 -- first version worth releasing
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <setjmp.h>
 #include "zutest.h"
 
 
@@ -22,10 +25,34 @@
  * within a test, the test itself is stopped and printed as a failure
  * but all other tests in the current test suite, and all other test
  * suites, will still be run.
+ * 
+ * You need to ensure that it's impossible for Assert macros to be
+ * called without first ensuring that test_enter is called.
+ * 
+ * A single test is typically:
+ *   
+ *   Generally each step in a test must be processed in order
+ * (later steps depend on earlier).  This is why tmtest bails
+ * on the entire test when the first assert fails -- chances are
+ * that the failure will prevent any further processing in this
+ * test from producing meaningful results, and is probably not
+ * unlikely to cause a full crash.  Therefore when an assert fails,
+ * the current test is stopped and the next test is started.
  *
- * A test suite consists of a number of tests.  Typically a C file
- * will include a test suite that lists all the tests in the file.
+ * Q: Why not collect tests in data structures like other unit test
+ * program do?
+ * A: Zutest used to do this.  However, you can't call a data structure
+ * with different parameters.  For instance, ensuring a suite of tests
+ * works with any sized buffer:
+ *     test_buffer(1024);
+ *     test_buffer(13);
+ *     test_buffer(0);
+ * And you can't set a breakpoint on a data structure or step through
+ * it in a debugger.  So, while it might be conceptually cleaner to
+ * specify your tests purely declarative, in practice it's significantly
+ * less convenient.
  *
+ * TODO: move test setup into the tests themselves.
  * TODO: print test results, test suites, etc as they run.
  *    Add a quiet flag that will suppress printing unless a test fails.
  *    quiet=0, full printing
@@ -36,10 +63,10 @@
 
 
 int zutest_assertions = 0;		///< A goofy statistic, updated by the assertion macros
-static int tests_run = 0;		///< The number of tests that we have run.  successes+failures==tests_run (if not, then there's a bug somewhere).
-static int successes = 0;		///< The number of successful tests run
-static int failures = 0;		///< The number of failed tests run.
-static jmp_buf test_bail;		///< If an assertion fails, and we're not inverted, this is where we end up.
+int zutest_tests_run = 0;		///< The number of tests that we have run.  successes+failures==tests_run (if not, then there's a bug somewhere).
+int zutest_successes = 0;		///< The number of successful tests run
+int zutest_failures = 0;		///< The number of failed tests run.
+jmp_buf zutest_test_bail;		///< If an assertion fails, and we're not inverted, this is where we end up.
 static jmp_buf *inversion;		///< If an assertion fails, and we're inverted, this is where we end up.  This is NULL except when running Zutest's internal unit tests.  See test_fail().
 static int show_failures = 0; 	///< Set this to 1 to print the failures.  This allows you to view the output of each failure to ensure it looks OK.
 
@@ -61,67 +88,41 @@ void zutest_fail(const char *file, int line, const char *func,
 		longjmp(*inversion, 1);
 	}
 
-	longjmp(test_bail, 1);
-}
-
-
-void run_zutest_suite(const zutest_suite suite)
-{
-	const zutest_proc *test;
-
-	for(test=suite; *test; test++) {
-		tests_run += 1;
-		if(!setjmp(test_bail)) {
-			(*test)();
-			successes += 1;
-		} else {
-			failures += 1;
-		}
-	}
-}
-
-
-void run_zutest_suites(const zutest_suites suites)
-{
-	zutest_suite *suite;
-
-	for(suite=suites; *suite; suite++) {
-		run_zutest_suite(*suite);
-	}
+	longjmp(zutest_test_bail, 1);
 }
 
 
 void print_zutest_results()
 {
-	if(failures == 0) {
+	if(zutest_failures == 0) {
 		printf("All OK.  %d test%s run, %d successe%s (%d assertion%s).\n",
-				successes, (successes == 1 ? "" : "s"),
-				successes, (successes == 1 ? "" : "s"),
+				zutest_successes, (zutest_successes == 1 ? "" : "s"),
+				zutest_successes, (zutest_successes == 1 ? "" : "s"),
 				zutest_assertions, (zutest_assertions == 1 ? "" : "s"));
 		return;
 	}
 
 	printf("ERROR: %d failure%s in %d test%s run!\n",
-			failures, (failures == 1 ? "" : "s"), 
-			tests_run, (tests_run == 1 ? "" : "s"));
+			zutest_failures, (zutest_failures == 1 ? "" : "s"), 
+			zutest_tests_run, (zutest_tests_run == 1 ? "" : "s"));
 }
 
 
 /** Runs all the unit tests in all the passed-in test suites.
  */
 
-void run_unit_tests(const zutest_suites suites)
+void run_unit_tests(zutest_proc proc)
 {
-	run_zutest_suites(suites);
+	(*proc)();
 	print_zutest_results();
-	exit(failures < 100 ? failures : 100);
+	exit(zutest_failures < 100 ? zutest_failures : 100);
 }
 
 
-void run_unit_tests_showing_failures(const zutest_suites suites)
+void run_unit_tests_showing_failures(zutest_proc proc)
 {
 	show_failures = 1;
-	run_unit_tests(suites);
+	run_unit_tests(proc);
 }
 
 
@@ -136,18 +137,14 @@ void run_unit_tests_showing_failures(const zutest_suites suites)
  * without doing anything.
  */
 
-void unit_test_check(int argc, char **argv, const zutest_suites suites)
+void unit_test_check(int argc, char **argv, zutest_proc proc)
 {
 	if(argc > 1 && strcmp(argv[1],"--run-unit-tests") == 0) {
-		run_unit_tests(suites);
+		run_unit_tests(proc);
 	}
 }
 
 
-
-
-
-#if defined(ZUTEST) || defined(ZUTEST_MAIN)
 
 /* This code runs the zutest unit tests to ensure that zutest itself
  * is working properly.
@@ -383,26 +380,13 @@ void test_assert_strings()
 }
 
 
-zutest_proc zutest_tests[] = {
-	test_assert_int,
-	test_assert_hex,
-	test_assert_ptr,
-	test_assert_float,
-	test_assert_strings,
-	NULL
-};
-
-
-// Ensure that zutest doesn't crash if handed an empty suite.
-zutest_proc zutest_empty_suite[] = {
-	NULL
-};
-
-
-zutest_suite all_zutests[] = {
-	zutest_empty_suite,
-	zutest_tests,
-	NULL
+void zutest_tests()
+{
+	zutest( test_assert_int() );
+	zutest( test_assert_hex() );
+	zutest( test_assert_ptr() );
+	zutest( test_assert_float() );
+	zutest( test_assert_strings() );
 };
 
 
@@ -412,14 +396,11 @@ int main(int argc, char **argv)
 	if(argc > 1) {
 		// "zutest -f" prints all the failures in the zutest unit tests.
 		// This allows you to check the output of each macro.
-		run_unit_tests_showing_failures(all_zutests);
+		run_unit_tests_showing_failures(zutest_tests);
 	} else {
-		run_unit_tests(all_zutests);
+		run_unit_tests(zutest_tests);
 	}
 	// this will never be reached
 	return 0;
 }
 #endif
-
-#endif
-

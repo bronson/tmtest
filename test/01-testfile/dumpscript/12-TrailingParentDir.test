@@ -23,7 +23,6 @@ MKFILE tt2 "$di/tt.test" <<'EOL'
 	echo "$config"
 EOL
 
-
 $tmtest --dump-script "$di/.." | REPLACE "$do" /tmp/DIR | FIX_SCRIPT
 
 
