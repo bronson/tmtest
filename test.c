@@ -674,8 +674,8 @@ void scan_sections(struct test *test, scanstate *scanner,
     do {
         int tokno = scan_next_token(scanner);
         if(tokno < 0) {
-            test_abort(test, "scan_sections error %d pulling status tokens: %s\n", 
-                    tokno, strerror(errno));
+            test_abort(test, "scan_sections error %d pulling status tokens: "
+				"%s\n", tokno, strerror(errno));
         } else if(tokno == 0) {
 			break;
 		}
@@ -955,8 +955,7 @@ static void dump_reason(struct test *test, const char *name)
 }
 
 
-/** Prints the actual result sections in the same order as they
- * appear in the testfile.
+/** Prints the result sections as tested.
  */
 
 void dump_results(struct test *test)
@@ -982,9 +981,7 @@ void dump_results(struct test *test)
     }
 
     // The command section has already been dumped.  We just
-    // need to dump the result sections.  The trick is, though,
-    // that we need to dump them in the same order as they occur
-    // in the testfile otherwise the diff will be all screwed up.
+    // need to dump the STDERR and STDOUT results.
 
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;

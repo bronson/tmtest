@@ -1,6 +1,10 @@
 /* zutest.h
  * Scott Bronson
  * 6 Mar 2006
+ *
+ * TODO: make tests self-documenting.  The test name is the same as the
+ * function name, but they should also have a short and long description.
+ * TODO: make zutest suites able to be arranged in a hierarchy.
  * 
  * This file is released under the MIT License.
  * See http://en.wikipedia.org/wiki/MIT_License for more.

@@ -272,7 +272,7 @@ static int open_file(char *fn, const char *name, int flags)
 }
 
 
-static int write_stdin_to_tmpfile(struct test *test)
+static void write_stdin_to_tmpfile(struct test *test)
 {
 	char *buf;
 	int fd;
@@ -288,8 +288,6 @@ static int write_stdin_to_tmpfile(struct test *test)
 	assert(strlen(buf) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
 	write_file(test, fd, 0, NULL);
 	close(fd);
-
-	return fd;
 }
 
 
