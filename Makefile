@@ -39,8 +39,8 @@ CHDR+=qscandir.h pathconv.h pathstack.h
 CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c template.c
 CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h
 # unit test files
-CSRC+=units.c zutest.c
-CHDR+=units.h zutest.h
+CSRC+=units.c mutest/mutest.c
+CHDR+=units.h mutest/mutest.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
@@ -66,8 +66,8 @@ test: tmtest
 	tmtest test
 	
 # Sometimes the app won't compile but we still want to run the unit tests...
-units: compare.c pathstack.c units.c units.h zutest.c zutest.h $(SCANH) $(SCANC) Makefile
-	$(CC) -g -Wall compare.c pathstack.c pathconv.c units.c zutest.c $(SCANC) -o units -DUNITS_MAIN
+units: compare.c pathstack.c units.c units.h mutest/mutest.c mutest/main.c mutest/mutest.h $(SCANH) $(SCANC) Makefile
+	$(CC) -g -Wall compare.c pathstack.c pathconv.c units.c mutest/mutest.c mutest/main.c $(SCANC) -o units -DUNITS_MAIN
 
 run-units: units
 	./units
@@ -105,7 +105,7 @@ else
 endif
 
 clean:
-	rm -f tmtest template.c tags zutest
+	rm -f tmtest template.c tags
 
 distclean: clean
 	rm -f stscan.[co]
@@ -129,6 +129,4 @@ rediff:
 	
 reupdate:
 	ls re2c/*.[ch] | (ODIR=`pwd`; cd ../oe; xargs cp --target-directory $$ODIR/re2c)
-
-zutest: zutest.c zutest.h Makefile
-	gcc -Wall -Werror -g zutest.c -DZUTEST_MAIN -o zutest
+	

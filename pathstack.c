@@ -320,9 +320,9 @@ static void test_empty_pathstack()
 
 void pathstack_tests()
 {
-	zutest( test_pathstack() );
-	zutest( test_small_pathstack() );
-	zutest( test_empty_pathstack() );
+	mutest( test_pathstack() );
+	mutest( test_small_pathstack() );
+	mutest( test_empty_pathstack() );
 }
 
 #endif

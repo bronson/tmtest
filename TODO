@@ -61,6 +61,8 @@
 - Add the zutest unit tests to the tmtest test battery.
 - Make zutest able to run both quiet (only failures printed) and verbose
   (everything printed and then some).
+- Try to re-enable some of the disabled tests.  Especially the openfds
+  test; it's helped in the past to ensure that we don't leak fds.
 
 0.98:
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.

@@ -9,6 +9,8 @@
 #    open: 7
 #    open: 10
 
+DISABLED: Number of open fds keeps changing.
+
 $tmtest -o -q - <<-'EOL' | INDENT
 	for i in `seq 3 255`; do
 		exec 2>/dev/null

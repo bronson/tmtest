@@ -360,11 +360,11 @@ static void test_tiny_buffer(cutest *ct)
 
 void compare_tests()
 {
-	zutest( test_empty() );
-	zutest( test_standard() );
-	zutest( test_large() );
-	zutest( test_newlines() );
-	zutest( test_inc() );
-	zutest( test_inc_newlines() );
+	mutest( test_empty() );
+	mutest( test_standard() );
+	mutest( test_large() );
+	mutest( test_newlines() );
+	mutest( test_inc() );
+	mutest( test_inc_newlines() );
 };
 
