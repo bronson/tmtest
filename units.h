@@ -1,4 +1,4 @@
-#include "mutest/mutest_Assert.h"
+#include "mutest/mutest_assert.h"
 
 void compare_tests();
 void pathstack_tests();

@@ -39,8 +39,8 @@ CHDR+=qscandir.h pathconv.h pathstack.h
 CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c template.c
 CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h
 # unit test files
-CSRC+=units.c mutest/mutest.c mutest/test_Assert.c
-CHDR+=units.h mutest/mutest.h mutest/mutest_Assert.h
+CSRC+=units.c mutest/mutest.c mutest/test_assert.c
+CHDR+=units.h mutest/mutest.h mutest/mutest_assert.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
@@ -66,8 +66,8 @@ test: tmtest
 	tmtest test
 	
 # Sometimes the app won't compile but we still want to run the unit tests...
-units: compare.c pathstack.c units.c units.h mutest/mutest.c mutest/main.c mutest/test_Assert.c mutest/mutest_Assert.h mutest/mutest.h $(SCANH) $(SCANC) Makefile
-	$(CC) -g -Wall compare.c pathstack.c pathconv.c units.c mutest/mutest.c mutest/test_Assert.c mutest/main.c $(SCANC) -o units -DUNITS_MAIN
+units: compare.c pathstack.c units.c units.h mutest/mutest.c mutest/main.c mutest/test_assert.c mutest/mutest_assert.h mutest/mutest.h $(SCANH) $(SCANC) Makefile
+	$(CC) -g -Wall compare.c pathstack.c pathconv.c units.c mutest/mutest.c mutest/test_assert.c mutest/main.c $(SCANC) -o units -DUNITS_MAIN
 
 run-units: units
 	./units
