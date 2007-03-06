@@ -32,7 +32,9 @@
 #include "tfscan.h"
 #include "pathconv.h"
 #include "pathstack.h"
+
 #include "units.h"
+#include "mutest/mutest.h"
 
 
 #define DIFFPROG "/usr/bin/diff"

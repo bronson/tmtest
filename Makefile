@@ -32,15 +32,20 @@ COPTS=-g -Wall -Werror
 SCANC=re2c/read.c re2c/read-fd.c re2c/read-mem.c re2c/read-rand.c re2c/scan.c re2c/scan-dyn.c
 SCANH=re2c/read.h re2c/read-fd.h re2c/read-mem.h re2c/read-rand.h re2c/scan.h re2c/scan-dyn.h
 	
+# files with unit tests
+USRC=pathstack.c compare.c pathconv.c
+UHDR=pathstack.h compare.h pathconv.h
+# add the files needed to run the unit tests
+USRC+=units.c $(shell mutest/mutest-config --c --tests assert)
+UHDR+=units.h $(shell mutest/mutest-config --headers assert)
+
 # utilities:
-CSRC+=qscandir.c pathconv.c pathstack.c
-CHDR+=qscandir.h pathconv.h pathstack.h
+CSRC+=qscandir.c $(USRC)
+CHDR+=qscandir.h $(UHDR)
 # program files:
-CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c template.c
-CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h
+CSRC+=vars.c test.c rusage.c tfscan.c stscan.o main.c template.c
+CHDR+=vars.h test.h rusage.h tfscan.h stscan.h
 # unit test files
-CSRC+=units.c mutest/mutest.c mutest/test_assert.c
-CHDR+=units.h mutest/mutest.h mutest/mutest_assert.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
@@ -66,8 +71,8 @@ test: tmtest
 	tmtest test
 	
 # Sometimes the app won't compile but we still want to run the unit tests...
-units: compare.c pathstack.c units.c units.h mutest/mutest.c mutest/main.c mutest/test_assert.c mutest/mutest_assert.h mutest/mutest.h $(SCANH) $(SCANC) Makefile
-	$(CC) -g -Wall compare.c pathstack.c pathconv.c units.c mutest/mutest.c mutest/test_assert.c mutest/main.c $(SCANC) -o units -DUNITS_MAIN
+units: $(USRC) $(UHDR) mutest/main.c $(SCANH) $(SCANC) Makefile
+	$(CC) -g -Wall $(USRC) mutest/main.c $(SCANC) -o units -DUNITS_MAIN
 
 run-units: units
 	./units
