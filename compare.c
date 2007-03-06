@@ -198,13 +198,13 @@ static void test_empty()
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
-	AssertEq(compare_check(ss), cmp_full_match);
+	AssertEQ(compare_check(ss), cmp_full_match);
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
 	val = compare_continue(ss, "", 0);
 	AssertNonNegative(val);
-	AssertEq(compare_check(ss), cmp_full_match);
+	AssertEQ(compare_check(ss), cmp_full_match);
 }
 
 
@@ -219,7 +219,7 @@ static void test_standard()
 	AssertNonNegative(val);
 	val = compare_continue(ss, "3", 1);
 	AssertNonNegative(val);
-	AssertEq(compare_check(ss), cmp_full_match);
+	AssertEQ(compare_check(ss), cmp_full_match);
 }
 
 
@@ -241,7 +241,7 @@ static void test_large()
 
 	// compare_check will never return cmp_full_match because
 	// the random reader will never run out of data.
-	AssertEq(compare_check(ss), cmp_ss_has_more_data);
+	AssertEQ(compare_check(ss), cmp_ss_has_more_data);
 }
 
 
@@ -266,19 +266,19 @@ static compare_result check_newlines(const char *s1, const char *s2)
 
 static void test_newlines()
 {
-	AssertEq(check_newlines("Unix\n",   "Unix\n"  ), cmp_full_match);
-	AssertEq(check_newlines("Unix",     "Unix\n"  ), cmp_ptr_has_extra_nl);
-	AssertEq(check_newlines("Unix\n",   "Unix"    ), cmp_ss_has_extra_nl);
-	AssertEq(check_newlines("Unix",     "Unix"    ), cmp_full_match);
+	AssertEQ(check_newlines("Unix\n",   "Unix\n"  ), cmp_full_match);
+	AssertEQ(check_newlines("Unix",     "Unix\n"  ), cmp_ptr_has_extra_nl);
+	AssertEQ(check_newlines("Unix\n",   "Unix"    ), cmp_ss_has_extra_nl);
+	AssertEQ(check_newlines("Unix",     "Unix"    ), cmp_full_match);
 
-	AssertEq(check_newlines("Unix\n\n", "Unix\n"  ), cmp_ss_has_extra_nl);
-	AssertEq(check_newlines("Unix\n",   "Unix\n\n"), cmp_ptr_has_more_nls);
+	AssertEQ(check_newlines("Unix\n\n", "Unix\n"  ), cmp_ss_has_extra_nl);
+	AssertEQ(check_newlines("Unix\n",   "Unix\n\n"), cmp_ptr_has_more_nls);
 
 	// empty buffers (except for newlines)
-	AssertEq(check_newlines("\n",   ""     ), cmp_ss_has_extra_nl);
-	AssertEq(check_newlines("",     "\n"   ), cmp_ptr_has_extra_nl);
-	AssertEq(check_newlines("\n\n", ""     ), cmp_ss_has_more_data);
-	AssertEq(check_newlines("",     "\n\n" ), cmp_no_match);
+	AssertEQ(check_newlines("\n",   ""     ), cmp_ss_has_extra_nl);
+	AssertEQ(check_newlines("",     "\n"   ), cmp_ptr_has_extra_nl);
+	AssertEQ(check_newlines("\n\n", ""     ), cmp_ss_has_more_data);
+	AssertEQ(check_newlines("",     "\n\n" ), cmp_no_match);
 }
 
 static void test_inc()
@@ -296,7 +296,7 @@ static void test_inc()
 	AssertNonNegative(val);
 	val = compare_continue(ss, "\n", 1);
 	AssertNonNegative(val);
-	AssertEq(compare_check(ss), cmp_ptr_has_extra_nl);
+	AssertEQ(compare_check(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "123");
 	compare_attach(ss);
@@ -306,7 +306,7 @@ static void test_inc()
 	AssertNonNegative(val);
 	val = compare_continue(ss, "\n", 1);
 	AssertNonNegative(val);
-	AssertEq(compare_check(ss), cmp_no_match);
+	AssertEQ(compare_check(ss), cmp_no_match);
 }
 
 
@@ -327,7 +327,7 @@ static void test_inc_newlines()
 	AssertNonNegative(val);
 	val = compare_continue(ss, "\n", 1);
 	AssertNonNegative(val);
-	AssertEq(compare_check_newlines(ss), cmp_ptr_has_extra_nl);
+	AssertEQ(compare_check_newlines(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "123\n");
 	compare_attach(ss);
@@ -337,17 +337,17 @@ static void test_inc_newlines()
 	AssertNonNegative(val);
 	val = compare_continue(ss, "3", 1);
 	AssertNonNegative(val);
-	AssertEq(compare_check_newlines(ss), cmp_ss_has_extra_nl);
+	AssertEQ(compare_check_newlines(ss), cmp_ss_has_extra_nl);
 
 	readmem_init_str(ss, "");
 	compare_attach(ss);
 	val = compare_continue(ss, "\n", 1);
 	AssertNonNegative(val);
-	AssertEq(compare_check_newlines(ss), cmp_ptr_has_extra_nl);
+	AssertEQ(compare_check_newlines(ss), cmp_ptr_has_extra_nl);
 
 	readmem_init_str(ss, "\n");
 	compare_attach(ss);
-	AssertEq(compare_check_newlines(ss), cmp_ss_has_extra_nl);
+	AssertEQ(compare_check_newlines(ss), cmp_ss_has_extra_nl);
 }
 
 

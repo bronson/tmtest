@@ -39,8 +39,8 @@ CHDR+=qscandir.h pathconv.h pathstack.h
 CSRC+=vars.c test.c compare.c rusage.c tfscan.c stscan.o main.c template.c
 CHDR+=vars.h test.h compare.h rusage.h tfscan.h stscan.h
 # unit test files
-CSRC+=units.c mutest/mutest.c
-CHDR+=units.h mutest/mutest.h
+CSRC+=units.c mutest/mutest.c mutest/test_Assert.c
+CHDR+=units.h mutest/mutest.h mutest/mutest_Assert.h
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
@@ -60,17 +60,23 @@ template.c: template.sh cstrfy
 %.o: %.c
 	$(CC) -g -c $< -o $@
 
-.PHONY: test
+.PHONY: test mutest run-mutest
 test: tmtest
 	./tmtest --run-unit-tests
 	tmtest test
 	
 # Sometimes the app won't compile but we still want to run the unit tests...
-units: compare.c pathstack.c units.c units.h mutest/mutest.c mutest/main.c mutest/mutest.h $(SCANH) $(SCANC) Makefile
-	$(CC) -g -Wall compare.c pathstack.c pathconv.c units.c mutest/mutest.c mutest/main.c $(SCANC) -o units -DUNITS_MAIN
+units: compare.c pathstack.c units.c units.h mutest/mutest.c mutest/main.c mutest/test_Assert.c mutest/mutest_Assert.h mutest/mutest.h $(SCANH) $(SCANC) Makefile
+	$(CC) -g -Wall compare.c pathstack.c pathconv.c units.c mutest/mutest.c mutest/test_Assert.c mutest/main.c $(SCANC) -o units -DUNITS_MAIN
 
 run-units: units
 	./units
+
+mutest:
+	(cd mutest; $(MAKE))
+
+run-mutest:
+	(cd mutest; ./mutest)
 
 # todo -- when global variables are worked out, just compile everything
 #units: $(CSRC) $(CHDR) $(SCANH) $(SCANC) Makefile
@@ -106,6 +112,7 @@ endif
 
 clean:
 	rm -f tmtest template.c tags
+	(cd mutest; $(MAKE) clean)
 
 distclean: clean
 	rm -f stscan.[co]

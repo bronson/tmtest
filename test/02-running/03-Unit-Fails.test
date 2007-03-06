@@ -10,7 +10,9 @@
 # This doesn't work either
 # $tmtest --show-unit-fails > >(sed s/0x[A-Z0-9][A-Z0-9]*/0xHEXDIGIT/g) 2>&1
 
-$tmtest --show-unit-fails 2>&1 | sed s/0x[A-Z0-9][A-Z0-9]*/0xHEXDIGIT/g | sed s/mutest\\/mutest.c:[0-9]\*:/mutest.c:NNN:/
+$tmtest --show-unit-fails 2>&1 | \
+	sed s/0x[A-Z0-9][A-Z0-9]*/0xHEXDIGIT/g | \
+	sed s/^.*\\.c:[0-9]\*:/mutest.c:NNN:/
 
 STDOUT:
 mutest.c:NNN: In test_assert_int, assert a == b failed. a==4 and b==3!
