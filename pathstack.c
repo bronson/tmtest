@@ -177,81 +177,84 @@ static void test_pathstack()
 		// therefore, buffer can hold 23 characters, bufsiz is only 22, and the entire buffer
 		// can hold a maximum of 21 characters including the leading '/'.
 	
-	// init the pathstack
-	pathstack_init(ps, buf, bufsiz, origstr);
-	AssertEqual(ps->curlen, strlen(origstr));
-	AssertEqual(ps->maxlen, bufsiz-1);
-	AssertStrEqual(ps->buf, origstr);
-	
-	
-	// push an actual string
-	ret = pathstack_push(ps, "/next", &save1);
-	AssertZero(ret);
-	AssertEqual(save1.oldlen, strlen(origstr));
-	AssertEqual(ps->maxlen, bufsiz-1);
-	AssertStrEqual(ps->buf, "/tryit/next");
-	
-	// and pop it
-	ret = pathstack_pop(ps, &save1);
-	AssertZero(ret);
-	AssertEqual(ps->curlen, strlen(origstr));
-	AssertEqual(ps->maxlen, bufsiz-1);
-	AssertStrEqual(ps->buf, origstr);
-	
-	
-	// push an empty string
-	ret = pathstack_push(ps, "", &save1);
-	AssertZero(ret);
-	AssertEqual(ps->curlen, strlen(origstr));
-	AssertEqual(ps->maxlen, bufsiz-1);
-	AssertStrEqual(ps->buf, origstr);
-	
-	// and pop it.
-	ret = pathstack_pop(ps, &save1);
-	AssertZero(ret);
-	AssertEqual(ps->curlen, strlen(origstr));
-	AssertEqual(ps->maxlen, bufsiz-1);
-	AssertStrEqual(ps->buf, origstr);
-	
-	
-	// push a series of strings, hit the end of the buffer
-	ret = pathstack_push(ps, "next/", &save1);
-	AssertZero(ret);
-	ret = pathstack_push(ps, "n", &save2);
-	AssertZero(ret);
-	ret = pathstack_push(ps, "123456789", &save3);
-	AssertZero(ret);
-	
-	//                       123456789012345678901ns  (n: null terminator, s: sentinel)
-	AssertStrEqual(ps->buf, "/tryit/next/n/1234567");
-	AssertEqual(ps->curlen, ps->maxlen);
-	AssertEqual(ps->maxlen, bufsiz-1);
-	
-	// and pop it
-	ret = pathstack_pop(ps, &save3);
-	AssertZero(ret);
-	ret = pathstack_pop(ps, &save2);
-	AssertZero(ret);
-	
-	// Ensure that an out-of-order pop gets ignored
-	ret = pathstack_pop(ps, &save3);
-	AssertEqual(ret, -1);
-	AssertStrEqual(ps->buf, "/tryit/next/");
-	
-	ret = pathstack_pop(ps, &save1);
-	AssertZero(ret);
-	
-	AssertEqual(ps->curlen, strlen(origstr));
-	AssertEqual(ps->maxlen, bufsiz-1);
-	AssertStrEqual(ps->buf, origstr);
-	
-	// ensure we can push without saving state without bus erroring
-	ret = pathstack_push(ps, "123", NULL);
-	// (can't really think of anything to test... the fact that we
-	// reached this line at all means the test succeeded).
-	
-	// And finally, check the sentinel
-	AssertEqual(buf[sizeof(buf)-1], 127);
+	mutest_start(__func__, "Tests typical pathstack operations")
+	{
+		// init the pathstack
+		pathstack_init(ps, buf, bufsiz, origstr);
+		AssertEqual(ps->curlen, strlen(origstr));
+		AssertEqual(ps->maxlen, bufsiz-1);
+		AssertStrEqual(ps->buf, origstr);
+		
+		
+		// push an actual string
+		ret = pathstack_push(ps, "/next", &save1);
+		AssertZero(ret);
+		AssertEqual(save1.oldlen, strlen(origstr));
+		AssertEqual(ps->maxlen, bufsiz-1);
+		AssertStrEqual(ps->buf, "/tryit/next");
+		
+		// and pop it
+		ret = pathstack_pop(ps, &save1);
+		AssertZero(ret);
+		AssertEqual(ps->curlen, strlen(origstr));
+		AssertEqual(ps->maxlen, bufsiz-1);
+		AssertStrEqual(ps->buf, origstr);
+		
+		
+		// push an empty string
+		ret = pathstack_push(ps, "", &save1);
+		AssertZero(ret);
+		AssertEqual(ps->curlen, strlen(origstr));
+		AssertEqual(ps->maxlen, bufsiz-1);
+		AssertStrEqual(ps->buf, origstr);
+		
+		// and pop it.
+		ret = pathstack_pop(ps, &save1);
+		AssertZero(ret);
+		AssertEqual(ps->curlen, strlen(origstr));
+		AssertEqual(ps->maxlen, bufsiz-1);
+		AssertStrEqual(ps->buf, origstr);
+		
+		
+		// push a series of strings, hit the end of the buffer
+		ret = pathstack_push(ps, "next/", &save1);
+		AssertZero(ret);
+		ret = pathstack_push(ps, "n", &save2);
+		AssertZero(ret);
+		ret = pathstack_push(ps, "123456789", &save3);
+		AssertZero(ret);
+		
+		//                       123456789012345678901ns  (n: null terminator, s: sentinel)
+		AssertStrEqual(ps->buf, "/tryit/next/n/1234567");
+		AssertEqual(ps->curlen, ps->maxlen);
+		AssertEqual(ps->maxlen, bufsiz-1);
+		
+		// and pop it
+		ret = pathstack_pop(ps, &save3);
+		AssertZero(ret);
+		ret = pathstack_pop(ps, &save2);
+		AssertZero(ret);
+		
+		// Ensure that an out-of-order pop gets ignored
+		ret = pathstack_pop(ps, &save3);
+		AssertEqual(ret, -1);
+		AssertStrEqual(ps->buf, "/tryit/next/");
+		
+		ret = pathstack_pop(ps, &save1);
+		AssertZero(ret);
+		
+		AssertEqual(ps->curlen, strlen(origstr));
+		AssertEqual(ps->maxlen, bufsiz-1);
+		AssertStrEqual(ps->buf, origstr);
+		
+		// ensure we can push without saving state without bus erroring
+		ret = pathstack_push(ps, "123", NULL);
+		// (can't really think of anything to test... the fact that we
+		// reached this line at all means the test succeeded).
+		
+		// And finally, check the sentinel
+		AssertEqual(buf[sizeof(buf)-1], 127);
+	}
 }
 
 
@@ -263,10 +266,13 @@ static void test_small_pathstack()
 	// Ensures that we won't overflow while initing.
 	// There are probably some other small path ops we should verify.
 	
-	// Pathstacks always need to start with '/'
-	pathstack_init(ps, buf, sizeof(buf), "/23456789");
-	AssertStrEqual(ps->buf, "/2345");	// 5 characters plus the null byte
-	AssertEqual(ps->curlen, ps->maxlen);
+	mutest_start(__func__, "Ensures that initializing with a long string won't overflow.")
+	{
+		// Pathstacks always need to start with '/'
+		pathstack_init(ps, buf, sizeof(buf), "/23456789");
+		AssertStrEqual(ps->buf, "/2345");	// 5 characters plus the null byte
+		AssertEqual(ps->curlen, ps->maxlen);
+	}
 }
 
 
@@ -290,39 +296,42 @@ static void test_empty_pathstack()
 	// is there a way to test that passing a bufsiz of 0 will
 	// cause the assert to trigger?
 	
-	// init the pathstack
-	pathstack_init(ps, buf, sizeof(buf), NULL);
-	AssertStackEmpty(ps);
-	
-	// push an actual string
-	ret = pathstack_push(ps, "/next", &save);
-	AssertEqual(ret, -1);
-	AssertEqual(save.oldlen, 1);
-	AssertStackEmpty(ps);
-	
-	// and pop it
-	ret = pathstack_pop(ps, &save);
-	AssertZero(ret);
-	AssertStackEmpty(ps);
-	
-	// push an empty string.  It's illegal to push an empty string onto a pathstack.
-	ret = pathstack_push(ps, "", &save);
-	AssertEqual(ret, -1);
-	AssertEqual(save.oldlen, 1);
-	AssertStackEmpty(ps);
-	
-	// and pop it.
-	ret = pathstack_pop(ps, &save);
-	AssertZero(ret);
-	AssertStackEmpty(ps);
+	mutest_start(__func__, "Ensures all operations are consistent even on a minimum-sized pathstack.")
+	{
+		// init the pathstack
+		pathstack_init(ps, buf, sizeof(buf), NULL);
+		AssertStackEmpty(ps);
+		
+		// push an actual string
+		ret = pathstack_push(ps, "/next", &save);
+		AssertEqual(ret, -1);
+		AssertEqual(save.oldlen, 1);
+		AssertStackEmpty(ps);
+		
+		// and pop it
+		ret = pathstack_pop(ps, &save);
+		AssertZero(ret);
+		AssertStackEmpty(ps);
+		
+		// push an empty string.  It's illegal to push an empty string onto a pathstack.
+		ret = pathstack_push(ps, "", &save);
+		AssertEqual(ret, -1);
+		AssertEqual(save.oldlen, 1);
+		AssertStackEmpty(ps);
+		
+		// and pop it.
+		ret = pathstack_pop(ps, &save);
+		AssertZero(ret);
+		AssertStackEmpty(ps);
+	}
 }
 
 
 void pathstack_tests()
 {
-	mutest( test_pathstack() );
-	mutest( test_small_pathstack() );
-	mutest( test_empty_pathstack() );
+	test_pathstack();
+	test_small_pathstack();
+	test_empty_pathstack();
 }
 
 #endif
