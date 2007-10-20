@@ -71,8 +71,8 @@ test: tmtest
 	tmtest test
 	
 # Sometimes the app won't compile but we still want to run the unit tests...
-units: $(USRC) $(UHDR) mutest/main.c $(SCANH) $(SCANC) Makefile
-	$(CC) -g -Wall $(USRC) mutest/main.c $(SCANC) -o units -DUNITS_MAIN
+units: $(USRC) $(UHDR) $(SCANH) $(SCANC) Makefile
+	$(CC) -g -Wall $(USRC) $(SCANC) -o units -DUNITS_MAIN
 
 run-units: units
 	./units

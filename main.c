@@ -1051,11 +1051,13 @@ static void process_args(int argc, char **argv)
 				break;
 
 			case 'U':
-				run_unit_tests(all_tests);
+				all_tests();
+				mutest_exit();
 				exit(0);
 
 			case 257:
-				run_unit_tests_showing_failures(all_tests);
+				mutest_show_failures();
+				all_tests();
 				exit(0);
 
 			case 'V':

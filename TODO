@@ -1,4 +1,7 @@
 0.96:
+- The installed .tmtestrc has, at the very top:
+  # This is the system-wide configuration file for tmtest.
+  Uh, no.  It's certainly not system-wide!
 - Put the zutest macro inside the tests (zutest { ... }) instead of outside.
 - Remove the allfiles and quiet options.
 - Is it possible to separate STDOUT and STDERR?  Maybe stderr comes first

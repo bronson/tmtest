@@ -3,6 +3,6 @@
 void compare_tests();
 void pathstack_tests();
 
-void run_all_unit_tests();
+void all_tests();
 
 
