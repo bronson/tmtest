@@ -204,7 +204,7 @@ MKDIR ()
 	fi
 
 	eval "$1='$name'"
-	ATEXIT "rmdir '$name'"
+	ATEXIT "rmdir '$name' || ABORT 'MKDIR: '$name' was not empty, can't delete it!"
 }
 
 
