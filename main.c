@@ -736,10 +736,9 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
 	struct pathstate save;
     mode_t *modes;
     int i, n, ret;
-	int keepontruckin;
+	int keepontruckin = 1;
 
-    for(n=0; ents[n]; n++)
-        ;
+    for(n=0; ents[n]; n++) { } // count n
 
     modes = malloc(n * sizeof(mode_t));
     if(!modes) {
@@ -1150,7 +1149,7 @@ static void process_argv(struct pathstack *ps, char **argv)
 	char **ents;
 	int i, n, oldlen;
 
-    for(n=0; argv[n]; n++) { }
+    for(n=0; argv[n]; n++) { }	// count n
 
 	ents = malloc((n+1)*sizeof(*ents));
 	ents[n] = NULL;
