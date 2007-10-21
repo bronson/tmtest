@@ -1,3 +1,6 @@
+- Added .tmtest-ignore (allows whole directories to be skipped).
+- Fixed a bug where there was a chance that the test would not complete
+  if tmtest spent any time looking through folders with no testfiles.
 - Rewrote the path handling code and gave it some unit tests.
 - Added -f command-line option to print only the failed tests.
 - Made REPLACE handle multiple text substitutions; could only handle 1 before.

@@ -681,14 +681,6 @@ static int process_absolute_dir(const char *abspath, const char *origpath, int p
 {
 	char buf[PATH_MAX];
 	struct pathstack stack;
-
-	if(outmode == outmode_test) {
-		if(print_absolute) {
-			printf("\nProcessing %s\n", abspath);
-		} else {
-			printf("\nProcessing ./%s\n", origpath);
-		}
-	}
 	
 	pathstack_init(&stack, buf, sizeof(buf), abspath);
 	pathstack_normalize(&stack);
@@ -696,12 +688,16 @@ static int process_absolute_dir(const char *abspath, const char *origpath, int p
 }
 
 
-static void print_relative_dir(struct pathstack *ps, int print_absolute)
+static void print_processing_progress(struct pathstack *ps, int print_absolute)
 {
 	char buf[PATH_MAX];
 	
 	// Don't print anything unless we're actually testing.
     if(outmode != outmode_test) {
+    	return;
+    }
+    
+    if(print_absolute == -1) {
     	return;
     }
 
@@ -712,9 +708,11 @@ static void print_relative_dir(struct pathstack *ps, int print_absolute)
 			printf("Path couldn't be converted \"\%s\"\n", pathstack_absolute(ps));
 			exit(runtime_error);
 		}
-		printf("\nProcessing ./%s\n", buf);
+		// special-case "." so we don't print the silly-looking "./."
+		printf("\nProcessing %s%s\n", (buf[0] == '.' && buf[1] == '\0' ? "" : "./"), buf);
 	}
 }
+
 
 
 /** Process all entries in a directory.
@@ -750,6 +748,12 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
     for(i=0; i<n; i++) {
         if(!is_dash(ents[i])) {
 			const char *cp = ents[i];
+			
+			if(strcmp(ents[i], ".tmtest-ignore") == 0) {
+				// skip this directory but continue processing
+				goto abort;
+			}
+			
 			if(ents[i][0] != '/') {
 				ret = pathstack_push(ps, ents[i], &save);
 				if(ret != 0) {
@@ -770,6 +774,9 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
             modes[i] = st.st_mode;
         }
     }
+    
+    // Now that we're sure we're going to process this dir, print a notice.
+    print_processing_progress(ps, print_absolute);
     
     // process all files in dir
     for(i=0; i<n; i++) {
@@ -812,7 +819,6 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
 				} else {
 					// Otherwise, we just push the path and chug.
 					ret = pathstack_push(ps, ents[i], &save);
-					print_relative_dir(ps, print_absolute);
 					keepontruckin = process_dir(ps, print_absolute);
 					pathstack_pop(ps, &save);
 				}
@@ -831,11 +837,25 @@ abort:
 
 /** This routine filters out any dirents that begin with '.'.
  *  We don't want to process any hidden files or special directories.
+ * 
+ * NOTE: we DO allow .tmtest-ignore files through.  Otherwise, how
+ * would the directory scanner know which directories to skip?
  */
 
 static int select_nodots(const struct dirent *d)
 {
-    return d->d_name[0] != '.';
+	// common case: if the filename doesn't begin with a dot, use it.
+    if(d->d_name[0] != '.') {
+    	return 1;
+    }
+    
+    // if it's named '.tmtest-ignore', use it
+    if(strcmp(d->d_name, ".tmtest-ignore") == 0) {
+    	return 1;
+    }
+    
+    // otherwise, ignore it.
+    return 0;
 }
 
 
@@ -1195,9 +1215,6 @@ int main(int argc, char **argv)
     if(optind < argc) {
 		process_argv(&pathstack, argv+optind);
     } else {
-        if(outmode == outmode_test) {
-            printf("\nProcessing .\n");
-        }
         process_dir(&pathstack, 0);
     }
     stop_tests();

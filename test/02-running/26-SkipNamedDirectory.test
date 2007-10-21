@@ -1,0 +1,21 @@
+# Ensures that a directory disabled by a .tmtest-ignore file is skipped
+# but subsequent tests are still run.
+
+MKDIR dir
+cd "$dir"
+
+mkdir disabled
+touch disabled/.tmtest-ignore
+cat > disabled/t1.test <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+$tmtest -q disabled | REPLACE "$dir" /tmp/DIR
+rm -rf "$dir"/disabled
+
+
+STDOUT:
+
+0 tests run, 0 successes, 0 failures.

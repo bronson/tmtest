@@ -32,7 +32,7 @@ STDOUT:
 	
 	Processing ./..
 	
-	Processing ./.
+	Processing .
 	echo START >&FD
 	
 	ABORT ()  { echo "ABORTED: $*" >&FD; exit 0; }

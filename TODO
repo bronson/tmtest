@@ -70,6 +70,12 @@
   test; it's helped in the past to ensure that we don't leak fds.
 
 0.98:
+- Document tmtest and testfile with naturaldocs?
+  This should be an example of how to print all important variables.
+	for i in MYDIR MYFILE TESTDIR TESTFILE PWD; do
+		eval o=\$$i
+		echo $i: $o
+	done
 - Change the I/O scheme to be event based.  Get rid of the tempfiles.
   Convert to using the async io library.  Don't use temporary files.
   This would allow us to recognize that the test is disabled before

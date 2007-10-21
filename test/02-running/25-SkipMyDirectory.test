@@ -1,0 +1,26 @@
+# Ensures that a skip file in the starting directory results in no tests run.
+
+MKDIR dir
+cd "$dir"
+
+cat > t1.test <<-EOs
+	echo hi
+	STDOUT:
+	hi
+EOs
+
+cat > t2.test <<-EOs
+	echo he
+	STDOUT:
+	he
+EOs
+
+touch .tmtest-ignore
+
+$tmtest -q | REPLACE "$dir" /tmp/DIR
+rm t1.test t2.test .tmtest-ignore
+
+
+STDOUT:
+
+0 tests run, 0 successes, 0 failures.

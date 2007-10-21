@@ -101,6 +101,14 @@ You can supply a reason string too
 
 =back
 
+If you place an empty file named ".tmtest-ignore" into a directory,
+tmtest will ignore that directory and all directories below it.
+tmtest does not check parent directories for a .tmtest-ignore file!
+It only checks for it when descending into subdirectories.  Therefore,
+if you explicitly name a testfile on the command-line, the test will
+be run even if it's in the same directory as a .tmtest-ignore file.
+
+
 =head1 EXIT VALUE
 
 tmtest exits with the number of tests that failed or were aborted.
@@ -120,6 +128,7 @@ between 100 and 199.  TODO: this isn't true yet.
 =head1 TEST RESULTS
 
 There are two schools of thought on how testfiles should be written:
+
 - like a shell script, where you need to manually check after the
 commands that matter if they failed or not.
 

@@ -52,7 +52,7 @@ ok   ../sup.test
 Processing ./sub
 ok   sub.test 
 
-Processing ./.
+Processing .
 ok   mid.test 
 
 Processing ./sub
@@ -61,7 +61,7 @@ ok   sub.test
 Processing ./..
 ok   sup.test 
 
-Processing ./.
+Processing .
 ok   mid.test 
 
 Processing ./sub
