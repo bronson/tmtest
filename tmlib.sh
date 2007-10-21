@@ -96,7 +96,7 @@ TRAP ()
 # Example:  (will produce "BA" on stdout when the test ends)
 #
 #     ATEXIT echo A
-#     ATEXIT echo -n B
+#     ATEXIT echo -n B 
 
 ATEXIT ()
 {
@@ -116,7 +116,11 @@ ATEXIT ()
 #
 # You need to be aware that if you supply an easily predictable filename
 # (such as a PID), you are exposing your users to symlink attacks.  You
-# should never supply a filename unless you know EXACTLY what you are doing.
+# should never supply your own filename unless you know EXACTLY what you
+# are doing.
+#
+# If a command produces the filename in its output (bad, because the
+# filename always changes), you can fix it with the <REPLACE> function.
 #
 # Examples:
 #
@@ -126,6 +130,9 @@ ATEXIT ()
 #     	Initial file contents.
 #     EOL
 #     cat "$fn"		<-- prints "Initial file contents."
+#
+# Remove the file name from a command's output:
+#     echo "$fn" | REPLACE "$fn" TMPFILE   <-- prints "TMPFILE"
 #
 # create a new empty file with the given name (open to symlink attack,
 # DO NOT USE UNLESS YOU ARE SURE WHAT YOU ARE DOING).
@@ -172,8 +179,10 @@ TOUCH ()
 #
 # Like MKFILE, but creates a directory instead of a file.  If you
 # supply a directory name, and that directory already exists, then
-# MKDIR ensures it is deleted when the script ends.  The directory
-# will not be deleted if it still contains any files.
+# MKDIR ensures it is deleted when the script ends.
+#
+# If the directory still contains files when the test ends, it
+# will not be deleted and the test will abort with an error.
 #
 # argument 1: varname, the name of the variable that will contain the new directory name.
 # argument 2: dirname, (optional) the name/fullpath to give the directory.
@@ -183,12 +192,18 @@ TOUCH ()
 #   The one exception is if you're creating a directory inside another
 #   directory that was created with the single arg.
 #
+# If a command produces the directory name in its output (bad, because the
+# name always changes), you can fix it with the <REPLACE> function.
+#
 # Examples:
 #
 # create a new directory with a random name in $TMPDIR or /tmp:
 #
 #     MKDIR dn
 #     cd "$dn"
+#
+# Remove the directory name from a command's output:
+# 	svn co svn://repo "$dn/local" | REPLACE "$dn" TMPDIR
 #
 # TODO: should emulate mkdir -p too.  Right now tmtest forces you to
 # call MKDIR for each dir you want to create.  Too wordy.

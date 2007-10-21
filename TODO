@@ -167,6 +167,9 @@ No longer a problem when we dump pcrs:
   "(pcrs:) Syntax error while parsing command (-11)."
 
 ????:
+- Right now we're tied really tightly to bash.  Any chance of getting
+  rid of the Bashisms and allowing tmtest to be run by any POSIX shell?
+  (not very important since testfiles tend to end up with Bashisms anyway).
 - There should be a way to repeatedly run a single test with only tiny
   differences.  i.e. test all permeutations of DISABLE DISABLE:
   DISABLED DISABLED:  Hopefully that will clean up 05-08-Disable/Abort.test

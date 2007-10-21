@@ -98,6 +98,7 @@ ifeq ($(wildcard $(conf_dst)),$(conf_dst))
 	# configuration already exists, don't overwrite it.
 	@echo "---> Not installing new config file over '$(conf_dst).'"
 	@echo "---> Please merge changes in 'sample.conf' by hand."
+	@echo "--->   (run 'diff -u $(conf_dst) sample.conf' to show differences)"
 else
 	# global configuration file doesn't exist so install it
 	install sample.conf $(conf_dst)
