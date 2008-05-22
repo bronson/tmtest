@@ -825,8 +825,8 @@ int check_for_failure(struct test *test, const char *testpath)
 /**
  * Reads all the data from infd and writes it onto outfd.
  *
- * @param endnl (optional) true if the data written ended with a newline,
- *   false if not.  Pass NULL if you don't care.
+ * @param endnl (optional) is set to true if the data written ended
+ *   with a newline, false if not.  Pass NULL if you don't care.
  * @returns the number of bytes written.
  */
 

@@ -159,20 +159,11 @@ rc series...
 - Maybe make an option to run the command from a pty so it looks just
   like the user is running the command.
 
-No longer a problem when we dump pcrs:
-- allow multiple s/// expressions on a single line.  will probably require
-  modifications to pcrs_compile_command, so make it support buf/len at the
-  same time.  These might be non-trivial changes...
-- it's stupid to dup the str just to null-terminate it so it can be passed
-  to pcrs.  Modify pcrs to compile buffers too.
-- Unify the line modifier in compare.c and test.c.  It's hackish now.
-- Wow, the pcrs error messages truly suck.  Is there any way to improve them?
-  "(pcrs:) Syntax error while parsing command (-11)."
-
 ????:
 - Right now we're tied really tightly to bash.  Any chance of getting
   rid of the Bashisms and allowing tmtest to be run by any POSIX shell?
   (not very important since testfiles tend to end up with Bashisms anyway).
+  (still, it could provide a very nice speedup if we switched to dash).
 - There should be a way to repeatedly run a single test with only tiny
   differences.  i.e. test all permeutations of DISABLE DISABLE:
   DISABLED DISABLED:  Hopefully that will clean up 05-08-Disable/Abort.test
