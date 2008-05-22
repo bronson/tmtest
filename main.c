@@ -34,7 +34,7 @@
 #include "pathstack.h"
 
 #include "units.h"
-#include "mutest/mutest.h"
+#include "ctest/ctest.h"
 
 
 #define DIFFPROG "/usr/bin/diff"
@@ -1071,11 +1071,11 @@ static void process_args(int argc, char **argv)
 
 			case 'U':
 				all_tests();
-				mutest_exit();
+				ctest_exit();
 				exit(0);
 
 			case 257:
-				mutest_show_failures();
+				ctest_show_failures();
 				all_tests();
 				exit(0);
 

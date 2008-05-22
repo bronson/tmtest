@@ -36,8 +36,8 @@ SCANH=re2c/read.h re2c/read-fd.h re2c/read-mem.h re2c/read-rand.h re2c/scan.h re
 USRC=pathstack.c compare.c pathconv.c
 UHDR=pathstack.h compare.h pathconv.h
 # add the files needed to run the unit tests
-USRC+=units.c $(shell mutest/mutest-config --c --tests assert)
-UHDR+=units.h $(shell mutest/mutest-config --headers assert)
+USRC+=units.c ctest/ctest_tests.c ctest/ctest.c ctest/test_assert.c
+UHDR+=units.h ctest/ctest.h ctest/ct_assert.h ctest/ctest_test.h
 
 # utilities:
 CSRC+=qscandir.c $(USRC)
@@ -65,7 +65,7 @@ template.c: template.sh cstrfy
 %.o: %.c
 	$(CC) -g -c $< -o $@
 
-.PHONY: test mutest run-mutest
+.PHONY: test ctest run-ctest
 test: tmtest
 	./tmtest --run-unit-tests
 	tmtest test
@@ -77,11 +77,11 @@ units: $(USRC) $(UHDR) $(SCANH) $(SCANC) Makefile
 run-units: units
 	./units
 
-mutest:
-	(cd mutest; $(MAKE))
+ctest:
+	(cd ctest; $(MAKE))
 
-run-mutest:
-	(cd mutest; ./mutest)
+run-ctest:
+	(cd ctest; ./ctest)
 
 # todo -- when global variables are worked out, just compile everything
 #units: $(CSRC) $(CHDR) $(SCANH) $(SCANC) Makefile
@@ -118,7 +118,7 @@ endif
 
 clean:
 	rm -f tmtest template.c tags
-	(cd mutest; $(MAKE) clean)
+	(cd ctest; $(MAKE) clean)
 
 distclean: clean
 	rm -f stscan.[co]

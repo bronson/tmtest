@@ -177,7 +177,7 @@ static void test_pathstack()
 		// therefore, buffer can hold 23 characters, bufsiz is only 22, and the entire buffer
 		// can hold a maximum of 21 characters including the leading '/'.
 	
-	mutest_start(__func__, "Tests typical pathstack operations")
+	ctest_start(__func__, "Tests typical pathstack operations")
 	{
 		// init the pathstack
 		pathstack_init(ps, buf, bufsiz, origstr);
@@ -266,7 +266,7 @@ static void test_small_pathstack()
 	// Ensures that we won't overflow while initing.
 	// There are probably some other small path ops we should verify.
 	
-	mutest_start(__func__, "Ensures that initializing with a long string won't overflow.")
+	ctest_start(__func__, "Ensures that initializing with a long string won't overflow.")
 	{
 		// Pathstacks always need to start with '/'
 		pathstack_init(ps, buf, sizeof(buf), "/23456789");
@@ -296,7 +296,7 @@ static void test_empty_pathstack()
 	// is there a way to test that passing a bufsiz of 0 will
 	// cause the assert to trigger?
 	
-	mutest_start(__func__, "Ensures all operations are consistent even on a minimum-sized pathstack.")
+	ctest_start(__func__, "Ensures all operations are consistent even on a minimum-sized pathstack.")
 	{
 		// init the pathstack
 		pathstack_init(ps, buf, sizeof(buf), NULL);

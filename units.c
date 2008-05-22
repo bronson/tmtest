@@ -4,7 +4,7 @@
 
 void all_tests()
 {
-	mutest_test_assert_flavor();
+	ctest_test_assert_flavor();
 	compare_tests();
 	pathstack_tests();
 }
@@ -12,12 +12,12 @@ void all_tests()
 
 #ifdef UNITS_MAIN
 
-#include "mutest/mutest.h"
+#include "ctest/ctest.h"
 
 int main(int argc, char **argv)
 {
 	all_tests();
-	mutest_exit();
+	ctest_exit();
 	
 	// this will never be reached
 	return 0;
