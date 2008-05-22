@@ -4,22 +4,23 @@
 
 # tests tmtest -d
 
-# updated for 2.0 on 27 Jan 2005
+# Supplies a testfile with the wrong output.
+# Ensures that tmtest produces a diff that will convert
+# the wrong output into the right output.
 
 
 $tmtest --diff - <<-EOL | FIX_DIFF
-    echo "right output"
-    STDOUT:
-    wrong output
+	echo "right output"
+	STDOUT:
+	wrong output
 EOL
 
 
 STDOUT:
 --- /tmp/FILE DATE TIME TZ
 +++ - DATE TIME TZ
-@@ -1,3 +1,5 @@
-     echo "right output"
-     STDOUT:
-     wrong output
-+STDOUT:
+@@ -1,3 +1,3 @@
+ echo "right output"
+ STDOUT:
+-wrong output
 +right output

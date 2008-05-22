@@ -13,19 +13,20 @@
 
 
 $tmtest -d - <<-EOL | FIX_DIFF
-    echo -n "right output"
-    STDOUT:
-    right output
+	echo -n "right output"
+	STDOUT:
+	right output
 EOL
 
-
+STDERR:
+WARNING: STDOUT didn't end with a newline!
+   Add a -n to (STDIN) line 2 if this is the expected behavior.
 STDOUT:
 --- /tmp/FILE DATE TIME TZ
 +++ - DATE TIME TZ
-@@ -1,3 +1,5 @@
-     echo -n "right output"
-     STDOUT:
-     right output
-+STDOUT:
+@@ -1,3 +1,3 @@
+ echo -n "right output"
+ STDOUT:
+-right output
 +right output
 \ No newline at end of file

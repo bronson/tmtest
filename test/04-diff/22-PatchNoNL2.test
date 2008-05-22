@@ -2,11 +2,9 @@
 # date:   14 Nov 2004
 
 # Ensures that patch can handle diffs that remove the trailing newline.
-# Except that we wedge it by putting the STDERR clause right after the
-# STDOUT.
 
-# Since STDOUT includes no trailing newline, STDERR ends up on the end
-# of the last STDOUT line.  This is not real good, but at least it
+# Since STDOUT includes no trailing newline, <<DONE>> ends up on the end
+# of the last STDOUT line.  This is not ideal but at least it
 # guarantees that the test will fail until the user fixes it.
 
 # See also test/03-results/18-NoNLWarn.test
@@ -14,11 +12,11 @@
 
 MKFILE tt <<-EOL
 	echo -n "right output"
-    echo "stderr text" 1>&2
+	echo "stderr text" 1>&2
+	STDERR:
+	stderr text
 	STDOUT:
 	right output
-    STDERR:
-    stderr text
 EOL
 
 
@@ -36,8 +34,8 @@ STDOUT:
 patching FILE
 And the patched file:
     echo -n "right output"
-        echo "stderr text" 1>&2
-    STDOUT:
-    right outputSTDERR:
+    echo "stderr text" 1>&2
+    STDERR:
     stderr text
-<<DONE>>
+    STDOUT:
+    right output<<DONE>>
