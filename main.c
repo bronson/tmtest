@@ -614,7 +614,13 @@ static int run_test(const char *path, const char *name, const char *dispname, in
                 dump_results(&test);
                 break;
             case outmode_diff:
-                dump_results(&test);
+                if(test.status == test_was_completed) {
+                    dump_results(&test);
+                } else {
+                    // Since no reliable results were produced, we'll just echo the test file.
+                    // This way, diff won't report strange errors or differences.
+                    write_file(&test, test.rewritefd, readfd_get_fd(&test.testfile), NULL);
+                }
                 finish_diff(&test, diffpid);
                 break;
             default:

@@ -1,0 +1,13 @@
+# tmtest had a bug where disabled would be ignored if you ran a diff.
+
+$tmtest -d - <<-EOL
+	DISABLED
+	echo it ran
+	STDOUT:
+	it ran
+EOL
+
+STDOUT:
+dis  (STDIN)
+
+1 test run, 0 successes, 0 failures.
