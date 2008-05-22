@@ -31,9 +31,6 @@ STDOUT:
 	ABORT ()  { echo "ABORTED: $*" >&7; exit 0; }
 	ABORT: () { ABORT $*; }
 
-	ATEXIT ()  { echo "ATEXIT: $*" >&7; }
-	ATEXIT: () { ATEXIT $*; }
-
 	DISABLED  () { echo "DISABLED: $*" >&7; exit 0; }
 	DISABLED: () { DISABLED $*; }
 	DISABLE   () { DISABLED $*; }
@@ -62,9 +59,7 @@ STDOUT:
 	echo 'RUNNING: (STDIN)' >&7
 	MYDIR='/tmp'
 	MYFILE='(STDIN)'
-	exec >&3 2>&5
-	exec 3>&-
-	exec 5>&-
+	exec >&3 2>&5 3>&- 5>&-
 	LINENO=0
 	THE-SCRIPT THE-SCRIPT THE-SCRIPT 1
 	THE-SCRIPT THE-SCRIPT THE-SCRIPT 2

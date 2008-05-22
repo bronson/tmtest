@@ -1,5 +1,4 @@
-get rid of ATEXIT from template.sh.  Can also merge 3>&- and 5>& in template.sh
-- Release 0.94 on 2 Mar 2006
+Released 0.94 on 2 Mar 2006
 - NOTE: Bash3 has made it so that the regex can not appear on the same line as
   the MODIFY keyword.  I updated all tests and accelerated MODIFY deprecation.
 - Added the INDENT and REPLACE functions to tmlib.

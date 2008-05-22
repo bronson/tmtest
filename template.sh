@@ -3,9 +3,6 @@ echo START >&%(STATUSFD)
 ABORT ()  { echo "ABORTED: $*" >&%(STATUSFD); exit 0; }
 ABORT: () { ABORT $*; }
 
-ATEXIT ()  { echo "ATEXIT: $*" >&%(STATUSFD); }
-ATEXIT: () { ATEXIT $*; }
-
 DISABLED  () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
 DISABLED: () { DISABLED $*; }
 DISABLE   () { DISABLED $*; }
@@ -30,9 +27,7 @@ MODIFY: () { exit 0; }
 echo 'RUNNING: %(TESTFILE)' >&%(STATUSFD)
 MYDIR='%(TESTDIR)'
 MYFILE='%(TESTFILE)'
-exec >&%(OUTFD) 2>&%(ERRFD)
-exec %(OUTFD)>&-
-exec %(ERRFD)>&-
+exec >&%(OUTFD) 2>&%(ERRFD) %(OUTFD)>&- %(ERRFD)>&-
 %(TESTEXEC)
 
 echo DONE >&%(STATUSFD)
