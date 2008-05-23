@@ -36,8 +36,8 @@ SCANH=re2c/read.h re2c/read-fd.h re2c/read-mem.h re2c/read-rand.h re2c/scan.h re
 USRC=pathstack.c compare.c pathconv.c
 UHDR=pathstack.h compare.h pathconv.h
 # add the files needed to run the unit tests
-USRC+=units.c ctest/ctest_tests.c ctest/ctest.c ctest/test_assert.c
-UHDR+=units.h ctest/ctest.h ctest/ct_assert.h ctest/ctest_test.h
+USRC+=units.c ctest/ctest.c ctest/ct_assert.c
+UHDR+=units.h ctest/ctest.h ctest/ct_assert.h
 
 # utilities:
 CSRC+=qscandir.c $(USRC)

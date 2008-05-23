@@ -48,6 +48,9 @@
         // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
         // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
 - Get rid of all the exit() calls from main.c.
+- Most tmtest.conf files consist of a single line: ctest="$MYDIR/ctest"
+  Is there any way to make this automatic?  How can we make it easier
+  to find the proper binary?  Add all parent dirs with executables to PATH?
 - Ensure it compiles and runs on freebsd.
 - Get rid of -g, add -O2.  Make it easy to set these for compilation.
   Yes, have dev and prod modes.  dev would be -O0 and -g and include

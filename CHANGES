@@ -1,3 +1,4 @@
+- Add a path element to the diff files so so need to specify -p0 when patching.
 - Added .tmtest-ignore (allows whole directories to be skipped).
 - Fixed a bug where there was a chance that the test would not complete
   if tmtest spent any time looking through folders with no testfiles.

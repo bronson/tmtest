@@ -4,7 +4,7 @@
 
 void all_tests()
 {
-	ctest_test_assert_flavor();
+	ctest_test_asserts();
 	compare_tests();
 	pathstack_tests();
 }

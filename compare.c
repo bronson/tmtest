@@ -196,7 +196,7 @@ static void test_empty()
 	scanstate ssrec, *ss=&ssrec;
 	int val;
 	
-	ctest_start(__func__, "Ensure that two empty buffers are a full match.")
+	ctest_start(__func__)
 	{
 		readmem_init_str(ss, "");
 		compare_attach(ss);
@@ -216,7 +216,7 @@ static void test_standard()
 	scanstate ssrec, *ss=&ssrec;
 	int val;
 
-	ctest_start(__func__, "Ensure that 123 and 12,3 are a full match.")
+	ctest_start(__func__)
 	{
 		readmem_init_str(ss, "123");
 		compare_attach(ss);
@@ -236,7 +236,7 @@ static void test_large()
 	unsigned int seed = 47;
 	int num, i, val;
 
-	ctest_start(__func__, "Ensure that a few tens of K match.")
+	ctest_start(__func__)
 	{
 		scanstate_init(ss, buf, BUFSIZ);
 		readrand_attach(ss, seed);
@@ -275,7 +275,7 @@ static compare_result check_newlines(const char *s1, const char *s2)
 
 static void test_newlines()
 {
-	ctest_start(__func__, "Ensure that the newline descriptions are correct")
+	ctest_start(__func__)
 	{
 		AssertEQ(check_newlines("Unix\n",   "Unix\n"  ), cmp_full_match);
 		AssertEQ(check_newlines("Unix",     "Unix\n"  ), cmp_ptr_has_extra_nl);
@@ -298,7 +298,7 @@ static void test_inc()
 	scanstate ssrec, *ss=&ssrec;
 	int val;
 
-	ctest_start(__func__, "Ensures packetization won't affect non-matches.")
+	ctest_start(__func__)
 	{
 		readmem_init_str(ss, "12");
 		compare_attach(ss);
@@ -330,7 +330,7 @@ static void test_inc_newlines()
 	scanstate ssrec, *ss=&ssrec;
 	int val;
 
-	ctest_start(__func__, "Test packetization with newlines")
+	ctest_start(__func__)
 	{
 		readmem_init_str(ss, "123");
 		compare_attach(ss);
