@@ -1,6 +1,7 @@
 0.96:
 - Disabled tests are not ignored when running tmtest -d?
   /home/bronson/workspace-tmtest/tmtest/test/02-running/50-OpenFDsTest.test
+- Is this related to tmtest -d showing a bunch of differences even when tmtest doesn't?
 - Put the zutest macro inside the tests (zutest { ... }) instead of outside.
 - Remove the allfiles and quiet options.
 - Is it possible to separate STDOUT and STDERR?  Maybe stderr comes first

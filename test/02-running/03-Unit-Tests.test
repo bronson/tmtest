@@ -3,4 +3,4 @@
 $tmtest --run-unit-tests
 
 STDOUT:
-All OK.  34 tests run, 34 successes (255 assertions).
+All OK.  35 tests run, 35 successes (267 assertions).
