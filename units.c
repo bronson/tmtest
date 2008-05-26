@@ -4,7 +4,7 @@
 
 void all_tests()
 {
-	ctest_test_asserts();
+	run_ctassert_tests();
 	compare_tests();
 	pathstack_tests();
 }
