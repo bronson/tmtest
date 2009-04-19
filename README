@@ -1,37 +1,26 @@
 
-						TMTEST README
+                        TMTEST README
 
 
+tmtest makes functional tests as easy to write as shell scripts.
 
-More on this project can be found at http://tmtest.berlios.de/
+
+INSTALL
+
+	make install
+
+	Now tmtest is installed in your home directory, ~/bin, and ready
+	to be used.  Use "prefix" to put the executable elsewhere:
+
+	make install prefix=/usr/local
+
+
+USE
+
+	tmtest            (runs all tests in the current dir and all subdirs)
 
 
 LICENSE
 
 	LGPL.  See COPYING for more.
-
-
-REQUIRES
-
-	You need to install these libraries before building tmtest.
-
-	libpcre:  http://pcre.org/
-
-
-USES
-
-	These files are used in the development of tmtest, but are
-	do not need to be installed prior to compling it.
-
-	pcrs:     http://www.oesterhelt.org/pcrs/
-	re2c:     http://re2c.org/
-
-
-INSTALL
-
-	make
-	make install prefix=/usr/local
-
-	Defaults to installing in your home directory, ~/bin.  Use
-	"prefix" to tell the install script where to put the files.
 

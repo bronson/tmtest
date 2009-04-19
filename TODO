@@ -1,4 +1,7 @@
 0.96:
+- Get rid of re2c.  Just hand-write the scanners.
+- Get rid of ctest?  Do something to make it not fail when first downloaded.
+- Just print full path of test being run.  Truncate it if wider than termwidth.
 - Disabled tests are not ignored when running tmtest -d?
   /home/bronson/workspace-tmtest/tmtest/test/02-running/50-OpenFDsTest.test
 - Is this related to tmtest -d showing a bunch of differences even when tmtest doesn't?
