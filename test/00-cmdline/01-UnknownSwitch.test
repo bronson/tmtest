@@ -3,7 +3,10 @@
 # TODO: we pipe stderr to stdout for rewriting.  that needs to be
 # changed during 0.98.  Also, the exit code is lost -- tmtest returns 1.
 
-$tmtest -z - <<-EOL 2>&1 | REPLACE "$tmtest_file" tmtest
+# The REPLACE "'z'" z is because glibc changed getopt's error message to
+# quote the option somewhere around 2007-2008.  Accept both forms.
+
+$tmtest -z - <<-EOL 2>&1 | REPLACE "$tmtest_file" tmtest | REPLACE "'z'" z
 	echo Howdy
 	STDOUT:
 	Howdy

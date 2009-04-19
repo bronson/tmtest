@@ -1,14 +1,16 @@
-# Verifies that we correctly report unknown short switches
+# Verifies that we correctly report unknown long switches
 
 # TODO: this sends stderr to stdout for rewriting.  This sucks
 # and needs to be fixed.  The exit code is also lost.
 
+# The REPLACE "'z'" z is because glibc changed getopt's error message
+# quoting somewhere around 2007-2008.  Accept both forms.
 
-$tmtest --huh - <<-EOL 2>&1 | REPLACE "$tmtest_file" tmtest
+$tmtest --huh - <<-EOL 2>&1 | REPLACE "$tmtest_file" tmtest | REPLACE "\`--huh'" "'--huh'"
 	echo Howdy
 	STDOUT:
 	Howdy
 EOL
 
 STDOUT:
-tmtest: unrecognized option `--huh'
+tmtest: unrecognized option '--huh'
