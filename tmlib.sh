@@ -29,10 +29,8 @@
 #
 # ASSERT
 #
-# If you include this file from either a config file or your
-# test file (". assert.sh" or "source assert.sh"),
-# you can then use asserts in your test scripts.
-
+# Ensure a condition is met.  If not, stop testing immediately.
+#
 # usage:
 #   . assert.sh
 # 	assert 42 -eq $((0x2A))		# true, so test continues as normal
@@ -40,7 +38,7 @@
 
 ASSERT ()
 {
-	if [ ! $* ]; then
+	if [ ! "$@" ]; then
 		msg=''
 		if [ ${BASH_VERSINFO[0]} -ge 3 ]; then
 			# bash2 doesn't provide BASH_SOURCE or BASH_LINENO

@@ -7,6 +7,8 @@ tmtest makes functional tests as easy to write as shell scripts.
 
 INSTALL
 
+	git submodule init
+	git submodule update
 	make install
 
 	Now tmtest is installed in your home directory, ~/bin, and ready
