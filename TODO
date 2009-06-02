@@ -1,20 +1,47 @@
 0.96:
-- Get rid of re2c.  Just hand-write the scanners.
-- Rename ATEXIT to ALWAYS, don't document calls intended to be internal only (like TRAP)
-- Get rid of ctest?  Do something to make it not fail when first downloaded.
+- Try to get rid of tmlib completely.
+  - Have all tests start with the current dir set to an empty 700 tmpdir.
+    - If there are still files in there when the test ends, it fails.
+  - MKFILE should just create the file that the user names.
+  - MKTMPFILE should create a filename and store that in the user's variable.
+  - You should be able to run most testfiles in any posix shell
+    - There should be no need to install tmtest to run tests
+    - Of course, you'll need it if you want to automatically check the results
+  - What about INDENT and REPLACE?
+    - I guess indent should be copy-n-pasted where it needs to be used.
+    - REPLACE?  That's tougher...   maybe just put it in your tmtest.conf?
 - Just print full path of test being run.  Truncate it if wider than termwidth.
-- Disabled tests are not ignored when running tmtest -d?
-  /home/bronson/workspace-tmtest/tmtest/test/02-running/50-OpenFDsTest.test
-- Is this related to tmtest -d showing a bunch of differences even when tmtest doesn't?
-- Put the zutest macro inside the tests (zutest { ... }) instead of outside.
-- Remove the allfiles and quiet options.
+- Get rid of ctest?  Do something to make tmtest not fail when first downloaded.
+- Munge diff file to have a/file and b/file so there's no need to pass -p0
+
+0.962:
+- Try to get rid of tmtest.conf completely.
+  - Scan upward from the current dir to the root dir, adding dirs that contain
+    executables to the PATH.
+    - Deeper dirs override shallower ones.
+    - Don't check subdirs, there's too much chance for mistake.
+      - Maybe we could check subdirs with well-known names, like src or .lib?
+    - Don't add any world-writable dirs (like /tmp) or the user's home dir
+  - Supply the original path in ORIGPATH
+  - NO!  Maybe that's not good.  Maybe each test should just declare its deps?
+    - No because that fails being able to run tests without tmtest.
+- Maybe add a -x command that would run the test under exec 2>&1; set -x
+
+0.964:
 - Is it possible to separate STDOUT and STDERR?  Maybe stderr comes first
   in the testfile with each line prefixed by :.  Then STDOUT.  No need
   for this delimiter craziness.
   YES, stderr ALWAYS comes first in the testfile, followed by stdout.
   Should buffer stderr to memory, then compare stdout on the fly
-- MKFILE should just create the file that the user names.
-- MKTMPFILE should create a filename and store that in the user's variable.
+- Remove the allfiles and quiet options.
+
+0.966+:
+- Convert to libevent.  Get rid of my poorly maintained libio.
+- Disabled tests are not ignored when running tmtest -d?
+  /home/bronson/workspace-tmtest/tmtest/test/02-running/50-OpenFDsTest.test
+- Is this related to tmtest -d showing a bunch of differences even when tmtest doesn't?
+- Get rid of re2c.  Just hand-write the scanners.
+- Put the zutest macro inside the tests (zutest { ... }) instead of outside.
 - Write unit tests for path normalization.  Maybe for CURPATH too.
 - Make tmtest only execute config files owned by either the user or root.
   Print a big fat warning when the config file is skipped.  This prevents
