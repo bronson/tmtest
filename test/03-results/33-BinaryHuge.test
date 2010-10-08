@@ -7,16 +7,19 @@
 # ends in a newline, otherwise tmtest will complain (we could also
 # just have specified -n).
 
+DISABLED "Nobody cares about binary transparency -- it's too hard to edit testfiles anyway."
+
+binary_generator='for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}; print "\n";'
 
 MKFILE tt <<-'EOL'
-    perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}; print "\n";'
+    perl -e '$binary_generator'
     # stdout will be filled in below
 	STDOUT:
 EOL
 
 
 # Add the expected results to the testfile.
-perl -e 'for(my $i=0; $i<256; $i++) { for(my $j=0; $j<256; $j++) { print pack("cc", $i, $j); }}; print "\n";' >> "$tt"
+perl -e "$binary_generator" >> "$tt"
 
 # and run the test
 $tmtest --ignore-extension -q "$tt" | REPLACE "$tt" /tmp/FILE
