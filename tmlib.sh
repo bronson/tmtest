@@ -99,7 +99,7 @@ TRAP ()
 
 ATEXIT ()
 {
-	TRAP "$@" EXIT
+	TRAP "$*" EXIT
 }
 
 
