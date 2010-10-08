@@ -3,8 +3,8 @@
 cd "$TESTDIR"
 $tmtest -q - <<-EOL
 	echo begin
-	ATEXIT echo 1
-	ATEXIT echo 2
+	ATEXIT "echo 1"
+	ATEXIT "echo 2"
 	echo end
 
 	STDOUT:

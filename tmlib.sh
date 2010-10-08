@@ -44,9 +44,9 @@ ASSERT ()
 			# bash2 doesn't provide BASH_SOURCE or BASH_LINENO
 			msg=" on ${BASH_SOURCE[1]} line ${BASH_LINENO[0]}"
 		fi
-		ABORT assertion failed$msg: \"$*\"
-	fi  
-}    
+		ABORT assertion failed$msg: \"$@\"
+	fi
+}
 
 
 #
@@ -94,12 +94,12 @@ TRAP ()
 #
 # Example:  (will produce "BA" on stdout when the test ends)
 #
-#     ATEXIT echo A
-#     ATEXIT echo -n B 
+#     ATEXIT "echo A"
+#     ATEXIT "echo -n B"
 
 ATEXIT ()
 {
-	TRAP "$*" EXIT
+	TRAP "$@" EXIT
 }
 
 
@@ -159,7 +159,7 @@ MKFILE ()
 
 MKFILE_EMPTY ()
 {
-	MKFILE "$*" < /dev/null
+	MKFILE "$@" < /dev/null
 }
 
 
@@ -222,7 +222,7 @@ MKDIR ()
 }
 
 
-# 
+#
 # INDENT
 #
 # Indents the output the given number of spaces.
@@ -254,7 +254,7 @@ INDENT ()
 }
 
 
-# 
+#
 # REPLACE
 #
 # Replaces all occurrences of the first argument with the second argument.
