@@ -1,7 +1,6 @@
 echo START >&%(STATUSFD)
 
 ABORT ()  { echo "ABORTED: $*" >&%(STATUSFD); exit 0; }
-ABORT: () { ABORT $*; }
 
 DISABLED  () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
 DISABLED: () { DISABLED $*; }

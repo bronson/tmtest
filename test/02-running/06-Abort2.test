@@ -5,15 +5,15 @@
 
 
 $tmtest -q - <<-EOL
-	ABORT: This is the reason
+	ABORT This is the reason
 	echo "right output"
-	STDOUT:
+	STDOUT
 	wrong output
 EOL
 
 
-STDERR:
-STDOUT:
+STDERR
+STDOUT
 ABRT (STDIN)                   This is the reason
 
 1 test run, 0 successes, 1 failure.

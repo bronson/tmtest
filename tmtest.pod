@@ -87,7 +87,7 @@ the output produced by the testfile itself.
 Causes the test to abort immediately.  You can optionally specify
 a message.  See the example in L</MKDIR>.
 
-    ABORT: too bad this test won't live
+    ABORT too bad this test won't live
 
 =item DISABLE
 =item DISABLED
@@ -97,7 +97,7 @@ that directory and all subdirectories disabled.
 
 You can supply a reason string too
 
-   DISABLED: this test is just too lame.
+   DISABLED this test is just too lame.
 
 =back
 

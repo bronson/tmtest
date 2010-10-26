@@ -5,20 +5,20 @@
 
 
 $tmtest -d - <<-EOL | FIX_DIFF
-	ABORT: This is the reason
+	ABORT This is the reason
 	echo "right output"
-	STDOUT:
+	STDOUT
 	wrong output
 EOL
 
 
-STDERR:
+STDERR
 ERROR Test was aborted: This is the reason
-STDOUT:
+STDOUT
 --- /tmp/FILE DATE TIME TZ
 +++ - DATE TIME TZ
 @@ -1,4 +1,2 @@
- ABORT: This is the reason
+ ABORT This is the reason
  echo "right output"
--STDOUT:
+-STDOUT
 -wrong output
