@@ -145,13 +145,10 @@ tmtest uses the first technique by default; it treats testfiles like
 shell scripts.
 
 To make your testfile bail the instant it encounters an error, add
-the command "set -e" to it.  If any subsequent command returns an
-error, everything will bail out.  Add "set +e" to turn this behavior
-back off.  You may also want to "set -o pipefail" as well.
-
-If your testfiles are trivial, it probably makes sens to use -e to
-save yourself a lot of manual checking.  Otherwise, the default of
-+e is probably the safest, most understandable way to write tests.
+the command "set -e" to the top.  If any subsequent command returns an
+error, as long as it's not used in a pipeline, everything will bail out.
+Use "set +e" to turn this behavior back off.
+You may also want to "set -o pipefail" as well.
 
 =head1 TESTFILE SUGGESTIONS
 
@@ -162,16 +159,7 @@ If you can't figure out what your test is doing, you might want
 to add "set -x" to the top of the testfile.  This will
 show you line-by-line what is happening (use "set -v" if "set -x"'s
 command-line substitution produces hard-to-read results).
-You can also put them in
-a config file if you're having configuration issues.
-
-Never create files in /tmp with static or easily predictable file names.
-This opens you up to symlink attacks.  Instead, use mktemp(1)
-or tempfile(1) (tmtest's built-in helpers use mktemp).
-Also check the examples directory for functions
-to make working with files easier.
-
-	file=`mktemp -t 02-XXXXXX` || ABORT can't mktemp.
+You can also put these directives in config files.
 
 =head1 FAQ
 
@@ -181,7 +169,7 @@ sections.
 
 =over 4
 
-Answer: run your command's output through indent.
+Answer: run your command's output through sed:
 
 	mycmd | sed "s/^/    /"
 
@@ -194,6 +182,23 @@ output:
 
 =back
 
+Where is my program run?
+
+=over 4
+
+Somewhere in an empty temporary directory with permissions set to 0700
+so only your user can access it.  You can create files and directories but make
+sure you delete them all before your test is finished.  tmtest fails
+tests that don't clean up after themselves.
+
+You can use the TESTFILE and TESTDIR variables to access your testfile
+and the directory that contains it.   (echo "$TESTDIR")
+MYFILE and MYDIR contain the file and parent dir of the currently
+running script.  These will be the same as TESTFILE and TESTDIR
+unless the currently running script is a configuration file.
+
+=back
+
 How do I retrieve my test program's exit result?
 
 =over 4
@@ -203,25 +208,17 @@ Answer: use the shell variable $?:
     myprogram
 	echo RESULT: $?
 
-tmtest used to provide a RESULT section that automatically checked a
-command's result value.  The problem is, most testfiles contain
-multiple commands, with cleanup code, etc.  To ensure that tmtest
-reads the correct value of $? would require drastic restrictions
-on the things a testfile may do.  We decided that it was much better
-to force the user to insert $? in the proper spot rather than add
-a whole bunch of arbitrary restrictions.
-
 =back
 
 =head1 HISTORY
 
 The original tmtest script was written in June of 2000 when I got frustrated
-with the TrestleMail mail relay program.  TrestleMail, now large and complex,
-required some serious reorganization.  I wrote tmtest as a quick one-off Perl
+with the TrestleMail mail relay program.  TrestleMail had become large and complex
+and required some serious reorganization.  I wrote tmtest as a quick one-off Perl
 hack to allow me to tear TrestleMail to shreds and have some hope of getting
-the peices back together.
+the peices back together.  It worked exactly as I'd hoped.
 
-The Perl version was too slow and its testfile format took some learking.
+The Perl version was far too slow and its testfile format took some learning.
 So, in early 2005, I rewrote the good parts in C and tried to make it as
 much like Bash as possible.
 

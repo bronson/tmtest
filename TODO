@@ -1,7 +1,7 @@
 0.96:
+- strncpy and strncat are wrong
+- remove invalid functions (with colon) from the template
 - Try to get rid of tmlib completely.
-  - Have all tests start with the current dir set to an empty 700 tmpdir.
-    - If there are still files in there when the test ends, it fails.
   - MKFILE should just create the file that the user names.
   - MKTMPFILE should create a filename and store that in the user's variable.
   - You should be able to run most testfiles in any posix shell

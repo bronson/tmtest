@@ -1,25 +1,24 @@
 # ensures that tmtest -f works.
 #
 # We verify that it runs all tests and only prints the ones that fail.
-# We hit it with a disabled test, an aborted test, and 
+# We hit it with a succeeding test, a failing test, and a disabled test.
+# We can't hit it with an abort test since that would stop the test run.
 
-MKDIR dir
-
-MKFILE fsuccess "$dir/success.test" <<-EOL
+cat > success.test <<-EOL
 	# ensure this test isn't printed
 	echo HI
 	STDOUT:
 	HI
 EOL
 
-MKFILE ffail "$dir/fail.test" <<-EOL
+cat > fail.test <<-EOL
 	# ensure this test is printed
 	echo HI
 	STDOUT:
 	HO
 EOL
 
-MKFILE fdisabled "$dir/disabled.test" <<-EOL
+cat > disabled.test <<-EOL
 	# this test would succeed if it weren't disabled
 	DISABLED
 	echo HI
@@ -27,26 +26,20 @@ MKFILE fdisabled "$dir/disabled.test" <<-EOL
 	HI
 EOL
 
-# We can't do this because it stops the entire test run.
-#MKFILE fabort "$dir/aborted.test" <<-EOL
-#	# this test would succeed if it didn't abort
-#	ABORT
-#	echo HI
-#	STDOUT:
-#	HI
-#EOL
-
-MKDIR subdir "$dir/subdir"
-
-MKFILE subfail "$subdir/fail.test" <<-EOL
+mkdir subdir
+cat > subdir/fail.test <<-EOL
 	# make sure we show the proper path in subdirectories
 	echo HI
 	STDOUT:
 	HO
 EOL
 
-$tmtest -f $dir | REPLACE `basename "$dir"` DIR
+set +e  # tmtest will return an error since a test failed
+$tmtest -f .
+
+rm success.test fail.test disabled.test
+rm -rf subdir
 
 STDOUT:
-DIR/fail.test
-DIR/subdir/fail.test
+fail.test
+subdir/fail.test

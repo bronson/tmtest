@@ -449,8 +449,69 @@ static int open_test_file(struct test *test)
 }
 
 
-#define is_pseudodir(str) (((str)[0] == '.' && (str)[1] == '\0') || \
-          ((str)[0] == '.' && (str)[1] == '.' && (str)[2] == '\0'))
+static int select_no_pseudo_dirs(const struct dirent *d)
+{
+    if(d->d_name[0] == '.' && d->d_name[1] == '\0') return 0;
+    if(d->d_name[0] == '.' && d->d_name[1] == '.' && d->d_name[2] == '\0') return 0;
+    return 1;
+}
+
+
+static int remove_subdirs(struct test *test, struct pathstack *stack, char *start, char *msg, int msgsiz)
+{
+    struct stat st;
+    char **ents;
+    char *path;
+    struct pathstate state;
+    int count = 0;
+    int i, subcnt;
+
+    ents = qscandir(pathstack_absolute(stack), select_no_pseudo_dirs, qdirentcoll);
+    if(!ents) {
+        // qscandir has already printed the error message
+        exit(runtime_error);
+    }
+
+    for(i=0; ents[i]; i++) {
+        count += 1;
+        subcnt = 0;
+
+        pathstack_push(stack, ents[i], &state);
+        path = pathstack_absolute(stack);
+
+        if(stat(path, &st) < 0) {
+            test_abort(test, "Could not locate %s: %s\n", path, strerror(errno));
+        }
+
+        if(S_ISDIR(st.st_mode)) {
+            subcnt = remove_subdirs(test, stack, start, msg, msgsiz);
+            if(rmdir(path) < 0) {
+                test_abort(test, "Could not rmdir %s: %s\n", path, strerror(errno));
+            }
+        } else {
+            if(unlink(path) < 0) {
+                test_abort(test, "Could not unlink %s: %s\n", path, strerror(errno));
+            }
+        }
+
+        if(subcnt == 0) {
+            // only add a dir to the message if we didn't remove any subdirs
+            if(msg[0]) {
+                strncat(msg, ", ", msgsiz - strlen(msg) - 1);
+            } else {
+                strncat(msg, "not deleted: ", msgsiz - strlen(msg) - 1);
+            }
+            strncat(msg, start, msgsiz - strlen(msg) - 1);
+        }
+
+        pathstack_pop(stack, &state);
+        free(ents[i]);
+    }
+
+    free(ents);
+    return count;
+}
+
 
 /** Ensures no files or dirs were left behind in the testhome.
  *  If there were, it deletes them and marks the test as failed.
@@ -458,41 +519,18 @@ static int open_test_file(struct test *test)
 
 static void check_testhome(struct test *test)
 {
-    DIR *directory;
-    struct dirent *entry;
+    char buf[PATH_MAX];
+    struct pathstack stack;
     char message[BUFSIZ];
 
-    assert(test->status == test_was_completed);
+    pathstack_init(&stack, buf, sizeof(buf), g_testhome);
     message[0] = '\0';
+    remove_subdirs(test, &stack, buf+strlen(g_testhome)+1, message, sizeof(message));
 
-    directory = opendir(g_testhome);
-    if(directory == NULL) {
-        test_abort(test, "Could not open directory '%s': %s\n",
-                g_testhome, strerror(errno));
-    }
-
-    while((entry = readdir(directory)) != NULL) {
-        if(!is_pseudodir(entry->d_name)) {
-            // a file was left behind
-            if(message[0]) {
-                strcat(message, ", ");
-            } else {
-                strcpy(message, "Not deleted: ");
-            }
-            strcat(message, entry->d_name);
-        }
-    }
-    if(errno != 0) {
-        test_abort(test, "Could not read directory '%s': %s\n",
-                g_testhome, strerror(errno));
-    }
-
-    if(message[0]) {
+    if(message[0] && test->status == test_was_started) {
         test->status = test_has_failed;
         test->status_reason = strdup(message);
     }
-
-    closedir(directory);
 }
 
 
@@ -679,6 +717,10 @@ static int run_test(const char *path, const char *name, const char *dispname, in
 
         keepontruckin = !was_aborted(test.status);
     }
+
+    usleep(10000); // TODO: this is really weird.  it slows us way down.  Get rid of it!!!
+        // without this we get "shell-init: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory"
+        // get rid of this when switching to event based handling.
 
     test_free(&test);
 
@@ -999,7 +1041,7 @@ static void start_tests()
     strcat(g_testhome, "/");
     strcat(g_testhome, TESTHOME);
 
-    if(mkdir(g_testhome, 0600) < 0) {
+    if(mkdir(g_testhome, 0700) < 0) {
         fprintf(stderr, "couldn't create %s: %s\n", g_testhome, strerror(errno));
         exit(initialization_error);
     }

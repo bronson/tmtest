@@ -1,0 +1,13 @@
+# we don't care what directory the test starts in as long
+# as it's empty.
+
+$tmtest -o - <<EOL | sed "s/^/    /"
+ls           # doesn't produce any output
+ls | wc -l   # prints 0
+EOL
+
+STDOUT:
+    ls           # doesn't produce any output
+    ls | wc -l   # prints 0
+    STDOUT:
+    0

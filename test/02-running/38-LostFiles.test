@@ -1,0 +1,29 @@
+# Ensures tmtest deletes files from the testhome before running
+# the next test.
+
+cat > 1.test <<-EOL
+	echo hi > file1
+	mkdir d2
+	echo ho > d2/f2
+	cat file1
+	STDOUT:
+	hi
+EOL
+
+cat > 2.test <<-EOL
+	ls
+	ls | wc -l
+	STDOUT:
+	0
+EOL
+
+set +e   # ensure the test doesn't stop here even though tmtest returns a failure
+$tmtest -q 1.test 2.test
+
+rm 1.test 2.test
+
+STDOUT:
+FAIL 1.test                    not deleted: d2/f2, file1
+ok   2.test 
+
+2 tests run, 1 success, 1 failure.

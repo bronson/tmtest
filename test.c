@@ -780,7 +780,7 @@ void test_results(struct test *test, const char *dispname)
 	}
 
 	if(test->status == test_has_failed) {
-		print_reason(test, "DIR ", "by");
+		print_reason(test, "FAIL", "by");
 		return;
 	}
 

@@ -1,6 +1,7 @@
 # Ensure we don't leak fds to the running test.
 # Ideally, there would be NO open FDs.  This will be the case for tmtest 0.98.
 
+DISABLED like previous test
 
 # creates a temporary directory DD:
 # /tmp/DD/tmtest.conf   -- stores the open fds in $openfds

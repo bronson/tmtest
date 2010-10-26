@@ -2,9 +2,6 @@
 # This is just so we don't surprise ourselves...  Any time you modify
 # template.sh, you should expect test to fail.
 
-# The --config directive disables reading config files from the directory
-# containing the named config file and all its parent directories.
-
 $tmtest --dump-script - <<-EOL | FIX_SCRIPT
 	this test is never run but we do need to specify a file so tmtest
 	knows what config files to include.
@@ -21,7 +18,7 @@ STDOUT:
 	DISABLE   () { DISABLED $*; }
 	DISABLE:  () { DISABLED $*; }
 	
-	TESTDIR='/tmp'
+	TESTDIR='...test'
 	TESTFILE='(STDIN)'
 	
 	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
@@ -38,7 +35,7 @@ STDOUT:
 	STDERR: () { exit 0; }
 	
 	echo 'RUNNING: (STDIN)' >&FD
-	MYDIR='/tmp'
+	MYDIR='...test'
 	MYFILE='(STDIN)'
 	exec >&FD FD>&FD FD>&- FD>&-
 	LINENO=0
