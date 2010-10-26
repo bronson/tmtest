@@ -534,6 +534,29 @@ static void check_testhome(struct test *test)
 }
 
 
+// quick sanity check to be absolutely certain we're not starting
+// a test with files and dirs left over from a previous run.
+static void verify_testhome(struct test *test)
+{
+    DIR *directory;
+    struct dirent *entry;
+
+    directory = opendir(g_testhome);
+    if(directory == NULL) {
+        test_abort(test, "Could not open directory '%s': %s\n",
+                g_testhome, strerror(errno));
+    }
+
+    while((entry = readdir(directory)) != NULL) {
+        if(select_no_pseudo_dirs(entry)) {
+            test_abort(test, "Almost started test with files in %s: %s", g_testhome, entry->d_name);
+        }
+    }
+
+    closedir(directory);
+}
+
+
 /** Runs the named testfile.
  *
  * If warn_suffix is true and the ffilename doesn't end in ".test"
@@ -594,6 +617,8 @@ static int run_test(const char *path, const char *name, const char *dispname, in
     test.outfd = g_outfd;
     test.errfd = g_errfd;
     test.statusfd = g_statusfd;
+
+    verify_testhome(&test);
 
     // initialize the test mode
     switch(outmode) {
