@@ -9,7 +9,7 @@
 #    open: 7
 #    open: 10
 
-DISABLED: Number of open fds keeps changing.
+DISABLED Number of open fds keeps changing.
 
 $tmtest -o -q - <<-'EOL' | sed "s/^/    /"
 	for i in `seq 3 255`; do

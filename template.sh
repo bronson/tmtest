@@ -3,9 +3,7 @@ echo START >&%(STATUSFD)
 ABORT ()  { echo "ABORTED: $*" >&%(STATUSFD); exit 0; }
 
 DISABLED  () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
-DISABLED: () { DISABLED $*; }
 DISABLE   () { DISABLED $*; }
-DISABLE:  () { DISABLED $*; }
 
 TESTDIR='%(TESTDIR)'
 TESTFILE='%(TESTFILE)'

@@ -5,7 +5,7 @@
 
 
 $tmtest -q - <<-EOL
-	DISABLED: This is the reason
+	DISABLED This is the reason
 	echo "right output"
 	STDOUT:
 	wrong output

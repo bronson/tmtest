@@ -1,4 +1,4 @@
-DISABLED: needs streaming tmtest?
+DISABLED needs streaming tmtest?
 
 echo test output > >(sed "s/^/    /")
 

@@ -38,9 +38,7 @@ STDOUT:
 	ABORT ()  { echo "ABORTED: $*" >&FD; exit 0; }
 	
 	DISABLED  () { echo "DISABLED: $*" >&FD; exit 0; }
-	DISABLED: () { DISABLED $*; }
 	DISABLE   () { DISABLED $*; }
-	DISABLE:  () { DISABLED $*; }
 	
 	TESTDIR='/tmp/DIR/di'
 	TESTFILE='/tmp/DIR/di/tt.test'

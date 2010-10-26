@@ -11,7 +11,7 @@
 
 
 $tmtest -q - <<-EOL
-	DISABLED: "   "
+	DISABLED "   "
 	echo "right output"
 	STDOUT:
 	wrong output
@@ -19,6 +19,6 @@ EOL
 
 
 STDOUT:
-dis  (STDIN)                   
+dis  (STDIN)                      
 
 1 test run, 0 successes, 0 failures.

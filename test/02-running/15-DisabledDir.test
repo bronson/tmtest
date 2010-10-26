@@ -5,7 +5,7 @@ MKDIR dir
 cd "$dir"
 
 cat > tmtest.conf <<-EOs
-	DISABLED: this is the reason
+	DISABLED this is the reason
 EOs
 
 cat > t1.test <<-EOs

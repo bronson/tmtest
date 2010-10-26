@@ -1,6 +1,5 @@
 0.96:
 - strncpy and strncat are wrong
-- remove invalid functions (with colon) from the template
 - Try to get rid of tmlib completely.
   - MKFILE should just create the file that the user names.
   - MKTMPFILE should create a filename and store that in the user's variable.
@@ -11,6 +10,7 @@
     - REPLACE?  That's tougher...   maybe just put it in your tmtest.conf?
 - Just print full path of test being run.  Truncate it if wider than termwidth.
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
+- Run in print failures only mode by default, -v to get every result.
 
 0.962:
 - Try to get rid of tmtest.conf completely.
@@ -198,8 +198,8 @@ rc series...
   (not very important since testfiles tend to end up with Bashisms anyway).
   (still, it could provide a very nice speedup if we switched to dash).
 - There should be a way to repeatedly run a single test with only tiny
-  differences.  i.e. test all permeutations of DISABLE DISABLE:
-  DISABLED DISABLED:  Hopefully that will clean up 05-08-Disable/Abort.test
+  differences.  i.e. test all permeutations of a function
+  Hopefully that will clean up 05-08-Disable/Abort.test
 - Add a timeout that will terminate stalled tests.  You can set the timeout
   in the config file or the test itself.
 - I don't like that $tmtest expands to "$tmtest --config=...".  That's
