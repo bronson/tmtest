@@ -1,7 +1,7 @@
 /* main.c
  * 28 Dec 2004
  * Copyright (C) 2004 Scott Bronson
- * 
+ *
  * The main routine for tmtest.
  *
  * This file is distrubuted under the MIT License
@@ -32,10 +32,6 @@
 #include "tfscan.h"
 #include "pathconv.h"
 #include "pathstack.h"
-
-#include "units.h"
-#include "ctest/ctest.h"
-
 
 #define DIFFPROG "/usr/bin/diff"
 #define SHPROG   "/bin/bash"
@@ -138,7 +134,7 @@ static int i_have_permission(const struct stat *st, int op)
 static int verify_readable(const char *file, struct stat *st, int regfile)
 {
 	struct stat sts;
-	
+
 	// arg is optional so we can pass the stat struct back
 	// if the caller wants to do more with it.
 	if(st == NULL) {
@@ -315,12 +311,12 @@ static int start_diff(struct test *test)
 		assert(filename);
 		assert(filename[0]);
     }
-		
+
     if(pipe(pipes) < 0) {
         perror("creating diff pipe");
         exit(runtime_error);
     }
-    
+
     child = fork();
     if(child < 0) {
         perror("forking diff");
@@ -333,7 +329,7 @@ static int start_diff(struct test *test)
         }
         close(pipes[0]);
         close(pipes[1]);
-        
+
         if (!filename) {
 			// need to figure out the filename to pass to diff
         	if (test->testfilename[0] == '/') {
@@ -409,7 +405,7 @@ static void print_test_path(struct test *test)
 {
 	char result[PATH_MAX];
 	char testfile[PATH_MAX];
-	
+
 	assemble_absolute_testpath(test, testfile, sizeof(testfile));
 
 	if(abs2rel(testfile, orig_cwd, result, sizeof(result))) {
@@ -423,12 +419,12 @@ static int open_test_file(struct test *test)
 {
 	char buf[PATH_MAX];
 	int fd;
-	
+
 	// If the filename is a dash then we just use stdin.
 	if(is_dash(test->testfilename)) {
         return STDIN_FILENO;
     }
-    
+
 	if(test->testfilename[0] == '/') {
 	    // If the filename is absolute, we use it directly.
 	    strncpy(buf, test->testfilename, sizeof(buf));
@@ -437,13 +433,13 @@ static int open_test_file(struct test *test)
 		// Otherwise we need to make an absolute path
 		assemble_absolute_testpath(test, buf, sizeof(buf));
 	}
-	
+
 	fd = open(buf, O_RDONLY);
     if(fd < 0) {
         fprintf(stderr, "Could not open %s: %s\n", buf, strerror(errno));
         exit(runtime_error);
     }
-    
+
     return fd;
 }
 
@@ -654,21 +650,21 @@ static int process_absolute_file(const char *abspath, const char *origpath, int 
 
 	pathstack_init(&stack, buf, sizeof(buf), abspath);
 	pathstack_normalize(&stack);
-	
+
 	dir = pathstack_absolute(&stack);
 	file = strrchr(dir, '/');
 	if(!file) {
 		fprintf(stderr, "Path wasn't absolute in process_absolute file!?  %s\n", abspath);
 		return 0;
 	}
-	
+
 	*file++ = '\0';		// separate the path and the filename
 	// If the file was in the root directory, ensure we don't blow away
 	// the leading slash.
 	if(dir[0] == '\0') {
 		dir = "/";
 	}
-	
+
 	return run_test(dir, file, origpath, warn_suffix);
 }
 
@@ -681,7 +677,7 @@ static int process_absolute_dir(const char *abspath, const char *origpath, int p
 {
 	char buf[PATH_MAX];
 	struct pathstack stack;
-	
+
 	pathstack_init(&stack, buf, sizeof(buf), abspath);
 	pathstack_normalize(&stack);
 	return process_dir(&stack, print_absolute);
@@ -691,12 +687,12 @@ static int process_absolute_dir(const char *abspath, const char *origpath, int p
 static void print_processing_progress(struct pathstack *ps, int print_absolute)
 {
 	char buf[PATH_MAX];
-	
+
 	// Don't print anything unless we're actually testing.
     if(outmode != outmode_test) {
     	return;
     }
-    
+
     if(print_absolute == -1) {
     	return;
     }
@@ -743,17 +739,17 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
         fprintf(stderr, "Could not allocate %d mode_t objects.\n", n);
         exit(runtime_error);
     }
-    
+
     // first collect the stat info for each entry and perform a quick sanity check
     for(i=0; i<n; i++) {
         if(!is_dash(ents[i])) {
 			const char *cp = ents[i];
-			
+
 			if(strcmp(ents[i], ".tmtest-ignore") == 0) {
 				// skip this directory but continue processing
 				goto abort;
 			}
-			
+
 			if(ents[i][0] != '/') {
 				ret = pathstack_push(ps, ents[i], &save);
 				if(ret != 0) {
@@ -774,10 +770,10 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
             modes[i] = st.st_mode;
         }
     }
-    
+
     // Now that we're sure we're going to process this dir, print a notice.
     print_processing_progress(ps, print_absolute);
-    
+
     // process all files in dir
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || S_ISREG(modes[i])) {
@@ -837,7 +833,7 @@ abort:
 
 /** This routine filters out any dirents that begin with '.'.
  *  We don't want to process any hidden files or special directories.
- * 
+ *
  * NOTE: we DO allow .tmtest-ignore files through.  Otherwise, how
  * would the directory scanner know which directories to skip?
  */
@@ -848,12 +844,12 @@ static int select_nodots(const struct dirent *d)
     if(d->d_name[0] != '.') {
     	return 1;
     }
-    
+
     // if it's named '.tmtest-ignore', use it
     if(strcmp(d->d_name, ".tmtest-ignore") == 0) {
     	return 1;
     }
-    
+
     // otherwise, ignore it.
     return 0;
 }
@@ -1022,7 +1018,6 @@ static void process_args(int argc, char **argv)
 		{"help", 0, 0, 'h'},
 		{"output", 0, 0, 'o'},
 		{"quiet", 0, 0, 'q'},
-		{"run-unit-tests", 0, 0, 'U'},
 		{"version", 0, 0, 'V'},
 		{0, 0, 0, 0},
 	};
@@ -1068,11 +1063,6 @@ static void process_args(int argc, char **argv)
 				quiet++;
 				break;
 
-			case 'U':
-				all_tests();
-				ctest_exit();
-				exit(0);
-
 			case 'V':
 				printf("tmtest version %s\n", stringify(VERSION));
 				exit(0);
@@ -1094,7 +1084,7 @@ static void process_args(int argc, char **argv)
 
 
 /* normalize_path
- * 
+ *
  * I wish I could use canonicalize_path(3), but that routine resolves
  * symbolic links and provides no way to turn that behavior off.
  * How stupid!  This isn't as much of a hack as it looks because
@@ -1103,8 +1093,6 @@ static void process_args(int argc, char **argv)
  * @param original: the path to be normalized
  * @param outpath: the normalized path.  this may or may not be the same
  *     as original.
- * 
- * TODO: how about hitting this routine with some unit tests?
  */
 
 static void normalize_path(struct pathstack *ps, char *original, char **outpath)
@@ -1167,7 +1155,7 @@ static void process_argv(struct pathstack *ps, char **argv)
 
 	ents = malloc((n+1)*sizeof(*ents));
 	ents[n] = NULL;
-	
+
 	for(i=0; i<n; i++) { normalize_path(ps, argv[i], &ents[i]); }
 	oldlen = ps->curlen;
 	process_ents(ps, ents, -1);
@@ -1199,7 +1187,7 @@ int main(int argc, char **argv)
 {
 	char buf[PATH_MAX];
 	struct pathstack pathstack;
-	
+
 	orig_cwd = dup_cwd();
 	process_args(argc, argv);
 

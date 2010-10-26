@@ -1,4 +1,5 @@
 - Removed INDENT from tmlib.sh
+- Removed unit tests. They were heavy and didn't offer much addl coverage.
 
 0.95 was never released
 - Add a path element to the diff files so so need to specify -p0 when patching.

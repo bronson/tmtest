@@ -10,7 +10,6 @@
   - What about REPLACE?
     - REPLACE?  That's tougher...   maybe just put it in your tmtest.conf?
 - Just print full path of test being run.  Truncate it if wider than termwidth.
-- Get rid of ctest?  Do something to make tmtest not fail when first downloaded.
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
 
 0.962:

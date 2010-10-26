@@ -5,7 +5,7 @@
 # This software is distributed under the LGPL.  See COPYING for more.
 
 
-VERSION=0.95
+VERSION=0.96
 
 # override this for make install.  "make install prefix=/usr/local"
 #prefix=/usr
@@ -31,21 +31,13 @@ COPTS=-g -Wall -Werror
 # scanner files
 SCANC=re2c/read.c re2c/read-fd.c re2c/read-mem.c re2c/read-rand.c re2c/scan.c re2c/scan-dyn.c
 SCANH=re2c/read.h re2c/read-fd.h re2c/read-mem.h re2c/read-rand.h re2c/scan.h re2c/scan-dyn.h
-	
-# files with unit tests
-USRC=pathstack.c compare.c pathconv.c
-UHDR=pathstack.h compare.h pathconv.h
-# add the files needed to run the unit tests
-USRC+=units.c ctest/ctest.c ctest/ctassert.c
-UHDR+=units.h ctest/ctest.h ctest/ctassert.h
 
 # utilities:
-CSRC+=qscandir.c $(USRC)
-CHDR+=qscandir.h $(UHDR)
+CSRC+=qscandir.c pathstack.c compare.c pathconv.c
+CHDR+=qscandir.h pathstack.h compare.h pathconv.h
 # program files:
 CSRC+=vars.c test.c rusage.c tfscan.c stscan.o main.c template.c
 CHDR+=vars.h test.h rusage.h tfscan.h stscan.h
-# unit test files
 
 # It makes it rather hard to debug when Make deletes the intermediate files.
 INTERMED=stscan.c
@@ -65,27 +57,9 @@ template.c: template.sh cstrfy
 %.o: %.c
 	$(CC) -g -c $< -o $@
 
-.PHONY: test ctest run-ctest
+.PHONY: test
 test: tmtest
-	./tmtest --run-unit-tests
 	tmtest test
-	
-# Sometimes the app won't compile but we still want to run the unit tests...
-units: $(USRC) $(UHDR) $(SCANH) $(SCANC) Makefile
-	$(CC) -g -Wall $(USRC) $(SCANC) -o units -DUNITS_MAIN
-
-run-units: units
-	./units
-
-ctest:
-	(cd ctest; $(MAKE))
-
-run-ctest:
-	(cd ctest; ./ctest)
-
-# todo -- when global variables are worked out, just compile everything
-#units: $(CSRC) $(CHDR) $(SCANH) $(SCANC) Makefile
-#	$(CC) $(COPTS) $(CSRC) $(SCANC) -o units -DUNITS_MAIN
 
 install: tmtest
 	install -d -m755 $(bindir)
@@ -118,15 +92,11 @@ endif
 
 clean:
 	rm -f tmtest template.c tags
-	(cd ctest; $(MAKE) clean)
 
 distclean: clean
 	rm -f stscan.[co]
 
 dist: stscan.c
-	
-tags: $(CSRC) $(CHDR) $(INTERMED)
-	ctags -R
 
 doc:
 	doxygen
@@ -136,10 +106,3 @@ doc:
 
 %.png: %.dot
 	dot -Tpng $< -o $@
-
-rediff:
-	diff ../oe/re2c/ re2c
-	
-reupdate:
-	ls re2c/*.[ch] | (ODIR=`pwd`; cd ../oe; xargs cp --target-directory $$ODIR/re2c)
-	
