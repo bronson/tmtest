@@ -34,6 +34,7 @@ typedef enum {
     test_was_completed,  ///< test completed normally.  tests may abort prematurely but still consider it a successful run, so use test_was_started.  this status is largely useless.
     test_was_aborted,    ///< somebody called abort in the middle of the test
     test_was_disabled,   ///< the test was disabled by somebody.
+    test_has_failed,     ///< the test has already been marked a failure
 } test_status;
 
 

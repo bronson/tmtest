@@ -722,6 +722,11 @@ static void test_analyze_results(struct test *test, int *stdo, int *stde)
 		return;
 	}
 
+	if(test->status == test_has_failed) {
+		test_failures++;
+		return;
+	}
+
     if(!was_started(test->status)) {
         test_failures++;
         return;
@@ -771,6 +776,11 @@ void test_results(struct test *test, const char *dispname)
 
 	if(was_disabled(test->status)) {
 		print_reason(test, "dis ", "by");
+		return;
+	}
+
+	if(test->status == test_has_failed) {
+		print_reason(test, "DIR ", "by");
 		return;
 	}
 

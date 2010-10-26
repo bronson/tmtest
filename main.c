@@ -61,9 +61,11 @@ char g_testdir[sizeof(TESTDIR)];
 #define OUTNAME "stdout"
 #define ERRNAME "stderr"
 #define STATUSNAME "status"
+#define TESTHOME "test"
 char g_outname[sizeof(TESTDIR)+sizeof(OUTNAME)];
 char g_errname[sizeof(TESTDIR)+sizeof(ERRNAME)];
 char g_statusname[sizeof(TESTDIR)+sizeof(STATUSNAME)];
+char g_testhome[sizeof(TESTDIR)+sizeof(TESTHOME)];
 
 // file in tmpdir that holds stdout
 #define DIFFNAME "diff"
@@ -447,6 +449,53 @@ static int open_test_file(struct test *test)
 }
 
 
+#define is_pseudodir(str) (((str)[0] == '.' && (str)[1] == '\0') || \
+          ((str)[0] == '.' && (str)[1] == '.' && (str)[2] == '\0'))
+
+/** Ensures no files or dirs were left behind in the testhome.
+ *  If there were, it deletes them and marks the test as failed.
+ */
+
+static void check_testhome(struct test *test)
+{
+    DIR *directory;
+    struct dirent *entry;
+    char message[BUFSIZ];
+
+    assert(test->status == test_was_completed);
+    message[0] = '\0';
+
+    directory = opendir(g_testhome);
+    if(directory == NULL) {
+        test_abort(test, "Could not open directory '%s': %s\n",
+                g_testhome, strerror(errno));
+    }
+
+    while((entry = readdir(directory)) != NULL) {
+        if(!is_pseudodir(entry->d_name)) {
+            // a file was left behind
+            if(message[0]) {
+                strcat(message, ", ");
+            } else {
+                strcpy(message, "Not deleted: ");
+            }
+            strcat(message, entry->d_name);
+        }
+    }
+    if(errno != 0) {
+        test_abort(test, "Could not read directory '%s': %s\n",
+                g_testhome, strerror(errno));
+    }
+
+    if(message[0]) {
+        test->status = test_has_failed;
+        test->status_reason = strdup(message);
+    }
+
+    closedir(directory);
+}
+
+
 /** Runs the named testfile.
  *
  * If warn_suffix is true and the ffilename doesn't end in ".test"
@@ -598,6 +647,7 @@ static int run_test(const char *path, const char *name, const char *dispname, in
         // read the status file to determine what happened
         // and store the information in the test struct.
         scan_status_file(&test);
+        check_testhome(&test);
 
         // process and output the test results
         switch(outmode) {
@@ -905,6 +955,9 @@ static void stop_tests()
     checkerr(unlink(g_errname), "deleting", g_errname);
     checkerr(unlink(g_statusname), "deleting", g_statusname);
 
+    // the test already ensured this dir is empty
+    checkerr(rmdir(g_testhome), "deleting", g_testhome);
+
     checkerr(rmdir(g_testdir), "removing directory", g_testdir);
 }
 
@@ -925,8 +978,6 @@ static void sig_int(int blah)
 
 static void start_tests()
 {
-    char *cp;
-
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sig_int);
 
@@ -944,11 +995,17 @@ static void start_tests()
     g_statusfd = open_file(g_statusname, STATUSNAME, O_APPEND);
     assert(strlen(g_statusname) == sizeof(g_statusname)-1);
 
-    // tmtest always runs with the CWD pointed to the temporary directory
-    cp = getenv("TMPDIR");
-    if(!cp) cp = "/tmp";
-    if(chdir(cp) != 0) {
-        fprintf(stderr, "Could not chdir 2 to %s: %s\n", cp, strerror(errno));
+    strcpy(g_testhome, g_testdir);
+    strcat(g_testhome, "/");
+    strcat(g_testhome, TESTHOME);
+
+    if(mkdir(g_testhome, 0600) < 0) {
+        fprintf(stderr, "couldn't create %s: %s\n", g_testhome, strerror(errno));
+        exit(initialization_error);
+    }
+
+    if(chdir(g_testhome) != 0) {
+        fprintf(stderr, "Could not chdir 2 to %s: %s\n", g_testhome, strerror(errno));
         exit(initialization_error);
     }
 
