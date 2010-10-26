@@ -28,11 +28,11 @@ EOL
 
 $tmtest --ignore-extension -d "$tt1" "$tt2" "$tt3" | (cd `dirname "$tt1"` && patch | FIX_PATCH)
 echo
-INDENT "\t" < "$tt1"
+sed "s/^/\t/" < "$tt1"
 echo
-INDENT "\t" < "$tt2"
+sed "s/^/\t/" < "$tt2"
 echo
-INDENT "\t" < "$tt3"
+sed "s/^/\t/" < "$tt3"
 
 
 STDOUT:

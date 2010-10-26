@@ -1,7 +1,7 @@
 (
   echo output1
   echo output2
-) | INDENT
+) | sed "s/^/    /"
 
 STDOUT:
     output1

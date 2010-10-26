@@ -1,6 +1,6 @@
 DISABLED: needs streaming tmtest?
 
-echo test output > >(INDENT)
+echo test output > >(sed "s/^/    /")
 
 # What the hell?  These two sleeps make this test mostly reliable
 # but not 100%.

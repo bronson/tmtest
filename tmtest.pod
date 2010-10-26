@@ -183,14 +183,14 @@ sections.
 
 Answer: run your command's output through indent.
 
-	mycmd | INDENT
+	mycmd | sed "s/^/    /"
 
 If you have multiple commands, you can use parentheses to collect the
 output:
 
 	(	cmd1
 		cmd2
-	) 2>&1 | INDENT
+	) 2>&1 | sed "s/^/    /"
 
 =back
 

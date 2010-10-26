@@ -7,8 +7,7 @@
   - You should be able to run most testfiles in any posix shell
     - There should be no need to install tmtest to run tests
     - Of course, you'll need it if you want to automatically check the results
-  - What about INDENT and REPLACE?
-    - I guess indent should be copy-n-pasted where it needs to be used.
+  - What about REPLACE?
     - REPLACE?  That's tougher...   maybe just put it in your tmtest.conf?
 - Just print full path of test being run.  Truncate it if wider than termwidth.
 - Get rid of ctest?  Do something to make tmtest not fail when first downloaded.

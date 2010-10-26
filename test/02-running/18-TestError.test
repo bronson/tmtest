@@ -4,7 +4,7 @@
 # Now that we no longer have a RESULT section, I'm not sure this test
 # means much...   leaving it in anyway.
 
-$tmtest $args -o - <<-EOL | sed -re "s/: line [0-9]+:/: line BLAH:/" | INDENT "  "
+$tmtest $args -o - <<-EOL | sed -re "s/: line [0-9]+:/: line BLAH:/" | sed "s/^/  /"
 	set -e
 	iusedtobullseyewompratsinmypants
 	echo it ran

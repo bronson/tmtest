@@ -11,7 +11,7 @@
 
 DISABLED: Number of open fds keeps changing.
 
-$tmtest -o -q - <<-'EOL' | INDENT
+$tmtest -o -q - <<-'EOL' | sed "s/^/    /"
 	for i in `seq 3 255`; do
 		exec 2>/dev/null
 		echo -n >&$i && echo open: $i

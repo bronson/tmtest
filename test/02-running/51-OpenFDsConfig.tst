@@ -25,16 +25,16 @@ EOL
 
 while [ -f /tmp/s ]; do sleep 1; done
 
-$tmtest $args -o "$dd" | INDENT
+$tmtest $args -o "$dd"
 
 
 STDOUT:
-    for i in `seq 3 255`; do
-    exec 2>/dev/null
-    echo -n >&$i && echo open: $i
-    done
-    STDOUT:
-    open: 4
-    open: 6
-    open: 7
-    open: 10
+for i in `seq 3 255`; do
+exec 2>/dev/null
+echo -n >&$i && echo open: $i
+done
+STDOUT:
+open: 4
+open: 6
+open: 7
+open: 10

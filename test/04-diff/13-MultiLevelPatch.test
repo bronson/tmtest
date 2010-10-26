@@ -54,15 +54,15 @@ cd two
 
 $tmtest --ignore-extension -d .. | patch -p0 | FIX_PATCH
 echo
-INDENT "\t" < ../t.test
+sed "s/^/\t/" < ../t.test
 echo
-INDENT "\t" < ../one/t.test
+sed "s/^/\t/" < ../one/t.test
 echo
-INDENT "\t" < t1.test
+sed "s/^/\t/" < t1.test
 echo
-INDENT "\t" < t2.test
+sed "s/^/\t/" < t2.test
 echo
-INDENT "\t" < one/t.test
+sed "s/^/\t/" < one/t.test
 
 rm -rf ../t.test ../one ../two
 

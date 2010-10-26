@@ -21,7 +21,6 @@
 # MKFILE_EMPTY: create an empty temporary file.
 # MKFILE:   Creates a temporary file with the given contents.
 # MKDIR:    create a temporary directory
-# INDENT:   indent some output.
 # REPLACE:  replaces literal text with other literal text (no regexes).
 
 
@@ -219,38 +218,6 @@ MKDIR ()
 
 	eval "$1='$name'"
 	ATEXIT "rmdir '$name' || ABORT 'MKDIR: '$name' was not empty, can't delete it!"
-}
-
-
-#
-# INDENT
-#
-# Indents the output the given number of spaces.
-# Note that this only works with stdout!  You'll have to combine
-# the stdout and stderr streams if you want to indent stderr.
-#
-# By default this script indents each line with four spaces.
-# Pass an argument to tell this function what to put before
-# each line.
-#
-# Examples:
-#
-#    echo hi | INDENT "\t"      # indents stdout with a tab char
-#    cat /tmp 2>&1 | INDENT     # indents both stdout and stderr
-#    exec > >(INDENT)           # indents all further script output
-#
-
-INDENT ()
-{
-    # sed appears more binary transparent than bash's builtins so I'm
-    # using it instead of builtin read.  It might even be faster.
-    sed -e "s/^/${1-    }/"
-
-    # even though it would probably be faster to do it with the
-	# Bash built-in, the following mucks things up.  Bash is sloppy.
-    #	while read LINE; do
-    #		echo $'\t'"$LINE"
-    #	done
 }
 
 
