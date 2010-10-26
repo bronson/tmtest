@@ -41,17 +41,20 @@ enum {
     outmode_test,
     outmode_dump,
     outmode_diff,
-	outmode_failures_only
+    outmode_failures_only
 };
 
+/* configuration options */
 int outmode = outmode_test;
-int allfiles = 0;			// run a testfile even if it begins with a dash
-int dumpscript = 0;			// print the script instead of running it
+int allfiles = 0;     // run a testfile even if it begins with a dash
+int dumpscript = 0;   // print the script instead of running it
 int quiet = 0;
-const char *orig_cwd;		// tmtest runs with the cwd pointed to /tmp
-char *config_file;	// absolute path to the user-specified config file
-					// null if user didn't specify a config file.
+char *config_file;    // absolute path to the user-specified config file
+                      // null if user didn't specify a config file.
 
+const char *orig_cwd; // tmtest changes dirs before running a test
+
+// The testdir contains fifos, tempfiles, etc for running the test.
 #define TESTDIR "/tmp/tmtest-XXXXXX"
 char g_testdir[sizeof(TESTDIR)];
 
@@ -82,7 +85,7 @@ enum {
     runtime_error,
     interrupted_error,
     internal_error,
-	initialization_error,
+    initialization_error,
 };
 
 
@@ -111,50 +114,50 @@ static int strcmpend(const char *s1, const char *s2)
 
 static int i_have_permission(const struct stat *st, int op)
 {
-	if(st->st_mode & S_IRWXU & op) {
-		if(geteuid() == st->st_uid) {
-			return 1;
-		}
-	}
+    if(st->st_mode & S_IRWXU & op) {
+        if(geteuid() == st->st_uid) {
+            return 1;
+        }
+    }
 
-	if(st->st_mode & S_IRWXG & op) {
-		if(getegid() == st->st_gid) {
-			return 1;
-		}
-	}
+    if(st->st_mode & S_IRWXG & op) {
+        if(getegid() == st->st_gid) {
+            return 1;
+        }
+    }
 
-	if(st->st_mode & S_IRWXO & op) {
-		return 1;
-	}
+    if(st->st_mode & S_IRWXO & op) {
+        return 1;
+    }
 
-	return 0;
+    return 0;
 }
 
 
 static int verify_readable(const char *file, struct stat *st, int regfile)
 {
-	struct stat sts;
+    struct stat sts;
 
-	// arg is optional so we can pass the stat struct back
-	// if the caller wants to do more with it.
-	if(st == NULL) {
-		st = &sts;
-	}
+    // arg is optional so we can pass the stat struct back
+    // if the caller wants to do more with it.
+    if(st == NULL) {
+        st = &sts;
+    }
 
-	if(stat(file, st) < 0) {
-		fprintf(stderr, "Could not locate %s: %s\n", file, strerror(errno));
-		return 0;
-	}
-	if(regfile && !S_ISREG(st->st_mode)) {
-		fprintf(stderr, "Could not open %s: not a file!\n", file);
-		return 0;
-	}
-	if(!i_have_permission(st, 0444)) {
-		fprintf(stderr, "Could not open %s: permission denied!\n", file);
-		return 0;
-	}
+    if(stat(file, st) < 0) {
+        fprintf(stderr, "Could not locate %s: %s\n", file, strerror(errno));
+        return 0;
+    }
+    if(regfile && !S_ISREG(st->st_mode)) {
+        fprintf(stderr, "Could not open %s: not a file!\n", file);
+        return 0;
+    }
+    if(!i_have_permission(st, 0444)) {
+        fprintf(stderr, "Could not open %s: permission denied!\n", file);
+        return 0;
+    }
 
-	return 1;
+    return 1;
 }
 
 
@@ -241,7 +244,7 @@ static int wait_for_child(int child, const char *name)
             // If test was interrupted with a sigint then raise it on ourselves.
             // Otherwise it can be hard to interrupt a series of tests
             // (you kill one test but the next one fires right up).
-			kill(getpid(), SIGINT);
+            kill(getpid(), SIGINT);
         }
     } else if(!WIFEXITED(status)) {
         // not signalled, but os claims child didn't exit normally.
@@ -256,9 +259,9 @@ static int wait_for_child(int child, const char *name)
 
 static int open_file(char *fn, const char *name, int flags)
 {
-	strcpy(fn, g_testdir);
-	strcat(fn, "/");
-	strcat(fn, name);
+    strcpy(fn, g_testdir);
+    strcat(fn, "/");
+    strcat(fn, name);
 
     int fd = open(fn, flags|O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
     if(fd < 0) {
@@ -272,20 +275,20 @@ static int open_file(char *fn, const char *name, int flags)
 
 static void write_stdin_to_tmpfile(struct test *test)
 {
-	char *buf;
-	int fd;
+    char *buf;
+    int fd;
 
-	buf = malloc(sizeof(TESTDIR) + sizeof(DIFFNAME));
-	if(!buf) {
-		perror("malloc");
-		exit(runtime_error);
-	}
+    buf = malloc(sizeof(TESTDIR) + sizeof(DIFFNAME));
+    if(!buf) {
+        perror("malloc");
+        exit(runtime_error);
+    }
 
-	test->diffname = buf;
-	fd = open_file(buf, DIFFNAME, 0);
-	assert(strlen(buf) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
-	write_file(test, fd, 0, NULL);
-	close(fd);
+    test->diffname = buf;
+    fd = open_file(buf, DIFFNAME, 0);
+    assert(strlen(buf) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
+    write_file(test, fd, 0, NULL);
+    close(fd);
 }
 
 
@@ -296,20 +299,20 @@ static int start_diff(struct test *test)
 {
     int pipes[2];
     int child;
-	const char *filename = NULL;
-	char buf[PATH_MAX];
-	struct pathstack stack;
+    const char *filename = NULL;
+    char buf[PATH_MAX];
+    struct pathstack stack;
 
-	assert(test->testfilename);
-	// if the test is coming from stdin, we need to copy it to a
-	// real file before we can diff against it.
+    assert(test->testfilename);
+    // if the test is coming from stdin, we need to copy it to a
+    // real file before we can diff against it.
     if(is_dash(test->testfilename)) {
-		// first, write all of our stdin to a tmpfile.
-		write_stdin_to_tmpfile(test);
-		// then, read the test from this file instead of stdin.
-		filename = test->diffname;
-		assert(filename);
-		assert(filename[0]);
+        // first, write all of our stdin to a tmpfile.
+        write_stdin_to_tmpfile(test);
+        // then, read the test from this file instead of stdin.
+        filename = test->diffname;
+        assert(filename);
+        assert(filename[0]);
     }
 
     if(pipe(pipes) < 0) {
@@ -331,22 +334,22 @@ static int start_diff(struct test *test)
         close(pipes[1]);
 
         if (!filename) {
-			// need to figure out the filename to pass to diff
-        	if (test->testfilename[0] == '/') {
-        		// if the path is absolute, we can just use it straight away.
-				filename = test->testfilename;
-			} else {
-				pathstack_init(&stack, buf, sizeof(buf), test->testfiledir);
-				pathstack_push(&stack, test->testfilename, NULL);
-				filename = pathstack_absolute(&stack);
-			}
-		}
+            // need to figure out the filename to pass to diff
+            if (test->testfilename[0] == '/') {
+                // if the path is absolute, we can just use it straight away.
+                filename = test->testfilename;
+            } else {
+                pathstack_init(&stack, buf, sizeof(buf), test->testfiledir);
+                pathstack_push(&stack, test->testfilename, NULL);
+                filename = pathstack_absolute(&stack);
+            }
+        }
 
-		if(0 != chdir(test->testfiledir)) {
-			fprintf(stderr, "Could not chdir 1 to %s: %s\n",
-					test->testfiledir, strerror(errno));
-			exit(runtime_error);
-		}
+        if(0 != chdir(test->testfiledir)) {
+            fprintf(stderr, "Could not chdir 1 to %s: %s\n",
+                    test->testfiledir, strerror(errno));
+            exit(runtime_error);
+        }
 
         execl(DIFFPROG, DIFFPROG, "-u", filename, "-", (char*)NULL);
         perror("executing " DIFFPROG " for test");
@@ -392,10 +395,10 @@ static void finish_diff(struct test *test, int diffpid)
 
 static void assemble_absolute_testpath(struct test *test, char *buf, int bufsiz)
 {
-	buf[0] = '\0';
-	strncat(buf, test->testfiledir, bufsiz-1);
-	strncat(buf, "/", bufsiz-1);
-	strncat(buf, test->testfilename, bufsiz-1);
+    buf[0] = '\0';
+    strncat(buf, test->testfiledir, bufsiz-1);
+    strncat(buf, "/", bufsiz-1);
+    strncat(buf, test->testfilename, bufsiz-1);
 }
 
 
@@ -403,38 +406,38 @@ static void assemble_absolute_testpath(struct test *test, char *buf, int bufsiz)
 
 static void print_test_path(struct test *test)
 {
-	char result[PATH_MAX];
-	char testfile[PATH_MAX];
+    char result[PATH_MAX];
+    char testfile[PATH_MAX];
 
-	assemble_absolute_testpath(test, testfile, sizeof(testfile));
+    assemble_absolute_testpath(test, testfile, sizeof(testfile));
 
-	if(abs2rel(testfile, orig_cwd, result, sizeof(result))) {
-		printf("%s\n", result);
-	} else {
-		printf("print_test_path: abs2rel error: %s relto %s\n", testfile, orig_cwd);
-	}
+    if(abs2rel(testfile, orig_cwd, result, sizeof(result))) {
+        printf("%s\n", result);
+    } else {
+        printf("print_test_path: abs2rel error: %s relto %s\n", testfile, orig_cwd);
+    }
 }
 
 static int open_test_file(struct test *test)
 {
-	char buf[PATH_MAX];
-	int fd;
+    char buf[PATH_MAX];
+    int fd;
 
-	// If the filename is a dash then we just use stdin.
-	if(is_dash(test->testfilename)) {
+    // If the filename is a dash then we just use stdin.
+    if(is_dash(test->testfilename)) {
         return STDIN_FILENO;
     }
 
-	if(test->testfilename[0] == '/') {
-	    // If the filename is absolute, we use it directly.
-	    strncpy(buf, test->testfilename, sizeof(buf));
-	    buf[sizeof(buf)-1] = 0;
-	} else {
-		// Otherwise we need to make an absolute path
-		assemble_absolute_testpath(test, buf, sizeof(buf));
-	}
+    if(test->testfilename[0] == '/') {
+        // If the filename is absolute, we use it directly.
+        strncpy(buf, test->testfilename, sizeof(buf));
+        buf[sizeof(buf)-1] = 0;
+    } else {
+        // Otherwise we need to make an absolute path
+        assemble_absolute_testpath(test, buf, sizeof(buf));
+    }
 
-	fd = open(buf, O_RDONLY);
+    fd = open(buf, O_RDONLY);
     if(fd < 0) {
         fprintf(stderr, "Could not open %s: %s\n", buf, strerror(errno));
         exit(runtime_error);
@@ -469,12 +472,12 @@ static int run_test(const char *path, const char *name, const char *dispname, in
     char buf[BUFSIZ];   // scan buffer for the testfile
     int pipes[2];
     int child;
-	int keepontruckin = 0;
+    int keepontruckin = 0;
     int diffpid;
     int fd = -1;
     int i;
     FILE *tochild;
-	jmp_buf abort_jump;
+    jmp_buf abort_jump;
 
     // defined in the exec.c file generated by exec.tmpl.
     extern const char exec_template[];
@@ -486,18 +489,18 @@ static int run_test(const char *path, const char *name, const char *dispname, in
         return 1;
     }
 
-	// so that we can safely single quote filenames in the shell.
-	if(strchr(name, '\'') || strchr(name, '"')) {
-		fprintf(stderr, "%s was skipped because its file name contains a quote character.\n", name);
-		return 1;
-	}
+    // so that we can safely single quote filenames in the shell.
+    if(strchr(name, '\'') || strchr(name, '"')) {
+        fprintf(stderr, "%s was skipped because its file name contains a quote character.\n", name);
+        return 1;
+    }
 
     test_init(&test);
-	if(setjmp(abort_jump)) {
-		// test was aborted.
-		fprintf(stderr, "Test aborted: %s\n", test.status_reason);
+    if(setjmp(abort_jump)) {
+        // test was aborted.
+        fprintf(stderr, "Test aborted: %s\n", test.status_reason);
         exit(runtime_error);
-	}
+    }
 
     test.testfilename = name;
     test.testfiledir = path;
@@ -508,7 +511,7 @@ static int run_test(const char *path, const char *name, const char *dispname, in
     // initialize the test mode
     switch(outmode) {
         case outmode_test:
-		case outmode_failures_only:
+        case outmode_failures_only:
             // nothing to do
             break;
         case outmode_dump:
@@ -556,14 +559,14 @@ static int run_test(const char *path, const char *name, const char *dispname, in
     // create the testfile scanner.  it will either scan from
     // the testfile itself or from stdin if filename is "-".
     scanstate_init(&test.testfile, buf, sizeof(buf));
-	if(test.diffname) {
-		if(lseek(test.diff_fd, 0, SEEK_SET) < 0) {
-			fprintf(stderr, "Couldn't seek to start of %s: %s\n",
-					test.diffname, strerror(errno));
-			exit(runtime_error);
-		}
+    if(test.diffname) {
+        if(lseek(test.diff_fd, 0, SEEK_SET) < 0) {
+            fprintf(stderr, "Couldn't seek to start of %s: %s\n",
+                    test.diffname, strerror(errno));
+            exit(runtime_error);
+        }
         readfd_attach(&test.testfile, test.diff_fd);
-	} else {
+    } else {
         readfd_attach(&test.testfile, open_test_file(&test));
     }
     tfscan_attach(&test.testfile);
@@ -601,11 +604,11 @@ static int run_test(const char *path, const char *name, const char *dispname, in
             case outmode_test:
                 test_results(&test, dispname);
                 break;
-			case outmode_failures_only:
-				if(check_for_failure(&test, dispname)) {
-					print_test_path(&test);
-				}
-				break;
+            case outmode_failures_only:
+                if(check_for_failure(&test, dispname)) {
+                    print_test_path(&test);
+                }
+                break;
             case outmode_dump:
                 dump_results(&test);
                 break;
@@ -629,7 +632,7 @@ static int run_test(const char *path, const char *name, const char *dispname, in
 
     test_free(&test);
 
-	return keepontruckin;
+    return keepontruckin;
 }
 
 
@@ -644,28 +647,28 @@ static int run_test(const char *path, const char *name, const char *dispname, in
 
 static int process_absolute_file(const char *abspath, const char *origpath, int warn_suffix)
 {
-	char buf[PATH_MAX];
-	struct pathstack stack;
-	char *file, *dir;
+    char buf[PATH_MAX];
+    struct pathstack stack;
+    char *file, *dir;
 
-	pathstack_init(&stack, buf, sizeof(buf), abspath);
-	pathstack_normalize(&stack);
+    pathstack_init(&stack, buf, sizeof(buf), abspath);
+    pathstack_normalize(&stack);
 
-	dir = pathstack_absolute(&stack);
-	file = strrchr(dir, '/');
-	if(!file) {
-		fprintf(stderr, "Path wasn't absolute in process_absolute file!?  %s\n", abspath);
-		return 0;
-	}
+    dir = pathstack_absolute(&stack);
+    file = strrchr(dir, '/');
+    if(!file) {
+        fprintf(stderr, "Path wasn't absolute in process_absolute file!?  %s\n", abspath);
+        return 0;
+    }
 
-	*file++ = '\0';		// separate the path and the filename
-	// If the file was in the root directory, ensure we don't blow away
-	// the leading slash.
-	if(dir[0] == '\0') {
-		dir = "/";
-	}
+    *file++ = '\0';   // separate the path and the filename
+    // If the file was in the root directory, ensure we don't blow away
+    // the leading slash.
+    if(dir[0] == '\0') {
+        dir = "/";
+    }
 
-	return run_test(dir, file, origpath, warn_suffix);
+    return run_test(dir, file, origpath, warn_suffix);
 }
 
 
@@ -675,38 +678,38 @@ int process_dir(struct pathstack *ps, int print_absolute);
 
 static int process_absolute_dir(const char *abspath, const char *origpath, int print_absolute)
 {
-	char buf[PATH_MAX];
-	struct pathstack stack;
+    char buf[PATH_MAX];
+    struct pathstack stack;
 
-	pathstack_init(&stack, buf, sizeof(buf), abspath);
-	pathstack_normalize(&stack);
-	return process_dir(&stack, print_absolute);
+    pathstack_init(&stack, buf, sizeof(buf), abspath);
+    pathstack_normalize(&stack);
+    return process_dir(&stack, print_absolute);
 }
 
 
 static void print_processing_progress(struct pathstack *ps, int print_absolute)
 {
-	char buf[PATH_MAX];
+    char buf[PATH_MAX];
 
-	// Don't print anything unless we're actually testing.
+    // Don't print anything unless we're actually testing.
     if(outmode != outmode_test) {
-    	return;
+        return;
     }
 
     if(print_absolute == -1) {
-    	return;
+        return;
     }
 
-	if(print_absolute) {
-		printf("\nProcessing %s\n", pathstack_absolute(ps));
-	} else {
-		if(!abs2rel(pathstack_absolute(ps), orig_cwd, buf, PATH_MAX)) {
-			printf("Path couldn't be converted \"\%s\"\n", pathstack_absolute(ps));
-			exit(runtime_error);
-		}
-		// special-case "." so we don't print the silly-looking "./."
-		printf("\nProcessing %s%s\n", (buf[0] == '.' && buf[1] == '\0' ? "" : "./"), buf);
-	}
+    if(print_absolute) {
+        printf("\nProcessing %s\n", pathstack_absolute(ps));
+    } else {
+        if(!abs2rel(pathstack_absolute(ps), orig_cwd, buf, PATH_MAX)) {
+            printf("Path couldn't be converted \"\%s\"\n", pathstack_absolute(ps));
+            exit(runtime_error);
+        }
+        // special-case "." so we don't print the silly-looking "./."
+        printf("\nProcessing %s%s\n", (buf[0] == '.' && buf[1] == '\0' ? "" : "./"), buf);
+    }
 }
 
 
@@ -726,11 +729,11 @@ static void print_processing_progress(struct pathstack *ps, int print_absolute)
 
 static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
 {
-	struct stat st;
-	struct pathstate save;
+    struct stat st;
+    struct pathstate save;
     mode_t *modes;
     int i, n, ret;
-	int keepontruckin = 1;
+    int keepontruckin = 1;
 
     for(n=0; ents[n]; n++) { } // count n
 
@@ -743,30 +746,30 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
     // first collect the stat info for each entry and perform a quick sanity check
     for(i=0; i<n; i++) {
         if(!is_dash(ents[i])) {
-			const char *cp = ents[i];
+            const char *cp = ents[i];
 
-			if(strcmp(ents[i], ".tmtest-ignore") == 0) {
-				// skip this directory but continue processing
-				goto abort;
-			}
+            if(strcmp(ents[i], ".tmtest-ignore") == 0) {
+                // skip this directory but continue processing
+                goto abort;
+            }
 
-			if(ents[i][0] != '/') {
-				ret = pathstack_push(ps, ents[i], &save);
-				if(ret != 0) {
-					fprintf(stderr, "Paths are too long:\n   %s\n   %s\n", pathstack_absolute(ps), ents[i]);
-					exit(runtime_error);
-				}
-				cp = pathstack_absolute(ps);
-			}
-			// Need to be careful to test that file does exist.
-			// Bash opens it, not us, so the error message might
-			// be confusing.
-			if(!verify_readable(cp,&st,0)) {
+            if(ents[i][0] != '/') {
+                ret = pathstack_push(ps, ents[i], &save);
+                if(ret != 0) {
+                    fprintf(stderr, "Paths are too long:\n   %s\n   %s\n", pathstack_absolute(ps), ents[i]);
+                    exit(runtime_error);
+                }
+                cp = pathstack_absolute(ps);
+            }
+            // Need to be careful to test that file does exist.
+            // Bash opens it, not us, so the error message might
+            // be confusing.
+            if(!verify_readable(cp,&st,0)) {
                 exit(runtime_error);
             }
-			if(ents[i][0] != '/') {
-				pathstack_pop(ps, &save);
-			}
+            if(ents[i][0] != '/') {
+                pathstack_pop(ps, &save);
+            }
             modes[i] = st.st_mode;
         }
     }
@@ -777,23 +780,23 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
     // process all files in dir
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || S_ISREG(modes[i])) {
-			if(ents[i][0] == '/') {
-				// we know the path has already been fully normalized.
-				assert(print_absolute == -1);	// it should be impossible to get here if we've already recursed
-				keepontruckin = process_absolute_file(ents[i], ents[i], 1);
-			} else {
-				if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
-					// if there are potential non-normals in the path, we need to normalize it.
-					ret = pathstack_push(ps, ents[i], &save);
-					keepontruckin = process_absolute_file(pathstack_absolute(ps), ents[i], print_absolute == -1);
-					pathstack_pop(ps, &save);
-				} else {
-					keepontruckin = run_test(pathstack_absolute(ps), ents[i], ents[i], print_absolute == -1);
-				}
-			}
-			if(!keepontruckin) {
-				goto abort;
-			}
+            if(ents[i][0] == '/') {
+                // we know the path has already been fully normalized.
+                assert(print_absolute == -1); // it should be impossible to get here if we've already recursed
+                keepontruckin = process_absolute_file(ents[i], ents[i], 1);
+            } else {
+                if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
+                    // if there are potential non-normals in the path, we need to normalize it.
+                    ret = pathstack_push(ps, ents[i], &save);
+                    keepontruckin = process_absolute_file(pathstack_absolute(ps), ents[i], print_absolute == -1);
+                    pathstack_pop(ps, &save);
+                } else {
+                    keepontruckin = run_test(pathstack_absolute(ps), ents[i], ents[i], print_absolute == -1);
+                }
+            }
+            if(!keepontruckin) {
+                goto abort;
+            }
             modes[i] = 0;
         }
     }
@@ -802,32 +805,32 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
     for(i=0; i<n; i++) {
         if(is_dash(ents[i]) || modes[i] == 0) continue;
         if(S_ISDIR(modes[i])) {
-			if(ents[i][0] == '/') {
-				assert(print_absolute == -1);	// it should be impossible to get here if we've already recursed
-				keepontruckin = process_absolute_dir(ents[i], ents[i], 1);
-			} else {
-				if(print_absolute == -1) print_absolute = 0;
-				if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
-					// if there are potential non-normals in the path, we need to normalize it.
-					ret = pathstack_push(ps, ents[i], &save);
-					keepontruckin = process_absolute_dir(pathstack_absolute(ps), ents[i], print_absolute);
-					pathstack_pop(ps, &save);
-				} else {
-					// Otherwise, we just push the path and chug.
-					ret = pathstack_push(ps, ents[i], &save);
-					keepontruckin = process_dir(ps, print_absolute);
-					pathstack_pop(ps, &save);
-				}
-			}
-			if(!keepontruckin) {
-				goto abort;
-			}
+            if(ents[i][0] == '/') {
+                assert(print_absolute == -1); // it should be impossible to get here if we've already recursed
+                keepontruckin = process_absolute_dir(ents[i], ents[i], 1);
+            } else {
+                if(print_absolute == -1) print_absolute = 0;
+                if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
+                    // if there are potential non-normals in the path, we need to normalize it.
+                    ret = pathstack_push(ps, ents[i], &save);
+                    keepontruckin = process_absolute_dir(pathstack_absolute(ps), ents[i], print_absolute);
+                    pathstack_pop(ps, &save);
+                } else {
+                    // Otherwise, we just push the path and chug.
+                    ret = pathstack_push(ps, ents[i], &save);
+                    keepontruckin = process_dir(ps, print_absolute);
+                    pathstack_pop(ps, &save);
+                }
+            }
+            if(!keepontruckin) {
+                goto abort;
+            }
         }
     }
 
 abort:
     free(modes);
-	return keepontruckin;
+    return keepontruckin;
 }
 
 
@@ -840,14 +843,14 @@ abort:
 
 static int select_nodots(const struct dirent *d)
 {
-	// common case: if the filename doesn't begin with a dot, use it.
+    // common case: if the filename doesn't begin with a dot, use it.
     if(d->d_name[0] != '.') {
-    	return 1;
+        return 1;
     }
 
     // if it's named '.tmtest-ignore', use it
     if(strcmp(d->d_name, ".tmtest-ignore") == 0) {
-    	return 1;
+        return 1;
     }
 
     // otherwise, ignore it.
@@ -876,40 +879,40 @@ int process_dir(struct pathstack *ps, int print_absolute)
     }
     free(ents);
 
-	return keepontruckin;
+    return keepontruckin;
 }
 
 
 static void checkerr(int err, const char *op, const char *name)
 {
-	if(err < 0) {
-		fprintf(stderr, "There was an error %s %s: %s\n",
-				op, name, strerror(errno));
-		// not much else we can do other than complain...
-	}
+    if(err < 0) {
+        fprintf(stderr, "There was an error %s %s: %s\n",
+                op, name, strerror(errno));
+        // not much else we can do other than complain...
+    }
 }
 
 
 static void stop_tests()
 {
-	gettimeofday(&test_stop_time, NULL);
+    gettimeofday(&test_stop_time, NULL);
 
-	checkerr(close(g_outfd), "closing", g_outname);
-	checkerr(close(g_errfd), "closing", g_errname);
-	checkerr(close(g_statusfd), "closing", g_statusname);
+    checkerr(close(g_outfd), "closing", g_outname);
+    checkerr(close(g_errfd), "closing", g_errname);
+    checkerr(close(g_statusfd), "closing", g_statusname);
 
-	checkerr(unlink(g_outname), "deleting", g_outname);
-	checkerr(unlink(g_errname), "deleting", g_errname);
-	checkerr(unlink(g_statusname), "deleting", g_statusname);
+    checkerr(unlink(g_outname), "deleting", g_outname);
+    checkerr(unlink(g_errname), "deleting", g_errname);
+    checkerr(unlink(g_statusname), "deleting", g_statusname);
 
-	checkerr(rmdir(g_testdir), "removing directory", g_testdir);
+    checkerr(rmdir(g_testdir), "removing directory", g_testdir);
 }
 
 
 static void sig_int(int blah)
 {
-	stop_tests();
-	exit(interrupted_error);
+    stop_tests();
+    exit(interrupted_error);
 }
 
 
@@ -922,83 +925,83 @@ static void sig_int(int blah)
 
 static void start_tests()
 {
-	char *cp;
+    char *cp;
 
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sig_int);
 
-	strcpy(g_testdir, TESTDIR);
-	if(!mkdtemp(g_testdir)) {
-		fprintf(stderr, "Could not call mkdtemp() on %s: %s\n", g_testdir, strerror(errno));
-		exit(initialization_error);
-	}
+    strcpy(g_testdir, TESTDIR);
+    if(!mkdtemp(g_testdir)) {
+        fprintf(stderr, "Could not call mkdtemp() on %s: %s\n", g_testdir, strerror(errno));
+        exit(initialization_error);
+    }
 
-	// errors are handled by open_file.
+    // errors are handled by open_file.
     g_outfd = open_file(g_outname, OUTNAME, 0);
-	assert(strlen(g_outname) == sizeof(g_outname)-1);
+    assert(strlen(g_outname) == sizeof(g_outname)-1);
     g_errfd = open_file(g_errname, ERRNAME, 0);
-	assert(strlen(g_errname) == sizeof(g_errname)-1);
+    assert(strlen(g_errname) == sizeof(g_errname)-1);
     g_statusfd = open_file(g_statusname, STATUSNAME, O_APPEND);
-	assert(strlen(g_statusname) == sizeof(g_statusname)-1);
+    assert(strlen(g_statusname) == sizeof(g_statusname)-1);
 
-	// tmtest always runs with the CWD pointed to the temporary directory
-	cp = getenv("TMPDIR");
-	if(!cp) cp = "/tmp";
-	if(chdir(cp) != 0) {
-		fprintf(stderr, "Could not chdir 2 to %s: %s\n", cp, strerror(errno));
-		exit(initialization_error);
-	}
+    // tmtest always runs with the CWD pointed to the temporary directory
+    cp = getenv("TMPDIR");
+    if(!cp) cp = "/tmp";
+    if(chdir(cp) != 0) {
+        fprintf(stderr, "Could not chdir 2 to %s: %s\n", cp, strerror(errno));
+        exit(initialization_error);
+    }
 
-	gettimeofday(&test_start_time, NULL);
+    gettimeofday(&test_start_time, NULL);
 }
 
 
 static void set_config_file(const char *cfg)
 {
-	char buf[PATH_MAX];
+    char buf[PATH_MAX];
 
-	if(cfg[0] == '\0') {
-		fprintf(stderr, "You must specify a directory for --config.\n");
-		exit(argument_error);
-	}
+    if(cfg[0] == '\0') {
+        fprintf(stderr, "You must specify a directory for --config.\n");
+        exit(argument_error);
+    }
 
-	if(cfg[0] == '/') {
-		strncpy(buf, cfg, PATH_MAX);
-		buf[PATH_MAX-1] = '\0';
-	} else {
-		strncpy(buf, orig_cwd, PATH_MAX);
-		strncat(buf, "/", PATH_MAX);
-		strncat(buf, cfg, PATH_MAX);
-		buf[PATH_MAX-1] = '\0';
-	}
+    if(cfg[0] == '/') {
+        strncpy(buf, cfg, PATH_MAX);
+        buf[PATH_MAX-1] = '\0';
+    } else {
+        strncpy(buf, orig_cwd, PATH_MAX);
+        strncat(buf, "/", PATH_MAX);
+        strncat(buf, cfg, PATH_MAX);
+        buf[PATH_MAX-1] = '\0';
+    }
 
-	normalize_absolute_path(buf);
+    normalize_absolute_path(buf);
 
-	// need to ensure as well as we can that the file is readable because
-	// we don't open it ourselves.  Bash does.  And that can lead to some
-	// really cryptic error messages.
-	if(!verify_readable(buf,NULL,1)) {
-		exit(runtime_error);
-	}
+    // need to ensure as well as we can that the file is readable because
+    // we don't open it ourselves.  Bash does.  And that can lead to some
+    // really cryptic error messages.
+    if(!verify_readable(buf,NULL,1)) {
+        exit(runtime_error);
+    }
 
-	config_file = strdup(buf);
-	if(!config_file) {
-		perror("strdup");
-		exit(runtime_error);
-	}
+    config_file = strdup(buf);
+    if(!config_file) {
+        perror("strdup");
+        exit(runtime_error);
+    }
 }
 
 
 static void usage()
 {
-	printf(
-			"Usage: tmtest [OPTION]... [DLDIR]\n"
-			"  -o: output the test file with the new output.\n"
-			"  -d: output a diff between the expected and actual outputs.\n"
-			"  -V --version: print the version of this program.\n"
-			"  -h --help: prints this help text\n"
-			"Run tmtest with no arguments to run all tests in the current directory.\n"
-		  );
+    printf(
+            "Usage: tmtest [OPTION]... [DLDIR]\n"
+            "  -o: output the test file with the new output.\n"
+            "  -d: output a diff between the expected and actual outputs.\n"
+            "  -V --version: print the version of this program.\n"
+            "  -h --help: prints this help text\n"
+            "Run tmtest with no arguments to run all tests in the current directory.\n"
+          );
 }
 
 
@@ -1007,79 +1010,79 @@ static void process_args(int argc, char **argv)
     char buf[256], *cp;
     int optidx, i, c;
 
-	optidx = 0;
-	static struct option longopts[] = {
-		// name, has_arg (1=reqd,2=opt), flag, val
-		{"ignore-extension", 0, &allfiles, 1},
-		{"config", 1, 0, 'c'},
-		{"diff", 0, 0, 'd'},
-		{"dump-script", 0, &dumpscript, 1},
-		{"failures-only", 0, 0, 'f'},
-		{"help", 0, 0, 'h'},
-		{"output", 0, 0, 'o'},
-		{"quiet", 0, 0, 'q'},
-		{"version", 0, 0, 'V'},
-		{0, 0, 0, 0},
-	};
+    optidx = 0;
+    static struct option longopts[] = {
+        // name, has_arg (1=reqd,2=opt), flag, val
+        {"ignore-extension", 0, &allfiles, 1},
+        {"config", 1, 0, 'c'},
+        {"diff", 0, 0, 'd'},
+        {"dump-script", 0, &dumpscript, 1},
+        {"failures-only", 0, 0, 'f'},
+        {"help", 0, 0, 'h'},
+        {"output", 0, 0, 'o'},
+        {"quiet", 0, 0, 'q'},
+        {"version", 0, 0, 'V'},
+        {0, 0, 0, 0},
+    };
 
-	// dynamically create the option string from the long
-	// options.  Why oh why doesn't glibc do this for us???
-	cp = buf;
-	for(i=0; longopts[i].name; i++) {
-		if(!longopts[i].flag) {
-			*cp++ = longopts[i].val;
-			if(longopts[i].has_arg > 0) *cp++ = ':';
-			if(longopts[i].has_arg > 1) *cp++ = ':';
-		}
-	}
-	*cp++ = '\0';
+    // dynamically create the option string from the long
+    // options.  Why oh why doesn't glibc do this for us???
+    cp = buf;
+    for(i=0; longopts[i].name; i++) {
+        if(!longopts[i].flag) {
+            *cp++ = longopts[i].val;
+            if(longopts[i].has_arg > 0) *cp++ = ':';
+            if(longopts[i].has_arg > 1) *cp++ = ':';
+        }
+    }
+    *cp++ = '\0';
 
-	while(1) {
-		c = getopt_long(argc, argv, buf, longopts, &optidx);
-		if(c == -1) break;
+    while(1) {
+        c = getopt_long(argc, argv, buf, longopts, &optidx);
+        if(c == -1) break;
 
-		switch(c) {
-			case 'c':
-				set_config_file(optarg);
-				break;
+        switch(c) {
+            case 'c':
+                set_config_file(optarg);
+                break;
 
             case 'd':
                 outmode = outmode_diff;
                 break;
 
-			case 'f':
-				outmode = outmode_failures_only;
-				break;
+            case 'f':
+                outmode = outmode_failures_only;
+                break;
 
-			case 'h':
-				usage();
-				exit(0);
+            case 'h':
+                usage();
+                exit(0);
 
-			case 'o':
+            case 'o':
                 outmode = outmode_dump;
-				break;
+                break;
 
-			case 'q':
-				quiet++;
-				break;
+            case 'q':
+                quiet++;
+                break;
 
-			case 'V':
-				printf("tmtest version %s\n", stringify(VERSION));
-				exit(0);
+            case 'V':
+                printf("tmtest version %s\n", stringify(VERSION));
+                exit(0);
 
-			case '?':
-				// getopt_long already printed the error message
-				exit(argument_error);
+            case '?':
+                // getopt_long already printed the error message
+                exit(argument_error);
 
-			case 0:
-				// an option was automatically set
-				break;
+            case 0:
+                // an option was automatically set
+                break;
 
-			default:
-				fprintf(stderr, "getopt_long returned something weird: %d\n", c);
-				exit(internal_error);
-		}
-	}
+            default:
+                fprintf(stderr, "getopt_long returned something weird: %d\n", c);
+                exit(internal_error);
+        }
+    }
 }
 
 
@@ -1101,34 +1104,34 @@ static void normalize_path(struct pathstack *ps, char *original, char **outpath)
     char normalized[PATH_MAX];
 
     if(original[0] == '/') {
-		if(strlen(original) > PATH_MAX-1) {
-			fprintf(stderr, "Path is too long: %s\n", original);
-			exit(runtime_error);
-		}
-		strcpy(normalized, original);
-		normalize_absolute_path(normalized);
+        if(strlen(original) > PATH_MAX-1) {
+            fprintf(stderr, "Path is too long: %s\n", original);
+            exit(runtime_error);
+        }
+        strcpy(normalized, original);
+        normalize_absolute_path(normalized);
     } else {
         strncpy(buf, pathstack_absolute(ps), PATH_MAX);
-		strncat(buf, "/", PATH_MAX);
-		strncat(buf, original, PATH_MAX);
-		buf[PATH_MAX-1] = '\0';
-		normalize_absolute_path(buf);
+        strncat(buf, "/", PATH_MAX);
+        strncat(buf, original, PATH_MAX);
+        buf[PATH_MAX-1] = '\0';
+        normalize_absolute_path(buf);
 
-		// convert it back to a relative path so it prints the
-		// way the user intends.  We need to beware later on
-		// to trim .. from the leading path.
-		if(!abs2rel(buf, pathstack_absolute(ps), normalized, PATH_MAX)) {
+        // convert it back to a relative path so it prints the
+        // way the user intends.  We need to beware later on
+        // to trim .. from the leading path.
+        if(!abs2rel(buf, pathstack_absolute(ps), normalized, PATH_MAX)) {
             fprintf(stderr, "Could not reabsize %s: %s\n",
-				original, strerror(errno));
-			exit(runtime_error);
-		}
+                    original, strerror(errno));
+            exit(runtime_error);
+        }
     }
 
-	if(strcmp(original,normalized) == 0) {
-		*outpath = original;
-	} else {
-		*outpath = strdup(normalized);
-	}
+    if(strcmp(original,normalized) == 0) {
+        *outpath = original;
+    } else {
+        *outpath = strdup(normalized);
+    }
 }
 
 
@@ -1148,21 +1151,21 @@ static void normalize_free(const char *original, char *outpath)
 
 static void process_argv(struct pathstack *ps, char **argv)
 {
-	char **ents;
-	int i, n, oldlen;
+    char **ents;
+    int i, n, oldlen;
 
-    for(n=0; argv[n]; n++) { }	// count n
+    for(n=0; argv[n]; n++) { }  // count n
 
-	ents = malloc((n+1)*sizeof(*ents));
-	ents[n] = NULL;
+    ents = malloc((n+1)*sizeof(*ents));
+    ents[n] = NULL;
 
-	for(i=0; i<n; i++) { normalize_path(ps, argv[i], &ents[i]); }
-	oldlen = ps->curlen;
-	process_ents(ps, ents, -1);
-	assert(oldlen == ps->curlen);	// process_ents needs to not modify the pathstack.
-	for(i=0; i<n; i++) { normalize_free(argv[i], ents[i]); }
+    for(i=0; i<n; i++) { normalize_path(ps, argv[i], &ents[i]); }
+    oldlen = ps->curlen;
+    process_ents(ps, ents, -1);
+    assert(oldlen == ps->curlen); // process_ents needs to not modify the pathstack.
+    for(i=0; i<n; i++) { normalize_free(argv[i], ents[i]); }
 
-	free(ents);
+    free(ents);
 }
 
 
@@ -1172,30 +1175,30 @@ static void process_argv(struct pathstack *ps, char **argv)
 
 static const char* dup_cwd()
 {
-	char buf[PATH_MAX];
+    char buf[PATH_MAX];
 
-	if(!getcwd(buf, PATH_MAX)) {
-		perror("Couldn't get current working directory");
-		exit(runtime_error);
-	}
+    if(!getcwd(buf, PATH_MAX)) {
+        perror("Couldn't get current working directory");
+        exit(runtime_error);
+    }
 
-	return strdup(buf);
+    return strdup(buf);
 }
 
 
 int main(int argc, char **argv)
 {
-	char buf[PATH_MAX];
-	struct pathstack pathstack;
+    char buf[PATH_MAX];
+    struct pathstack pathstack;
 
-	orig_cwd = dup_cwd();
-	process_args(argc, argv);
+    orig_cwd = dup_cwd();
+    process_args(argc, argv);
 
-	pathstack_init(&pathstack, buf, sizeof(buf), orig_cwd);
+    pathstack_init(&pathstack, buf, sizeof(buf), orig_cwd);
 
     start_tests();
     if(optind < argc) {
-		process_argv(&pathstack, argv+optind);
+        process_argv(&pathstack, argv+optind);
     } else {
         process_dir(&pathstack, 0);
     }
@@ -1205,7 +1208,7 @@ int main(int argc, char **argv)
         print_test_summary(&test_start_time, &test_stop_time);
     }
 
-	free((char*)orig_cwd);
-	return test_get_exit_value();
+    free((char*)orig_cwd);
+    return test_get_exit_value();
 }
 
