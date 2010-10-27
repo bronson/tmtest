@@ -9,16 +9,11 @@
 # will be lost!
 
 
-# TODO: is there any way to get rid of MKFILE_EMPTY?  Can't MKFILE notice
-#       if read would block and, if so, just create an empty file.?
-
-
 # tmlib functions:
 #
 # ASSERT:   Stop a test if a condition fails
 # TRAP:     Execute a command when an exception happens
 # ATEXIT:   Ensure a command runs even if the test fails (usually to clean up).
-# MKFILE_EMPTY: create an empty temporary file.
 # MKFILE:   Creates a temporary file with the given contents.
 # MKDIR:    create a temporary directory
 # REPLACE:  replaces literal text with other literal text (no regexes).
@@ -144,21 +139,6 @@ MKFILE ()
 	eval "$1='$name'"
 	cat > "$name"
 	ATEXIT "rm '$name'"
-}
-
-
-#
-# MKFILE_EMPTY
-# TODO: this call is deprecated and will go away.
-#
-# I can't figure out how to get bash to bail instead of blocking.
-# Therefore, if you just want to create an empty file, you either
-# call MKFILE piped from /dev/null or just call MKFILE_EMPTY.
-#
-
-MKFILE_EMPTY ()
-{
-	MKFILE "$@" < /dev/null
 }
 
 
