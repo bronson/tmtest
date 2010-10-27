@@ -43,7 +43,7 @@ void pathstack_init(struct pathstack *ps, char *buf,
         if(ps->curlen > ps->maxlen) {
             ps->curlen = ps->maxlen;
         }
-        strncpy(ps->buf, str, ps->curlen);
+        memcpy(ps->buf, str, ps->curlen);
     } else {
         ps->curlen = 1;
         ps->buf[0] = '/';
