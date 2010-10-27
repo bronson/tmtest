@@ -7,21 +7,23 @@
 # This test ensures that won't happen anymore.
 
 
-MKDIR dd
+mkdir dd
 
-MKFILE tt1 "$dd/tmtest.conf" <<'EOL'
+cat > dd/tmtest.conf <<'EOL'
 	config="yes!"
 EOL
 
-MKFILE tt2 "$dd/tt.test" <<'EOL'
+cat > dd/tt.test <<'EOL'
 	echo "$config"
 EOL
 
-$tmtest --dump-script "$dd/" | REPLACE "$dd" /tmp/DIR | FIX_SCRIPT
+$tmtest --dump-script "dd/" | FIX_SCRIPT
+
+rm -rf dd
 
 STDOUT:
 	
-	Processing /tmp/DIR
+	Processing ./dd
 	echo START >&FD
 	
 	ABORT ()  { echo "ABORTED: $*" >&FD; exit 0; }
@@ -29,17 +31,17 @@ STDOUT:
 	DISABLED  () { echo "DISABLED: $*" >&FD; exit 0; }
 	DISABLE   () { DISABLED $*; }
 	
-	TESTDIR='/tmp/DIR'
-	TESTFILE='/tmp/DIR/tt.test'
+	TESTDIR='/tmp/DIR/dd'
+	TESTFILE='/tmp/DIR/dd/tt.test'
 	
 	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
 	MYDIR='...test'
 	MYFILE='...tmtest.sub.conf'
 	. '...tmtest.sub.conf'
-	echo 'CONFIG: /tmp/DIR/tmtest.conf' >&FD
-	MYDIR='/tmp/DIR'
-	MYFILE='/tmp/DIR/tmtest.conf'
-	. '/tmp/DIR/tmtest.conf'
+	echo 'CONFIG: /tmp/DIR/dd/tmtest.conf' >&FD
+	MYDIR='/tmp/DIR/dd'
+	MYFILE='/tmp/DIR/dd/tmtest.conf'
+	. '/tmp/DIR/dd/tmtest.conf'
 	
 	
 	echo PREPARE >&FD
@@ -49,10 +51,10 @@ STDOUT:
 	STDERR () { exit 0; }
 	STDERR: () { exit 0; }
 	
-	echo 'RUNNING: /tmp/DIR/tt.test' >&FD
-	MYDIR='/tmp/DIR'
-	MYFILE='/tmp/DIR/tt.test'
+	echo 'RUNNING: /tmp/DIR/dd/tt.test' >&FD
+	MYDIR='/tmp/DIR/dd'
+	MYFILE='/tmp/DIR/dd/tt.test'
 	exec >&FD FD>&FD FD>&- FD>&-
-	. '/tmp/DIR/tt.test'
+	. '/tmp/DIR/dd/tt.test'
 	
 	echo DONE >&FD

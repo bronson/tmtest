@@ -1,40 +1,34 @@
 # Ensures we prepare tests properly even when the --config
 # file is entirely outside the testdir.
 
-# Note that this test assumes that MKDIR will create its directory
-# in /tmp.  If this is not the case, and the test is failing, just
-# add a replace directive to fix it and send me a patch.
-
 # tmtest 0.94 and earlier had a bug where if you supplied a
 # trailing slash after a directory name on the command line,
 # it would include config files from that directory twice.
 # This test ensures that won't happen anymore.
 
 
-MKDIR do
+mkdir -p do/di
 
-MKDIR di "$do/di"
-
-MKFILE cc1 "$do/tmtest.conf" <<'EOL'
+cat > do/tmtest.conf <<'EOL'
 	config="yaksula"
 EOL
 
-MKFILE cc2 "$di/tmtest.conf" <<'EOL'
+cat > do/di/tmtest.conf <<'EOL'
 	config="excellent"
 EOL
 
-MKFILE tt2 "$di/tt.test" <<'EOL'
+cat > do/di/tt.test <<'EOL'
 	echo "$config"
 EOL
 
+$tmtest --dump-script do/di | FIX_SCRIPT
 
-cd `dirname "$do"`
-$tmtest --dump-script "$(basename $do)/di" | REPLACE "$(basename $do)" DIR | FIX_SCRIPT
+rm -rf do
 
 
 STDOUT:
 	
-	Processing ./DIR/di
+	Processing ./do/di
 	echo START >&FD
 	
 	ABORT ()  { echo "ABORTED: $*" >&FD; exit 0; }
@@ -42,21 +36,21 @@ STDOUT:
 	DISABLED  () { echo "DISABLED: $*" >&FD; exit 0; }
 	DISABLE   () { DISABLED $*; }
 	
-	TESTDIR='/tmp/DIR/di'
-	TESTFILE='/tmp/DIR/di/tt.test'
+	TESTDIR='/tmp/DIR/do/di'
+	TESTFILE='/tmp/DIR/do/di/tt.test'
 	
 	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
 	MYDIR='...test'
 	MYFILE='...tmtest.sub.conf'
 	. '...tmtest.sub.conf'
-	echo 'CONFIG: /tmp/DIR/tmtest.conf' >&FD
-	MYDIR='/tmp/DIR'
-	MYFILE='/tmp/DIR/tmtest.conf'
-	. '/tmp/DIR/tmtest.conf'
-	echo 'CONFIG: /tmp/DIR/di/tmtest.conf' >&FD
-	MYDIR='/tmp/DIR/di'
-	MYFILE='/tmp/DIR/di/tmtest.conf'
-	. '/tmp/DIR/di/tmtest.conf'
+	echo 'CONFIG: /tmp/DIR/do/tmtest.conf' >&FD
+	MYDIR='/tmp/DIR/do'
+	MYFILE='/tmp/DIR/do/tmtest.conf'
+	. '/tmp/DIR/do/tmtest.conf'
+	echo 'CONFIG: /tmp/DIR/do/di/tmtest.conf' >&FD
+	MYDIR='/tmp/DIR/do/di'
+	MYFILE='/tmp/DIR/do/di/tmtest.conf'
+	. '/tmp/DIR/do/di/tmtest.conf'
 	
 	
 	echo PREPARE >&FD
@@ -66,11 +60,11 @@ STDOUT:
 	STDERR () { exit 0; }
 	STDERR: () { exit 0; }
 	
-	echo 'RUNNING: /tmp/DIR/di/tt.test' >&FD
-	MYDIR='/tmp/DIR/di'
-	MYFILE='/tmp/DIR/di/tt.test'
+	echo 'RUNNING: /tmp/DIR/do/di/tt.test' >&FD
+	MYDIR='/tmp/DIR/do/di'
+	MYFILE='/tmp/DIR/do/di/tt.test'
 	exec >&FD FD>&FD FD>&- FD>&-
-	. '/tmp/DIR/di/tt.test'
+	. '/tmp/DIR/do/di/tt.test'
 	
 	echo DONE >&FD
 STDERR:
