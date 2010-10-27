@@ -14,7 +14,6 @@
 # TRAP:     Execute a command when an exception happens
 # ATEXIT:   Ensure a command runs even if the test fails (usually to clean up).
 # MKFILE:   Creates a temporary file with the given contents.
-# MKDIR:    create a temporary directory
 # REPLACE:  replaces literal text with other literal text (no regexes).
 
 
@@ -114,55 +113,6 @@ MKFILE ()
 	eval "$1='$name'"
 	cat > "$name"
 	ATEXIT "rm '$name'"
-}
-
-
-#
-# MKDIR
-#
-# Like MKFILE, but creates a directory instead of a file.  If you
-# supply a directory name, and that directory already exists, then
-# MKDIR ensures it is deleted when the script ends.
-#
-# If the directory still contains files when the test ends, it
-# will not be deleted and the test will abort with an error.
-#
-# argument 1: varname, the name of the variable that will contain the new directory name.
-# argument 2: dirname, (optional) the name/fullpath to give the directory.
-#
-#	NOTE: unless you really know what you are doing, specifying argument2
-#   is a major security risk.  Always use the single argument version.
-#   The one exception is if you're creating a directory inside another
-#   directory that was created with the single arg.
-#
-# If a command produces the directory name in its output (bad, because the
-# name always changes), you can fix it with the <REPLACE> function.
-#
-# Examples:
-#
-# create a new directory with a random name in $TMPDIR or /tmp:
-#
-#     MKDIR dn
-#     cd "$dn"
-#
-# Remove the directory name from a command's output:
-# 	svn co svn://repo "$dn/local" | REPLACE "$dn" TMPDIR
-#
-# TODO: should emulate mkdir -p too.  Right now tmtest forces you to
-# call MKDIR for each dir you want to create.  Too wordy.
-#
-
-MKDIR ()
-{
-	local name=${2}
-	if [ -z "$name" ]; then
-		name=`mktemp -d -t tmtest.XXXXXX || ABORT MKDIR: could not mktemp`
-	else
-		[ -d $name ] || mkdir --mode 0700 $name || ABORT "MKDIR: could not 'mkdir \"$name\"'"
-	fi
-
-	eval "$1='$name'"
-	ATEXIT "rmdir '$name' || ABORT 'MKDIR: '$name' was not empty, can't delete it!"
 }
 
 

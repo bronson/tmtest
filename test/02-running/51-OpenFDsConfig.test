@@ -8,9 +8,7 @@ DISABLED like previous test
 # /tmp/DD/tt.test       -- prints $openfds as its test result
 
 
-MKDIR dd
-
-MKFILE tt1 "$dd/tmtest.conf" <<'EOL'
+cat > tmtest.conf <<'EOL'
 	openfds=$(
 		for i in `seq 3 255`; do
 			exec 2>/dev/null
@@ -20,7 +18,7 @@ MKFILE tt1 "$dd/tmtest.conf" <<'EOL'
 EOL
 
 
-MKFILE tt2 "$dd/tt.test" <<'EOL'
+cat > tt.test <<'EOL'
 	echo "$openfds"
 EOL
 

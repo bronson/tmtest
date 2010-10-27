@@ -9,9 +9,8 @@
 # ./mid/sub/sub.test
 
 
-MKDIR dir
-mkdir -p "$dir/mid/sub"
-cd "$dir/mid"
+mkdir -p mid/sub
+cd mid
 
 cat > ../sup.test <<-EOL
 	echo superdir

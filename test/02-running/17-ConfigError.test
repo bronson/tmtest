@@ -2,12 +2,6 @@
 # config files which mark us pedantic.  This should preven the
 # tests from being run if there are config errors.
 
-# TODO: this pipes stderr to stdout so it can be rewritten.
-# That's bad news and needs to be fixed.
-
-
-MKDIR dir
-cd "$dir"
 
 cat > tmtest.conf <<-EOs
 	# make the config file pedantic.
@@ -27,17 +21,21 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-$tmtest -q 2>&1 | REPLACE "$dir" /tmp/DIR
+# need to fix paths in both stdout and stderr
+$tmtest -q \
+  2> >(sed "s/${PWD//\//\\/}/\/tmp\/DIR/g" >&2) \
+  | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+
 rm tmtest.conf t1.test t2.test
 
 
+STDERR:
+/tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
+/tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
 STDOUT:
-/tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
-/tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
 
 Processing .
 ERR  t1.test                   error in /tmp/DIR/tmtest.conf
 ERR  t2.test                   error in /tmp/DIR/tmtest.conf
 
 2 tests run, 0 successes, 2 failures.
-STDERR:

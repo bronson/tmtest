@@ -11,9 +11,6 @@
 # tt/two/one/t.test
 
 
-MKDIR tt
-cd "$tt" || ABORT "Could not cd to $tt"
-
 cat > t.test <<-EOL
 	echo "right output1"
 	STDOUT:

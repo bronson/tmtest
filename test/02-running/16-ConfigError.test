@@ -5,9 +5,6 @@
 # assistance from tmtest...  After 0.98's streaming changes though.
 # 	tmtest -q 2> >( REPLACE "$dir" /tmp/DIR >&2 )
 
-MKDIR dir
-cd "$dir"
-
 cat > tmtest.conf <<-EOs
 	# this will generate a command-not-found error
 	dotheyspeakbocceonwhat
@@ -25,7 +22,7 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-$tmtest -q 2>&1 | REPLACE "$dir" /tmp/DIR
+$tmtest -q 2>&1 | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 rm tmtest.conf t1.test t2.test
 
 

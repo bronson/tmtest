@@ -1,9 +1,6 @@
 # Ensures that a directory disabled by a .tmtest-ignore file is skipped
 # but subsequent tests are still run.
 
-MKDIR dir
-cd "$dir"
-
 mkdir disabled
 touch disabled/.tmtest-ignore
 cat > disabled/t1.test <<-EOs
@@ -12,8 +9,8 @@ cat > disabled/t1.test <<-EOs
 	hi
 EOs
 
-$tmtest -q disabled | REPLACE "$dir" /tmp/DIR
-rm -rf "$dir"/disabled
+$tmtest -q disabled | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+rm -rf disabled
 
 
 STDOUT:

@@ -1,9 +1,6 @@
 # Ensures that testfiles with quotes in their names are skipped
 # (might as well close this potential security hole right now)
 
-MKDIR dir
-cd "$dir"
-
 cat > "vl'hurg.test" <<-EOs
 	echo hi
 	STDOUT:
@@ -16,7 +13,7 @@ cat > '12".test' <<-EOs
 	hi
 EOs
 
-$tmtest -q | REPLACE "$dir" /tmp/DIR
+$tmtest -q | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 rm "vl'hurg.test" '12".test'
 
 

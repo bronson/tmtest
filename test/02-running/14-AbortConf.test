@@ -3,9 +3,6 @@
 # tests altogether.  We have two tests here, but when the first
 # one aborts, the second one is never run.
 
-MKDIR dir
-cd "$dir"
-
 cat > tmtest.conf <<-EOs
 	ABORT bail from config
 EOs
@@ -22,7 +19,7 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-$tmtest -q | REPLACE "$dir" /tmp/DIR
+$tmtest -q | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 rm tmtest.conf t1.test t2.test
 
 

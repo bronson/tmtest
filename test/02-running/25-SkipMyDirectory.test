@@ -1,8 +1,5 @@
 # Ensures that a skip file in the starting directory results in no tests run.
 
-MKDIR dir
-cd "$dir"
-
 cat > t1.test <<-EOs
 	echo hi
 	STDOUT:
@@ -17,7 +14,7 @@ EOs
 
 touch .tmtest-ignore
 
-$tmtest -q | REPLACE "$dir" /tmp/DIR
+$tmtest -q | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 rm t1.test t2.test .tmtest-ignore
 
 

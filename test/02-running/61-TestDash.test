@@ -3,18 +3,18 @@
 
 # Verifies what happens when a test is aborted.
 
-MKDIR dir
-
-MKFILE file "$dir/-" <<-EOL
+cat > blah <<-EOL
 	echo Howdy pardner.
 	STDOUT:
 	Howdy pardner.
 EOL
 
-$tmtest -q --ignore-extension "$file" | REPLACE "$dir" /tmp/DIR
+$tmtest -q --ignore-extension blah | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+
+rm blah
 
 
 STDOUT:
-ok   /tmp/DIR/- 
+ok   blah 
 
 1 test run, 1 success, 0 failures.

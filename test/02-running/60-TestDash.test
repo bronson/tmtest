@@ -1,20 +1,23 @@
 # author: Scott Bronson
 # date:   14 Nov 2004
 
-# Verifies what happens when a test is aborted.
+# Verifies that we can run a test whose name begins with a dash
+# (not sure why anyone would want to do that...)
 
-MKDIR dir
+mkdir dir
 
-MKFILE file "$dir/-.test" <<-EOL
+cat > dir/-.test <<-EOL
 	echo Howdy pardner.
 	STDOUT:
 	Howdy pardner.
 EOL
 
-$tmtest -q "$file" | REPLACE "$dir" /tmp/DIR
+$tmtest -q dir/-.test | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+
+rm -rf dir
 
 
 STDOUT:
-ok   /tmp/DIR/-.test 
+ok   dir/-.test 
 
 1 test run, 1 success, 0 failures.

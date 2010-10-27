@@ -85,11 +85,10 @@ the output produced by the testfile itself.
 =item ABORT
 
 Causes the test to abort immediately.  You can optionally specify
-a message.  See the example in L</MKDIR>.
+a message.
 
     ABORT too bad this test won't live
 
-=item DISABLE
 =item DISABLED
 
 Marks the test disabled.  If put in a config file, marks all tests in
@@ -203,10 +202,23 @@ How do I retrieve my test program's exit result?
 
 =over 4
 
-Answer: use the shell variable $?:
+Answer: just print the shell variable $? to stdout.
 
     myprogram
-	echo RESULT: $?
+    echo RESULT: $?
+
+=back
+
+My program prints full paths, and since it's run in a tmpdir, they're
+always changing!
+
+=over 4
+
+Just pipe its output through a program that cleans up the volatile
+data.  For instance, this would replace every occurrence of the
+current directory with "/tmp/DIR":
+
+     pwd | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 
 =back
 

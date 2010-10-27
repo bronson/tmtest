@@ -1,9 +1,6 @@
 # Ensures that we don't run hidden tests.
 
 
-MKDIR dir
-cd "$dir"
-
 cat > .hidden.test <<-EOL
 	echo hidden
 	STDOUT:
