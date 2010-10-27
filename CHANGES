@@ -1,4 +1,5 @@
-- Removed INDENT from tmlib.sh
+- We now run tests in their own private empty directory.
+- Removed tmlib.sh and put how to solve its few remaining tasks in the faq.
 - Removed unit tests. They were heavy and didn't offer much addl coverage.
 
 0.95 was never released

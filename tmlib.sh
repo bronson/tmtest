@@ -13,7 +13,6 @@
 #
 # TRAP:     Execute a command when an exception happens
 # ATEXIT:   Ensure a command runs even if the test fails (usually to clean up).
-# REPLACE:  replaces literal text with other literal text (no regexes).
 
 
 #
@@ -67,31 +66,4 @@ TRAP ()
 ATEXIT ()
 {
 	TRAP "$*" EXIT
-}
-
-
-#
-# REPLACE
-#
-# Replaces all occurrences of the first argument with the second argument.
-# Takes any number of arguments:
-#   echo "'a'" | REPLACE "'a'" "/\\a/\\"
-# replaces all occurrences of 'a' with /\a/\
-#   REPLACE abc ABC def DEF ghi GHI
-# converts the first nine characters of the alphabet to upper case
-# All non-control characters are safe: quotes, slashes, etc.
-# You can of course use sed if you want to replace with regexes.
-# Replace does not work if a newline is embedded in either argument.
-#
-# Three layers of escaping!  (bash, perlvar, perlre)  This is insane.
-# I wish sed or awk would work with raw strings instead of regexes.
-# Why isn't a replace utility a part of Gnu coreutils?
-#
-
-REPLACE()
-{
-    # unfortunately bash can't handle this substitution itself because it
-    # must work on ' and \ simultaneously. Send it to perl for processing.
-
-     ( while [ "$1" != "" ]; do echo "$1"; shift; done; echo; cat) | perl -e "my %ops; while(<>) { chomp; last if \$_ eq ''; \$_ = quotemeta(\$_); \$ops{\$_} = <>; chomp(\$ops{\$_}); warn 'odd number of arguments to REPLACE', last if \$ops{\$_} eq ''; } while(<>) { for my \$k (keys %ops) { s/\$k/\$ops{\$k}/g } print or die \"REPLACE: Could not print: \$!\\\\n\"; }"
 }

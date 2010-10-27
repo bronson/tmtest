@@ -1,16 +1,21 @@
 # Verifies that we correctly report unknown short switches
 
-# TODO: we pipe stderr to stdout for rewriting.  that needs to be
-# changed during 0.98.  Also, the exit code is lost -- tmtest returns 1.
+# The first sed fixup is because tmtest prints its $0 which might
+# be a full path, and the second is because glibc changed getopt's
+# error message quoting somewhere around 2007-2008.
 
-# The REPLACE "'z'" z is because glibc changed getopt's error message to
-# quote the option somewhere around 2007-2008.  Accept both forms.
-
-$tmtest -z - <<-EOL 2>&1 | REPLACE "$tmtest_file" tmtest | REPLACE "'z'" z
+($tmtest -z - <<-EOL || echo "exit code: $?") 2> >(sed -e 's/^.*tmtest:/tmtest:/' -e s/[\`\'\"]//g >&2) 
 	echo Howdy
 	STDOUT:
 	Howdy
 EOL
 
-STDOUT:
+# dammit, we're not getting all the data off stderr before the
+# test finishes.  Until we go to a 100% streams based setup
+# hopefully this will keep this test from failing too much.
+sleep 0.2
+
+STDERR:
 tmtest: invalid option -- z
+STDOUT:
+exit code: 100

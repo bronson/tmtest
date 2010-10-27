@@ -1,10 +1,6 @@
 # Ensures that even if config files generate errors, tests will
 # still try to run.  Config file errors go to stderr.
 
-# TODO: figure out how to rewrite stderr.  That may require some
-# assistance from tmtest...  After 0.98's streaming changes though.
-# 	tmtest -q 2> >( REPLACE "$dir" /tmp/DIR >&2 )
-
 cat > tmtest.conf <<-EOs
 	# this will generate a command-not-found error
 	dotheyspeakbocceonwhat
@@ -22,17 +18,20 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-$tmtest -q 2>&1 | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+# need to fix filenames on both stdout and stderr
+$tmtest -q 2> >(sed "s/${PWD//\//\\/}/\/tmp\/DIR/g" >&2) | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+
 rm tmtest.conf t1.test t2.test
+sleep 0.2   # arg!!
 
 
+STDERR:
+/tmp/DIR/tmtest.conf: line 2: dotheyspeakbocceonwhat: command not found
+/tmp/DIR/tmtest.conf: line 2: dotheyspeakbocceonwhat: command not found
 STDOUT:
-/tmp/DIR/tmtest.conf: line 2: dotheyspeakbocceonwhat: command not found
-/tmp/DIR/tmtest.conf: line 2: dotheyspeakbocceonwhat: command not found
 
 Processing .
 ERR  t1.test                   error in /tmp/DIR/tmtest.conf
 ERR  t2.test                   error in /tmp/DIR/tmtest.conf
 
 2 tests run, 0 successes, 2 failures.
-STDERR:
