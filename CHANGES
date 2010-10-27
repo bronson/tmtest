@@ -1,8 +1,9 @@
+- We don't install a config file anymore on make install, just the binary.
 - We now run tests in their own private empty directory.
 - Removed tmlib.sh and put how to solve its few remaining tasks in the faq.
 - Removed unit tests. They were heavy and didn't offer much addl coverage.
 
-0.95 was never released
+0.95 was never released, it would have been 2008 or 2009
 - Add a path element to the diff files so so need to specify -p0 when patching.
 - Added .tmtest-ignore (allows whole directories to be skipped).
 - Fixed a bug where there was a chance that the test would not complete

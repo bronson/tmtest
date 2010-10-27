@@ -1,9 +1,5 @@
 0.960:
 - strncpy and strncat are very wrong.  Use a different string lib?
-- Try to get rid of tmlib completely.
-  - You should be able to run most testfiles in any posix shell
-    - There should be no need to install tmtest to run tests
-    - Of course, you'll need it if you want to automatically check the results
 - Just print full path of test being run.  Truncate it if wider than termwidth.
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
 - Run in print failures only mode by default, -v to get every result.

@@ -13,16 +13,11 @@ prefix=$(HOME)
 
 # figure out where to install the software:
 bindir=$(prefix)/bin
-lib_src=tmlib.sh
 
 ifeq ($(prefix), $(HOME))
 	libdir=$(HOME)
-	stdlib=$(HOME)/.tmlib.sh
-	conf_dst=$(HOME)/.tmtestrc
 else
 	libdir=$(prefix)/share/tmtest
-	stdlib=$(libdir)/tmlib.sh
-	conf_dst=/etc/tmtest.conf
 endif
 
 
@@ -67,23 +62,10 @@ install: tmtest
 ifneq ($(libdir),$(HOME))
 	install -d -m755 $(libdir)
 endif
-	install tmlib.sh $(stdlib)
-ifeq ($(wildcard $(conf_dst)),$(conf_dst))
-	# configuration already exists, don't overwrite it.
-	@echo "---> Not installing new config file over '$(conf_dst).'"
-	@echo "---> Please merge changes in 'sample.conf' by hand."
-	@echo "--->   (run 'diff -u $(conf_dst) sample.conf' to show differences)"
-else
-	# global configuration file doesn't exist so install it
-	install sample.conf $(conf_dst)
-	@perl -pi -e 's/USER/$(shell whoami)/g' $(conf_dst)
-	@perl -pi -e 's:STDLIB:$(stdlib):g' $(conf_dst)
-endif
 
 # NOTE: This will remove the configuration file too!
 uninstall: tmtest
 	rm $(bindir)/tmtest
-	rm $(stdlib)
 ifeq ($(prefix), $(HOME))
 	rm $(HOME)/.tmtestrc
 else
@@ -106,3 +88,4 @@ doc:
 
 %.png: %.dot
 	dot -Tpng $< -o $@
+
