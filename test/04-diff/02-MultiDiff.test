@@ -6,19 +6,21 @@
 
 
 
-MKFILE t1 <<-EOF
+cat > t1 <<-EOF
 	echo "test 1 right output"
 	STDOUT:
 	test 1 wrong output
 EOF
 
-MKFILE t2 <<-EOF
+cat > t2 <<-EOF
 	echo "test 2 right output"
 	STDOUT:
 	test 2 wrong output
 EOF
 
-$tmtest --ignore-extension -d "$t1" "$t2" | FIX_DIFF
+$tmtest --ignore-extension -d t1 t2 | FIX_DIFF
+
+rm t1 t2
 
 
 STDOUT:

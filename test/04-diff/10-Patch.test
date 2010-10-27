@@ -5,20 +5,20 @@
 # Updated for tmtest 2.0 on 29 Jan 2005
 
 
-MKFILE tt <<-EOL
+cat > tt <<-EOL
 	echo "right output"
 	STDOUT:
 	wrong output
 EOL
 
 
-# This is a little exotic...  Patch needs the CWD to be the directory
-# containing the file to patch.  "dirname $(tt.test)" gives that dir.
-
-$tmtest --ignore-extension -d "$tt" | (cd `dirname "$tt"` && patch | FIX_PATCH)
+$tmtest --ignore-extension -d tt | patch | FIX_PATCH
 echo "And the patched file:"
 echo
-sed "s/^/\t/" < "$tt"
+sed "s/^/\t/" < tt
+
+rm tt
+
 
 STDOUT:
 patching FILE

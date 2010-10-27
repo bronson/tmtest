@@ -13,7 +13,6 @@
 #
 # TRAP:     Execute a command when an exception happens
 # ATEXIT:   Ensure a command runs even if the test fails (usually to clean up).
-# MKFILE:   Creates a temporary file with the given contents.
 # REPLACE:  replaces literal text with other literal text (no regexes).
 
 
@@ -68,51 +67,6 @@ TRAP ()
 ATEXIT ()
 {
 	TRAP "$*" EXIT
-}
-
-
-#
-# MKFILE
-#
-# Creates a file and assigns the new filename to the given variable.
-# Fills in the new file with the supplied data.  Ensures that it is
-# deleted when the test ends.
-#
-# argument 1: varname, the name of the variable that will contain the new filename.
-# argument 2: filename, (optional) the name/fullpath to give the file.
-#
-# You need to be aware that if you supply an easily predictable filename
-# (such as a PID), you are exposing your users to symlink attacks.  You
-# should never supply your own filename unless you know EXACTLY what you
-# are doing.
-#
-# If a command produces the filename in its output (bad, because the
-# filename always changes), you can fix it with the <REPLACE> function.
-#
-# Examples:
-#
-# create a new file with a random name in $TMPDIR or /tmp:
-#
-#     MKFILE fn <<-EOL
-#     	Initial file contents.
-#     EOL
-#     cat "$fn"		<-- prints "Initial file contents."
-#
-# Remove the file name from a command's output:
-#     echo "$fn" | REPLACE "$fn" TMPFILE   <-- prints "TMPFILE"
-#
-# create a new empty file with the given name (open to symlink attack,
-# DO NOT USE UNLESS YOU ARE SURE WHAT YOU ARE DOING).
-#
-#     MKFILE ttf /tmp/$mydir/tt1 < /dev/null
-#
-
-MKFILE ()
-{
-	local name=${2-`mktemp -t tmtest.XXXXXX || ABORT MKFILE: could not mktemp`}
-	eval "$1='$name'"
-	cat > "$name"
-	ATEXIT "rm '$name'"
 }
 
 

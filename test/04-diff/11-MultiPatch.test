@@ -5,19 +5,19 @@
 # Updated for tmtest 2.0 on 29 Jan 2005
 
 
-MKFILE tt1 <<-EOL
+cat > tt1 <<-EOL
 	echo "right output1"
 	STDOUT:
 	wrong output
 EOL
 
-MKFILE tt2 <<-EOL
+cat > tt2 <<-EOL
 	echo "right output2"
 	STDOUT:
 	wrong output
 EOL
 
-MKFILE tt3 <<-EOL
+cat > tt3 <<-EOL
 	echo "right output3"
 	STDOUT:
 	wrong output
@@ -26,13 +26,15 @@ EOL
 
 # All tt* files must be in the same directory.
 
-$tmtest --ignore-extension -d "$tt1" "$tt2" "$tt3" | (cd `dirname "$tt1"` && patch | FIX_PATCH)
+$tmtest --ignore-extension -d tt1 tt2 tt3 | patch | FIX_PATCH
 echo
-sed "s/^/\t/" < "$tt1"
+sed "s/^/\t/" < tt1
 echo
-sed "s/^/\t/" < "$tt2"
+sed "s/^/\t/" < tt2
 echo
-sed "s/^/\t/" < "$tt3"
+sed "s/^/\t/" < tt3
+
+rm tt1 tt2 tt3
 
 
 STDOUT:

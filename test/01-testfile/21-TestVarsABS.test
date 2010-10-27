@@ -1,14 +1,18 @@
 # Make sure the variables are set up correctly when we are running a
 # test with an absolute pathname.
 
-MKFILE tt <<-'EOL'
+cat > tt <<-'EOL'
 	echo MYDIR:    "$MYDIR"
 	echo MYFILE:   "$MYFILE"
 	echo TESTDIR:  "$TESTDIR"
 	echo TESTFILE: "$TESTFILE"
 EOL
 
-$tmtest $args --ignore-extension -o -q "$tt" | REPLACE "$tt" /tmp/FILE | sed "s/^/    /"
+$tmtest $args --ignore-extension -o -q tt | \
+  sed -e "s/${PWD//\//\\/}/\/tmp\/DIR/g" -e "s/^/    /"
+
+rm tt
+
 
 STDOUT:
     echo MYDIR:    "$MYDIR"
@@ -16,7 +20,7 @@ STDOUT:
     echo TESTDIR:  "$TESTDIR"
     echo TESTFILE: "$TESTFILE"
     STDOUT:
-    MYDIR: /tmp
-    MYFILE: /tmp/FILE
-    TESTDIR: /tmp
-    TESTFILE: /tmp/FILE
+    MYDIR: /tmp/DIR
+    MYFILE: /tmp/DIR/tt
+    TESTDIR: /tmp/DIR
+    TESTFILE: /tmp/DIR/tt

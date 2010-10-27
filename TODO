@@ -1,7 +1,6 @@
 0.96:
 - strncpy and strncat are wrong
 - Try to get rid of tmlib completely.
-  - MKFILE should just create the file that the user names.
   - MKTMPFILE should create a filename and store that in the user's variable.
   - You should be able to run most testfiles in any posix shell
     - There should be no need to install tmtest to run tests
@@ -11,6 +10,7 @@
 - Just print full path of test being run.  Truncate it if wider than termwidth.
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
 - Run in print failures only mode by default, -v to get every result.
+- Config file runs all tests with -e.  Fix and remove all "set +e" from tests.
 
 0.962:
 - Try to get rid of tmtest.conf completely.
@@ -131,7 +131,6 @@
   child.  If the child can't be reaped, that means it closed all its FDs
   but is still runnnig, which makes no sense; print an error and keep on
   trucking.
-- get rid of MKFILE_EMPTY, deprecated in favor of TOUCH.
 - Is there any way to record memory and swap usage for each test?
   sure, it's in the rusage. prolly add a "tmtest -v" to print it for each test.
 - Well, piping the result of a command to a function destroys the the
@@ -158,9 +157,6 @@
   see if any of your tests have intermittent failures.
 - Reomve as many TODOs as possible.
 - Make zutest take the names of tests to run on stdin?
-- Make MKFILE take a path as the first argument too.  If the first arg
-  is [0-9a-zA-Z_] then it's an identifier and we'll make a tempfile.
-  Otherwise, we'll use the arg as a filename.  ER, IS THIS A GOOD IDEA?
 
 rc series...
 

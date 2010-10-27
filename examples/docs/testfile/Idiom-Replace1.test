@@ -1,6 +1,5 @@
 # Testfile to demonstrate fixing a temporary filename
-MKFILE tt <<< "file contents"
-echo "patching $tt" | REPLACE "$tt" /tmp/FILE
+pwd | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 
 STDOUT:
-patching /tmp/FILE
+/tmp/DIR
