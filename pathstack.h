@@ -9,22 +9,22 @@
 struct pathstack {
     char *buf;
     int curlen;
-    int maxlen;	///< size of buffer - 1 (for null byte)
+    int maxlen; ///< size of buffer - 1 (for null byte)
 };
 
 struct pathstate {
-	int oldlen;
+    int oldlen;
 };
 
 
 void pathstack_init(struct pathstack *path, char *buf,
-                   int bufsiz, const char * str);
+        int bufsiz, const char * str);
 
 // There is no need to ever delete a pathstack because
 // it's 100% client-allocated.
 
 int pathstack_push(struct pathstack *ps, const char *newpath,
-                   struct pathstate *state);
+        struct pathstate *state);
 int pathstack_pop(struct pathstack *ps, struct pathstate *state);
 
 void pathstack_normalize(struct pathstack *ps);

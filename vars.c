@@ -43,20 +43,20 @@
 
 static int var_testfile(struct test *test, FILE* fp, const char *var)
 {
-	if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
-		fprintf(fp, "(STDIN)");
-	} else if(test->testfilename[0] == '/') {
-		fprintf(fp, "%s", test->testfilename);
-	} else {
-		fprintf(fp, "%s/%s", test->testfiledir, test->testfilename);
-	}
+    if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
+        fprintf(fp, "(STDIN)");
+    } else if(test->testfilename[0] == '/') {
+        fprintf(fp, "%s", test->testfilename);
+    } else {
+        fprintf(fp, "%s/%s", test->testfiledir, test->testfilename);
+    }
 
     return 0;
 }
 
 static int var_testdir(struct test *test, FILE* fp, const char *var)
 {
-	fputs(test->testfiledir, fp);
+    fputs(test->testfiledir, fp);
     return 0;
 }
 
@@ -67,17 +67,17 @@ static int var_testexec(struct test *test, FILE* fp, const char *var)
     // from stdin.  Otherwise, just have the shell execute the testfile.
 
     if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
-		// bash3 doesn't support setting LINENO anymore.  Bash2 did.
-		// what the hell, it's worth a shot.
-		fprintf(fp, "LINENO=0\n");
+        // bash3 doesn't support setting LINENO anymore.  Bash2 did.
+        // what the hell, it's worth a shot.
+        fprintf(fp, "LINENO=0\n");
         test_command_copy(test, fp);
     } else {
         test_command_copy(test, NULL);
-		if(test->testfilename[0] == '/') {
-			fprintf(fp, ". %s", test->testfilename);
-		} else {
-			fprintf(fp, ". '%s/%s'", test->testfiledir, test->testfilename);
-		}
+        if(test->testfilename[0] == '/') {
+            fprintf(fp, ". %s", test->testfilename);
+        } else {
+            fprintf(fp, ". '%s/%s'", test->testfiledir, test->testfilename);
+        }
     }
 
     return 0;
@@ -108,22 +108,22 @@ static int var_statusfd(struct test *test, FILE *fp, const char *var)
 
 static char* get_home_dir(struct test *test)
 {
-	char *cp;
-	struct passwd *entry;
-	
-	cp = getenv("HOME");
-	if(cp) return cp;
-	cp = getenv("LOGDIR");
-	if(cp) return cp;
+    char *cp;
+    struct passwd *entry;
 
-	entry = getpwuid(getuid());
-	if(entry) {
-		cp = entry->pw_dir;
-		if(cp) return cp;
-	}
+    cp = getenv("HOME");
+    if(cp) return cp;
+    cp = getenv("LOGDIR");
+    if(cp) return cp;
 
-	test_abort(test, "Could not locate your home directory!  Please set $HOME.\n");
-	return NULL; // will never be executed
+    entry = getpwuid(getuid());
+    if(entry) {
+        cp = entry->pw_dir;
+        if(cp) return cp;
+    }
+
+    test_abort(test, "Could not locate your home directory!  Please set $HOME.\n");
+    return NULL; // will never be executed
 }
 
 
@@ -132,8 +132,8 @@ static char* get_home_dir(struct test *test)
 
 int file_exists(char *path)
 {
-	struct stat st;
-	return stat(path, &st) == 0 && S_ISREG(st.st_mode);
+    struct stat st;
+    return stat(path, &st) == 0 && S_ISREG(st.st_mode);
 }
 
 
@@ -154,35 +154,35 @@ int file_exists(char *path)
  */
 
 static void check_config(struct test *test, FILE *fp,
-		const char *base, int len, const char *name)
+        const char *base, int len, const char *name)
 {
-	char buf[PATH_MAX];
-	
-	// if the buffer isn't big enough then don't even try.
-	if(len+(name?strlen(name):0)+2 > sizeof(buf)) return;
+    char buf[PATH_MAX];
 
-	// assemble the file name
-	memcpy(buf, base, len);
-	buf[len]='\0';
+    // if the buffer isn't big enough then don't even try.
+    if(len+(name?strlen(name):0)+2 > sizeof(buf)) return;
 
-	// append the filename if supplied
-	if(name) {
-		buf[len] = '/';
-		buf[len+1] = 0;
-		strcat(buf+len+1, name);
-	}
+    // assemble the file name
+    memcpy(buf, base, len);
+    buf[len]='\0';
 
-	if(config_file && strcmp(buf,config_file) == 0) {
-		// If buf == config_file then it means the user must have
-		// specified a config file within the current search path.
-		// This ensures that we don't include it twice.
-		return;
-	}
+    // append the filename if supplied
+    if(name) {
+        buf[len] = '/';
+        buf[len+1] = 0;
+        strcat(buf+len+1, name);
+    }
 
-	if(file_exists(buf)) {
-		fprintf(fp, "echo 'CONFIG: %s' >&%d\n", buf, test->statusfd);
-		fprintf(fp, "MYDIR='%.*s'\nMYFILE='%s'\n. '%s'\n", len, buf, buf, buf);
-	}
+    if(config_file && strcmp(buf,config_file) == 0) {
+        // If buf == config_file then it means the user must have
+        // specified a config file within the current search path.
+        // This ensures that we don't include it twice.
+        return;
+    }
+
+    if(file_exists(buf)) {
+        fprintf(fp, "echo 'CONFIG: %s' >&%d\n", buf, test->statusfd);
+        fprintf(fp, "MYDIR='%.*s'\nMYFILE='%s'\n. '%s'\n", len, buf, buf, buf);
+    }
 }
 
 
@@ -200,50 +200,50 @@ static void check_config(struct test *test, FILE *fp,
 
 static int var_config_files(struct test *test, FILE *fp, const char *var)
 {
-	char buf[PATH_MAX];
+    char buf[PATH_MAX];
     char *cp, *oldcfg;
-	int confbaselen;
+    int confbaselen;
 
-	// check global configuration files
-	if(config_file) {
-		// Need to temporarily forget config_file, otherwise it will think
-		// that it has included config_file twice and refuse to include it.
-		oldcfg = config_file;
-		config_file = NULL;
+    // check global configuration files
+    if(config_file) {
+        // Need to temporarily forget config_file, otherwise it will think
+        // that it has included config_file twice and refuse to include it.
+        oldcfg = config_file;
+        config_file = NULL;
 
-		strncpy(buf, oldcfg, sizeof(buf));
-		buf[sizeof(buf)-1] = '\0';
-		cp = strrchr(buf, '/');
-		if(cp == NULL) {
-			test_abort(test, "Illegal config_file: '%s'\n", buf); 
-		}
-		*cp = '\0';
-		check_config_str(test, fp, buf, cp+1);
-		config_file = oldcfg;
-	} else {
-		check_config_str(test, fp, "/etc", CONFIG_FILE);
-		check_config_str(test, fp, "/etc/tmtest", CONFIG_FILE);
-		check_config_str(test, fp, get_home_dir(test), HOME_CONFIG_FILE);
-	}
-
-	// check config files in the current hierarchy
-	strncpy(buf, test->testfiledir, sizeof(buf));
-	buf[sizeof(buf)-1] = '\0';
-	if(config_file) {
-		confbaselen = strrchr(config_file, '/') - config_file;
-	}
-    for(cp=buf; (cp=strchr(cp,'/')); cp++) {
-		// If the user specifies a config file, we only check directories
-		// not above the given config file.  i.e. if user specifies
-		// "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
-		// in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
-		if(config_file && cp-buf <= confbaselen &&
-				memcmp(buf, config_file, cp-buf)==0) {
-			continue;
-		}
-		check_config(test, fp, buf, cp-buf, CONFIG_FILE);
+        strncpy(buf, oldcfg, sizeof(buf));
+        buf[sizeof(buf)-1] = '\0';
+        cp = strrchr(buf, '/');
+        if(cp == NULL) {
+            test_abort(test, "Illegal config_file: '%s'\n", buf);
+        }
+        *cp = '\0';
+        check_config_str(test, fp, buf, cp+1);
+        config_file = oldcfg;
+    } else {
+        check_config_str(test, fp, "/etc", CONFIG_FILE);
+        check_config_str(test, fp, "/etc/tmtest", CONFIG_FILE);
+        check_config_str(test, fp, get_home_dir(test), HOME_CONFIG_FILE);
     }
-	check_config_str(test, fp, buf, CONFIG_FILE);
+
+    // check config files in the current hierarchy
+    strncpy(buf, test->testfiledir, sizeof(buf));
+    buf[sizeof(buf)-1] = '\0';
+    if(config_file) {
+        confbaselen = strrchr(config_file, '/') - config_file;
+    }
+    for(cp=buf; (cp=strchr(cp,'/')); cp++) {
+        // If the user specifies a config file, we only check directories
+        // not above the given config file.  i.e. if user specifies
+        // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
+        // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
+        if(config_file && cp-buf <= confbaselen &&
+                memcmp(buf, config_file, cp-buf)==0) {
+            continue;
+        }
+        check_config(test, fp, buf, cp-buf, CONFIG_FILE);
+    }
+    check_config_str(test, fp, buf, CONFIG_FILE);
 
     return 0;
 }

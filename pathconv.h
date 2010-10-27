@@ -3,9 +3,9 @@
 // Just use strcat and then normalize the absolute path.
 //
 // char *rel2abs(const char *path, const char *base, char *result,
-// 		const size_t size);
+//              const size_t size);
 
 char *abs2rel(const char *path, const char *base, char *result,
-		const size_t size);
+                const size_t size);
 
 int normalize_absolute_path(char *buf);

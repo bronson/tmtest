@@ -33,12 +33,12 @@ void pathstack_init(struct pathstack *ps, char *buf,
                     int bufsiz, const char *str)
 {
     assert(ps);
-    assert(bufsiz > 1);	  // bufsiz must hold "/" and the null terminator.
+    assert(bufsiz > 1);   // bufsiz must hold "/" and the null terminator.
 
     ps->buf = buf;
     ps->maxlen = bufsiz - 1;
     if(str) {
-    	assert(str[0] == '/');	// ensure it's an absolute path
+        assert(str[0] == '/');  // ensure it's an absolute path
         ps->curlen = strlen(str);
         if(ps->curlen > ps->maxlen) {
             ps->curlen = ps->maxlen;
@@ -89,7 +89,7 @@ int pathstack_push(struct pathstack *ps, const char *newpath,
     }
     // if the new string is empty then we don't change a thing
     if(newpath[0] == '\0') {
-    	return 0;
+        return 0;
     }
 
     // ensure the two paths are separated by '/'
@@ -98,14 +98,14 @@ int pathstack_push(struct pathstack *ps, const char *newpath,
         ps->curlen += 1;
     }
 
-	// and copy the new string
+    // and copy the new string
     if(ps->curlen + pathlen > ps->maxlen) {
-    	pathlen = ps->maxlen - ps->curlen;
+        pathlen = ps->maxlen - ps->curlen;
     }
     memcpy(ps->buf+ps->curlen, newpath, pathlen);
     ps->curlen += pathlen;
     ps->buf[ps->curlen] = '\0';
-    
+
     return 0;
 }
 
@@ -123,18 +123,18 @@ int pathstack_push(struct pathstack *ps, const char *newpath,
 
 int pathstack_pop(struct pathstack *ps, struct pathstate *state)
 {
-	if(state) {
-		if(state->oldlen > ps->curlen) {
-			// we can't enlarge the string using state; we'd expose invalid data.
-			return -1;
-		}
-		ps->curlen = state->oldlen;
-		state->oldlen = INT_MAX;	// ensure this state can never be used again
-	} else {
-		// popping without supplying state is currently a no-op...
-		// implement this later if needed.
-	}
-	
+    if(state) {
+        if(state->oldlen > ps->curlen) {
+            // we can't enlarge the string using state; we'd expose invalid data.
+            return -1;
+        }
+        ps->curlen = state->oldlen;
+        state->oldlen = INT_MAX;        // ensure this state can never be used again
+    } else {
+        // popping without supplying state is currently a no-op...
+        // implement this later if needed.
+    }
+
     ps->buf[ps->curlen] = '\0';
     return 0;
 }
@@ -152,7 +152,7 @@ int pathstack_pop(struct pathstack *ps, struct pathstate *state)
  
 void pathstack_normalize(struct pathstack *ps)
 {
-	normalize_absolute_path(ps->buf);
+    normalize_absolute_path(ps->buf);
     ps->curlen = strlen(ps->buf);
 }
 
