@@ -12,7 +12,6 @@
 # tmlib functions:
 #
 # TRAP:     Execute a command when an exception happens
-# ATEXIT:   Ensure a command runs even if the test fails (usually to clean up).
 
 
 #
@@ -50,20 +49,3 @@ TRAP ()
 	eval TRAP_$2=\"$1'${'TRAP_$2':+; }$'TRAP_$2\"
 }
 
-
-#
-# ATEXIT
-#
-# This behaves just like atexit(3) call.  Supply a command to be executed
-# when the shell exits.  Commands are executed in the reverse order that
-# they are supplied.
-#
-# Example:  (will produce "BA" on stdout when the test ends)
-#
-#     ATEXIT "echo A"
-#     ATEXIT "echo -n B"
-
-ATEXIT ()
-{
-	TRAP "$*" EXIT
-}
