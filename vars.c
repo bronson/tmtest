@@ -211,8 +211,8 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
         oldcfg = config_file;
         config_file = NULL;
 
-        strncpy(buf, oldcfg, sizeof(buf));
-        buf[sizeof(buf)-1] = '\0';
+        buf[0] = '\0';
+        strncat(buf, oldcfg, sizeof(buf) - 1);
         cp = strrchr(buf, '/');
         if(cp == NULL) {
             test_abort(test, "Illegal config_file: '%s'\n", buf);
@@ -227,8 +227,8 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
     }
 
     // check config files in the current hierarchy
-    strncpy(buf, test->testfiledir, sizeof(buf));
-    buf[sizeof(buf)-1] = '\0';
+    buf[0] = '\0';
+    strncat(buf, test->testfiledir, sizeof(buf) - 1);
     if(config_file) {
         confbaselen = strrchr(config_file, '/') - config_file;
     }
