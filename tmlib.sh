@@ -162,16 +162,6 @@ MKFILE_EMPTY ()
 }
 
 
-TOUCH ()
-{
-	while [ "$1" != "" ]; do
-		touch $1
-		ATEXIT "rm '$1'"
-		shift
-	done
-}
-
-
 #
 # MKDIR
 #
