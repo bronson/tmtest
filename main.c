@@ -163,6 +163,31 @@ static int verify_readable(const char *file, struct stat *st, int regfile)
 }
 
 
+static void copy_string(char *dst, const char *src, int dstsiz)
+{
+    dst[0] = '\0';
+    strncat(dst, src, dstsiz - 1);
+}
+
+
+static void cat_path(char *dst, const char *s1, const char *s2, int siz)
+{
+    // copies s1 and s2 into dst, separated with a "/" character.
+    // Generally s1 will be an absolute path and s2 will be relative.
+
+    int s1len = strlen(s1);
+    int s2len = strlen(s2);
+    if(s1len + s2len + 2 > siz) {
+        fprintf(stderr, "Path overflow!\n");
+        exit(argument_error);
+    }
+
+    memcpy(dst, s1, s1len);
+    dst[s1len] = '/';
+    memcpy(dst + s1len + 1, s2, s2len + 1); // include null terminator
+}
+
+
 /** Prints the given template to the given file, performing substitutions.
  */
 
@@ -259,13 +284,12 @@ static int wait_for_child(int child, const char *name)
 }
 
 
-static int open_file(char *fn, const char *name, int flags)
+static int open_file(char *fn, int fnsiz, const char *name, int flags)
 {
-    strcpy(fn, g_testdir);
-    strcat(fn, "/");
-    strcat(fn, name);
+    int fd;
 
-    int fd = open(fn, flags|O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
+    cat_path(fn, g_testdir, name, fnsiz);
+    fd = open(fn, flags|O_RDWR|O_CREAT/*|O_EXCL*/, S_IRUSR|S_IWUSR);
     if(fd < 0) {
         fprintf(stderr, "couldn't open %s: %s\n", fn, strerror(errno));
         exit(runtime_error);
@@ -277,18 +301,18 @@ static int open_file(char *fn, const char *name, int flags)
 
 static void write_stdin_to_tmpfile(struct test *test)
 {
-    char *buf;
+    int diffsiz;
     int fd;
 
-    buf = malloc(sizeof(TESTDIR) + sizeof(DIFFNAME));
-    if(!buf) {
+    diffsiz = sizeof(TESTDIR) + sizeof(DIFFNAME);
+    test->diffname = malloc(diffsiz);
+    if(!test->diffname) {
         perror("malloc");
         exit(runtime_error);
     }
 
-    test->diffname = buf;
-    fd = open_file(buf, DIFFNAME, 0);
-    assert(strlen(buf) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
+    fd = open_file(test->diffname, diffsiz, DIFFNAME, 0);
+    assert(strlen(test->diffname) == sizeof(TESTDIR)+sizeof(DIFFNAME)-1);
     write_file(test, fd, 0, NULL);
     close(fd);
 }
@@ -392,18 +416,6 @@ static void finish_diff(struct test *test, int diffpid)
 }
 
 
-/* Combines testfiledir and testfilename into a single absolute path for the testfile.
- * The caller must supply a buffer to fill with the result. */
-
-static void assemble_absolute_testpath(struct test *test, char *buf, int bufsiz)
-{
-    buf[0] = '\0';
-    strncat(buf, test->testfiledir, bufsiz-1);
-    strncat(buf, "/", bufsiz-1);
-    strncat(buf, test->testfilename, bufsiz-1);
-}
-
-
 /* Prints the relative path from the original cwd to the current testfile */
 
 static void print_test_path(struct test *test)
@@ -411,7 +423,7 @@ static void print_test_path(struct test *test)
     char result[PATH_MAX];
     char testfile[PATH_MAX];
 
-    assemble_absolute_testpath(test, testfile, sizeof(testfile));
+    cat_path(testfile, test->testfiledir, test->testfilename, sizeof(testfile));
 
     if(abs2rel(testfile, orig_cwd, result, sizeof(result))) {
         printf("%s\n", result);
@@ -432,11 +444,10 @@ static int open_test_file(struct test *test)
 
     if(test->testfilename[0] == '/') {
         // If the filename is absolute, we use it directly.
-        strncpy(buf, test->testfilename, sizeof(buf));
-        buf[sizeof(buf)-1] = 0;
+        copy_string(buf, test->testfilename, sizeof(buf));
     } else {
         // Otherwise we need to make an absolute path
-        assemble_absolute_testpath(test, buf, sizeof(buf));
+        cat_path(buf, test->testfiledir, test->testfilename, sizeof(buf));
     }
 
     fd = open(buf, O_RDONLY);
@@ -496,6 +507,8 @@ static int remove_subdirs(struct test *test, struct pathstack *stack, char *star
 
         if(subcnt == 0) {
             // only add a dir to the message if we didn't remove any subdirs
+            // we don't care if there's truncation here since it's only being
+            // displayed to the user and the dirs are being deleted anyway.
             if(msg[0]) {
                 strncat(msg, ", ", msgsiz - strlen(msg) - 1);
             } else {
@@ -1048,23 +1061,21 @@ static void start_tests()
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, sig_int);
 
-    strcpy(g_testdir, TESTDIR);
+    memcpy(g_testdir, TESTDIR, sizeof(g_testdir));
     if(!mkdtemp(g_testdir)) {
         fprintf(stderr, "Could not call mkdtemp() on %s: %s\n", g_testdir, strerror(errno));
         exit(initialization_error);
     }
 
     // errors are handled by open_file.
-    g_outfd = open_file(g_outname, OUTNAME, 0);
+    g_outfd = open_file(g_outname, sizeof(g_outname), OUTNAME, 0);
     assert(strlen(g_outname) == sizeof(g_outname)-1);
-    g_errfd = open_file(g_errname, ERRNAME, 0);
+    g_errfd = open_file(g_errname, sizeof(g_errname), ERRNAME, 0);
     assert(strlen(g_errname) == sizeof(g_errname)-1);
-    g_statusfd = open_file(g_statusname, STATUSNAME, O_APPEND);
+    g_statusfd = open_file(g_statusname, sizeof(g_statusname), STATUSNAME, O_APPEND);
     assert(strlen(g_statusname) == sizeof(g_statusname)-1);
 
-    strcpy(g_testhome, g_testdir);
-    strcat(g_testhome, "/");
-    strcat(g_testhome, TESTHOME);
+    cat_path(g_testhome, g_testdir, TESTHOME, sizeof(g_testhome));
 
     if(mkdir(g_testhome, 0700) < 0) {
         fprintf(stderr, "couldn't create %s: %s\n", g_testhome, strerror(errno));
@@ -1090,13 +1101,9 @@ static void set_config_file(const char *cfg)
     }
 
     if(cfg[0] == '/') {
-        strncpy(buf, cfg, PATH_MAX);
-        buf[PATH_MAX-1] = '\0';
+        copy_string(buf, cfg, sizeof(buf));
     } else {
-        strncpy(buf, orig_cwd, PATH_MAX);
-        strncat(buf, "/", PATH_MAX);
-        strncat(buf, cfg, PATH_MAX);
-        buf[PATH_MAX-1] = '\0';
+        cat_path(buf, orig_cwd, cfg, sizeof(buf));
     }
 
     normalize_absolute_path(buf);
@@ -1228,17 +1235,15 @@ static void normalize_path(struct pathstack *ps, char *original, char **outpath)
     char normalized[PATH_MAX];
 
     if(original[0] == '/') {
-        if(strlen(original) > PATH_MAX-1) {
+        int origlen = strlen(original);
+        if(origlen > PATH_MAX - 1) {
             fprintf(stderr, "Path is too long: %s\n", original);
             exit(runtime_error);
         }
-        strcpy(normalized, original);
+        memcpy(normalized, original, origlen);
         normalize_absolute_path(normalized);
     } else {
-        strncpy(buf, pathstack_absolute(ps), PATH_MAX);
-        strncat(buf, "/", PATH_MAX);
-        strncat(buf, original, PATH_MAX);
-        buf[PATH_MAX-1] = '\0';
+        cat_path(buf, pathstack_absolute(ps), original, sizeof(buf));
         normalize_absolute_path(buf);
 
         // convert it back to a relative path so it prints the

@@ -42,9 +42,10 @@ char* abs2rel(const char *path, const char *base, char *result, const size_t siz
     char *rp;
 
     if (*path != '/') {
-        if (strlen(path) >= size)
+        int pathlen = strlen(path);
+        if (pathlen >= size)
             goto erange;
-        strcpy(result, path);
+        memcpy(result, path, pathlen + 1);
         goto finish;
     } else if (*base != '/' || !size) {
         errno = EINVAL;
@@ -90,9 +91,10 @@ char* abs2rel(const char *path, const char *base, char *result, const size_t siz
      * down to leaf.
      */
     if (*branch) {
-        if (rp + strlen(branch + 1) > endp)
+        int brlen = strlen(branch + 1);
+        if (rp + brlen > endp)
             goto erange;
-        strcpy(rp, branch + 1);
+        memcpy(rp, branch + 1, brlen + 1);
     } else
         *--rp = 0;
 finish:
