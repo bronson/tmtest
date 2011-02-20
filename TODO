@@ -1,12 +1,13 @@
 0.960:
-- Just print full path of test being run.  Truncate it if wider than termwidth.
+- Just print full path of test being run.
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
 - Run in print failures only mode by default, -v to get every result.
+  Can we sense a terminal and print a running count statusline?
 - Config file runs all tests with -e.  Fix and remove all "set +e" from tests.
 
 0.962:
 - Get rid of all re2c scanners.  Make everything memory-based.
-- Convert to libevent.  Get rid of my poorly maintained libio.
+- Convert to libev http://software.schmorp.de/pkg/libev.html to get rid of my poorly maintained libio.
 - Read every stream to exhaustion before finishing the test.
 - Get rid of all the gratuitous sleeps in the code and tests.
 - Don't send entire testfile to bash, strip the STDOUT and STDERR ourselves.
