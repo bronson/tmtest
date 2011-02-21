@@ -40,8 +40,7 @@
 enum {
     outmode_test,
     outmode_dump,
-    outmode_diff,
-    outmode_failures_only
+    outmode_diff
 };
 
 /* configuration options */
@@ -422,22 +421,6 @@ static void finish_diff(struct test *test, int diffpid)
 }
 
 
-/* Prints the relative path from the original cwd to the current testfile */
-
-static void print_test_path(struct test *test)
-{
-    char result[PATH_MAX];
-    char testfile[PATH_MAX];
-
-    cat_path(testfile, test->testfiledir, test->testfilename, sizeof(testfile));
-
-    if(abs2rel(testfile, orig_cwd, result, sizeof(result))) {
-        printf("%s\n", result);
-    } else {
-        printf("print_test_path: abs2rel error: %s relto %s\n", testfile, orig_cwd);
-    }
-}
-
 static int open_test_file(struct test *test)
 {
     char buf[PATH_MAX];
@@ -648,7 +631,6 @@ static int run_test(const char *path, const char *name, const char *dispname, in
     // initialize the test mode
     switch(outmode) {
         case outmode_test:
-        case outmode_failures_only:
             // nothing to do
             break;
         case outmode_dump:
@@ -741,11 +723,6 @@ static int run_test(const char *path, const char *name, const char *dispname, in
         switch(outmode) {
             case outmode_test:
                 test_results(&test, dispname);
-                break;
-            case outmode_failures_only:
-                if(check_for_failure(&test, dispname)) {
-                    print_test_path(&test);
-                }
                 break;
             case outmode_dump:
                 dump_results(&test);
@@ -1212,10 +1189,6 @@ static void process_args(int argc, char **argv)
 
             case 'd':
                 outmode = outmode_diff;
-                break;
-
-            case 'f':
-                outmode = outmode_failures_only;
                 break;
 
             case 'h':
