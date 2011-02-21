@@ -122,26 +122,20 @@ int pathstack_push(struct pathstack *ps, const char *newpath,
 /** pathstack_pop
  *
  * Removes the most recent addition from the pathstack.
- *
- * Returns -1 if the state was invalid.
- *
- * If you don't supply a state, this function is a no-op.
+ * Once a state is used to pop it can never be used again.
+ * Returns -1 if the state was invalid or wasn't supplied.
  */
 
 
 int pathstack_pop(struct pathstack *ps, struct pathstate *state)
 {
-    if(state) {
-        if(state->oldlen > ps->curlen) {
-            // we can't enlarge the string using state; we'd expose invalid data.
-            return -1;
-        }
-        ps->curlen = state->oldlen;
-        state->oldlen = INT_MAX;        // ensure this state can never be used again
-    } else {
-        // popping without supplying state is currently a no-op...
-        // implement this later if needed.
+    if(!state || state->oldlen > ps->curlen) {
+        // we can't enlarge the string using state; we'd expose invalid data.
+        return -1;
     }
+
+    ps->curlen = state->oldlen;
+    state->oldlen = INT_MAX;        // ensure this state can never be used again
 
     ps->buf[ps->curlen] = '\0';
     return 0;
