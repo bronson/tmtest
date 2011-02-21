@@ -797,7 +797,10 @@ static int process_absolute_file(const char *abspath, const char *origpath, int 
         fprintf(stderr, "path too long: %s\n", abspath);
         exit(runtime_error);
     }
-    pathstack_normalize(&stack);
+
+    // this hack needs to go away
+    normalize_absolute_path(stack.buf);
+    stack.curlen = strlen(stack.buf);
 
     dir = pathstack_absolute(&stack);
     file = strrchr(dir, '/');
@@ -830,7 +833,11 @@ static int process_absolute_dir(const char *abspath, const char *origpath, int p
         fprintf(stderr, "path too long: %s\n", abspath);
         exit(runtime_error);
     }
-    pathstack_normalize(&stack);
+
+    // this hack needs to go away
+    normalize_absolute_path(stack.buf);
+    stack.curlen = strlen(stack.buf);
+
     return process_dir(&stack, print_absolute);
 }
 

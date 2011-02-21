@@ -27,6 +27,4 @@ int pathstack_push(struct pathstack *ps, const char *newpath,
         struct pathstate *state);
 int pathstack_pop(struct pathstack *ps, struct pathstate *state);
 
-void pathstack_normalize(struct pathstack *ps);
-
 #define pathstack_absolute(ps) ((ps)->buf)

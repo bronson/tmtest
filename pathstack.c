@@ -146,21 +146,3 @@ int pathstack_pop(struct pathstack *ps, struct pathstate *state)
     ps->buf[ps->curlen] = '\0';
     return 0;
 }
-
-
-/** pathstack_normalize
- *
- * Normalizes the path stored in the pathstack.
- * NOTE: Never ever call pathstack_push, normalize the stack, and then
- * call pathstack_pop!!  Normalizing will potentially change the path,
- * invalidating the offsets stored in the pathstate structs.
- * 
- * TODO: add some unit tests for this!
- */
- 
-void pathstack_normalize(struct pathstack *ps)
-{
-    normalize_absolute_path(ps->buf);
-    ps->curlen = strlen(ps->buf);
-}
-
