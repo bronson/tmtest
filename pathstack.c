@@ -6,7 +6,7 @@
  * See http://en.wikipedia.org/wiki/MIT_License for more.
  *
  * Some simple path handling routines
- * 
+ *
  * A pathstack is just like a regular stack, except you push and pull
  * path fragments.  The only slightly strange concept is the pathstack_state
  * used to "rewind" a push.
@@ -20,60 +20,79 @@
 #include "pathconv.h"
 
 
+static int trim_slashes(const char **strp)
+{
+    const char *str = *strp;
+    int len;
+
+    // remove any leading '/' from newpath
+    while(str[0] == '/') {
+        str += 1;
+    }
+
+    len = strlen(str);
+
+    while(len && str[len-1] == '/') {
+        len -= 1;
+    }
+
+    *strp = str;
+    return len;
+}
+
+
 /** pathstack_init
  *
  * Initializes a pathstack for use.  You must supply a buffer and an
  * optional string to initialize it with.  The buffer must be able to
  * hold at least a single character (for the null terminator).
- * 
+ *
  * We never allocate any memory so there's no need for a pathstack_free.
  */
 
-void pathstack_init(struct pathstack *ps, char *buf,
+int pathstack_init(struct pathstack *ps, char *buf,
                     int bufsiz, const char *str)
 {
-    assert(ps);
-    assert(bufsiz > 1);   // bufsiz must hold "/" and the null terminator.
+    if(!ps || bufsiz < 2) {
+        return 1;
+    }
 
     ps->buf = buf;
-    ps->maxlen = bufsiz - 1;
+    ps->bufsiz = bufsiz;
+    ps->curlen = 1;
+    ps->buf[0] = '/';
+
     if(str) {
-        assert(str[0] == '/');  // ensure it's an absolute path
-        ps->curlen = strlen(str);
-        if(ps->curlen > ps->maxlen) {
-            ps->curlen = ps->maxlen;
+        ps->curlen = 1 + trim_slashes(&str);  // slash
+        if(ps->curlen + 1 > bufsiz) {         // null terminator
+            return 1;
         }
-        memcpy(ps->buf, str, ps->curlen);
-    } else {
-        ps->curlen = 1;
-        ps->buf[0] = '/';
+        memcpy(ps->buf + 1, str, ps->curlen - 1);
     }
+
     ps->buf[ps->curlen] = '\0';
+    return 0;
 }
 
 
 /** pathstack_push
- * 
+ *
  * Adds the given relative path onto the end of the absolute path.
- * 
- * If the relative path won't fit, we'll push as much as possible and return -1.
- * It's illegal for the relative path to be NULL or empty.
- * 
- * If the existing path doesn't end with a '/' and the new path doesn't begin
- * with one, a slash will be automatically added to separate the two paths.
- * 
+ * If the relative path won't fit then nothing is changed and an
+ * error value is returned.
+ *
+ * Slashes are normalized. It doesn't matter if the paths begin or end
+ * with any number of slashes, they're still treated as relative.
+ *
  * @param state is optional but, if supplied, specifies a place to hold state.
  * The state can then be passed to pathstack_pop() to return the pathstack to
  * its state before pushing.
- * 
- * @return 0 if everything went OK, -1 if the result had to be truncated.
- * It's perfectly safe to ignore the return value.
  */
 
 int pathstack_push(struct pathstack *ps, const char *newpath,
                    struct pathstate *state)
 {
-    int pathlen = strlen(newpath);
+    int newlen;
 
     assert(ps);
     assert(newpath);
@@ -83,41 +102,30 @@ int pathstack_push(struct pathstack *ps, const char *newpath,
         state->oldlen = ps->curlen;
     }
 
-    // if there's no room for even a single character, bail.
-    if(ps->curlen == ps->maxlen) {
-        return -1;
-    }
-    // if the new string is empty then we don't change a thing
+    newlen = trim_slashes(&newpath);
     if(newpath[0] == '\0') {
         return 0;
     }
-
-    // ensure the two paths are separated by '/'
-    if(ps->buf[ps->curlen-1] != '/' && newpath[0] != '/') {
-        ps->buf[ps->curlen] = '/';
-        ps->curlen += 1;
+    if(ps->curlen + newlen + 2 > ps->bufsiz) {
+        return 1;
     }
 
-    // and copy the new string
-    if(ps->curlen + pathlen > ps->maxlen) {
-        pathlen = ps->maxlen - ps->curlen;
-    }
-    memcpy(ps->buf+ps->curlen, newpath, pathlen);
-    ps->curlen += pathlen;
+    ps->buf[ps->curlen++] = '/';
+    memcpy(ps->buf+ps->curlen, newpath, newlen);
+    ps->curlen += newlen;
+
     ps->buf[ps->curlen] = '\0';
-
     return 0;
 }
 
 
 /** pathstack_pop
- * 
+ *
  * Removes the most recent addition from the pathstack.
- * 
+ *
  * Returns -1 if the state was invalid.
- * 
+ *
  * If you don't supply a state, this function is a no-op.
- * (originally it was going to remove the topmost path item)
  */
 
 

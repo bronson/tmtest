@@ -8,8 +8,8 @@
 
 struct pathstack {
     char *buf;
-    int curlen;
-    int maxlen; ///< size of buffer - 1 (for null byte)
+    int bufsiz;
+    int curlen;  // not including null terminator
 };
 
 struct pathstate {
@@ -17,7 +17,7 @@ struct pathstate {
 };
 
 
-void pathstack_init(struct pathstack *path, char *buf,
+int pathstack_init(struct pathstack *path, char *buf,
         int bufsiz, const char * str);
 
 // There is no need to ever delete a pathstack because

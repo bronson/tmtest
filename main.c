@@ -365,8 +365,14 @@ static int start_diff(struct test *test)
                 // if the path is absolute, we can just use it straight away.
                 filename = test->testfilename;
             } else {
-                pathstack_init(&stack, buf, sizeof(buf), test->testfiledir);
-                pathstack_push(&stack, test->testfilename, NULL);
+                if(pathstack_init(&stack, buf, sizeof(buf), test->testfiledir) != 0) {
+                    fprintf(stderr, "path too long: %s\n", test->testfiledir);
+                    exit(runtime_error);
+                }
+                if(pathstack_push(&stack, test->testfilename, NULL) != 0) {
+                    fprintf(stderr, "path too long: %s\n", test->testfilename);
+                    exit(runtime_error);
+                }
                 filename = pathstack_absolute(&stack);
             }
         }
@@ -487,7 +493,10 @@ static int remove_subdirs(struct test *test, struct pathstack *stack, char *star
         count += 1;
         subcnt = 0;
 
-        pathstack_push(stack, ents[i], &state);
+        if(pathstack_push(stack, ents[i], &state) != 0) {
+            fprintf(stderr, "path too long: %s\n", ents[i]);
+            exit(runtime_error);
+        }
         path = pathstack_absolute(stack);
 
         if(stat(path, &st) < 0) {
@@ -536,7 +545,10 @@ static void check_testhome(struct test *test)
     struct pathstack stack;
     char message[BUFSIZ];
 
-    pathstack_init(&stack, buf, sizeof(buf), g_testhome);
+    if(pathstack_init(&stack, buf, sizeof(buf), g_testhome) != 0) {
+        fprintf(stderr, "path too long: %s\n", g_testhome);
+        exit(runtime_error);
+    }
     message[0] = '\0';
     remove_subdirs(test, &stack, buf+strlen(g_testhome)+1, message, sizeof(message));
 
@@ -781,7 +793,10 @@ static int process_absolute_file(const char *abspath, const char *origpath, int 
     struct pathstack stack;
     char *file, *dir;
 
-    pathstack_init(&stack, buf, sizeof(buf), abspath);
+    if(pathstack_init(&stack, buf, sizeof(buf), abspath) != 0) {
+        fprintf(stderr, "path too long: %s\n", abspath);
+        exit(runtime_error);
+    }
     pathstack_normalize(&stack);
 
     dir = pathstack_absolute(&stack);
@@ -811,7 +826,10 @@ static int process_absolute_dir(const char *abspath, const char *origpath, int p
     char buf[PATH_MAX];
     struct pathstack stack;
 
-    pathstack_init(&stack, buf, sizeof(buf), abspath);
+    if(pathstack_init(&stack, buf, sizeof(buf), abspath) != 0) {
+        fprintf(stderr, "path too long: %s\n", abspath);
+        exit(runtime_error);
+    }
     pathstack_normalize(&stack);
     return process_dir(&stack, print_absolute);
 }
@@ -862,7 +880,7 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
     struct stat st;
     struct pathstate save;
     mode_t *modes;
-    int i, n, ret;
+    int i, n;
     int keepontruckin = 1;
 
     for(n=0; ents[n]; n++) { } // count n
@@ -884,8 +902,7 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
             }
 
             if(ents[i][0] != '/') {
-                ret = pathstack_push(ps, ents[i], &save);
-                if(ret != 0) {
+                if(pathstack_push(ps, ents[i], &save) != 0) {
                     fprintf(stderr, "Paths are too long:\n   %s\n   %s\n", pathstack_absolute(ps), ents[i]);
                     exit(runtime_error);
                 }
@@ -917,7 +934,10 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
             } else {
                 if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
                     // if there are potential non-normals in the path, we need to normalize it.
-                    ret = pathstack_push(ps, ents[i], &save);
+                    if(pathstack_push(ps, ents[i], &save) != 0) {
+                        fprintf(stderr, "path too long: %s\n", ents[i]);
+                        exit(runtime_error);
+                    }
                     keepontruckin = process_absolute_file(pathstack_absolute(ps), ents[i], print_absolute == -1);
                     pathstack_pop(ps, &save);
                 } else {
@@ -942,12 +962,18 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
                 if(print_absolute == -1) print_absolute = 0;
                 if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
                     // if there are potential non-normals in the path, we need to normalize it.
-                    ret = pathstack_push(ps, ents[i], &save);
+                    if(pathstack_push(ps, ents[i], &save)) {
+                        fprintf(stderr, "path too long: %s\n", ents[i]);
+                        exit(runtime_error);
+                    }
                     keepontruckin = process_absolute_dir(pathstack_absolute(ps), ents[i], print_absolute);
                     pathstack_pop(ps, &save);
                 } else {
                     // Otherwise, we just push the path and chug.
-                    ret = pathstack_push(ps, ents[i], &save);
+                    if(pathstack_push(ps, ents[i], &save)) {
+                        fprintf(stderr, "path too long: %s\n", ents[i]);
+                        exit(runtime_error);
+                    }
                     keepontruckin = process_dir(ps, print_absolute);
                     pathstack_pop(ps, &save);
                 }
@@ -1323,7 +1349,10 @@ int main(int argc, char **argv)
     orig_cwd = dup_cwd();
     process_args(argc, argv);
 
-    pathstack_init(&pathstack, buf, sizeof(buf), orig_cwd);
+    if(pathstack_init(&pathstack, buf, sizeof(buf), orig_cwd)) {
+        fprintf(stderr, "path too long: %s\n", orig_cwd);
+        exit(runtime_error);
+    }
 
     start_tests();
     if(optind < argc) {
