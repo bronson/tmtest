@@ -22,8 +22,6 @@ $tmtest --dump-script "dd/" | FIX_SCRIPT
 rm -rf dd
 
 STDOUT:
-	
-	Processing ./dd
 	echo START >&FD
 	
 	ABORT ()  { echo "ABORTED: $*" >&FD; exit 0; }

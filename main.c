@@ -825,33 +825,6 @@ static int process_absolute_dir(const char *abspath, const char *origpath, int p
 }
 
 
-static void print_processing_progress(struct pathstack *ps, int print_absolute)
-{
-    char buf[PATH_MAX];
-
-    // Don't print anything unless we're actually testing.
-    if(outmode != outmode_test) {
-        return;
-    }
-
-    if(print_absolute == -1) {
-        return;
-    }
-
-    if(print_absolute) {
-        printf("\nProcessing %s\n", pathstack_absolute(ps));
-    } else {
-        if(!abs2rel(pathstack_absolute(ps), orig_cwd, buf, PATH_MAX)) {
-            printf("Path couldn't be converted \"\%s\"\n", pathstack_absolute(ps));
-            exit(runtime_error);
-        }
-        // special-case "." so we don't print the silly-looking "./."
-        printf("\nProcessing %s%s\n", (buf[0] == '.' && buf[1] == '\0' ? "" : "./"), buf);
-    }
-}
-
-
-
 /** Process all entries in a directory.
  *
  * @param ps The pathstack to use.  It comes pre-set-up with whatever
@@ -910,9 +883,6 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
             modes[i] = st.st_mode;
         }
     }
-
-    // Now that we're sure we're going to process this dir, print a notice.
-    print_processing_progress(ps, print_absolute);
 
     // process all files in dir
     for(i=0; i<n; i++) {

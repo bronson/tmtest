@@ -28,11 +28,7 @@ rm -rf disabled enabled t3.test
 
 
 STDOUT:
-
-Processing .
 ok   t3.test 
-
-Processing ./enabled
 ok   t2.test 
 
 2 tests run, 2 successes, 0 failures.

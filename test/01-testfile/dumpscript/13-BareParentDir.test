@@ -27,10 +27,6 @@ rm -rf do
 
 
 STDOUT:
-	
-	Processing ./..
-	
-	Processing .
 	echo START >&FD
 	
 	ABORT ()  { echo "ABORTED: $*" >&FD; exit 0; }

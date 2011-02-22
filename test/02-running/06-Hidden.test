@@ -13,6 +13,4 @@ rm .hidden.test
 
 STDOUT:
 
-Processing .
-
 0 tests run, 0 successes, 0 failures.

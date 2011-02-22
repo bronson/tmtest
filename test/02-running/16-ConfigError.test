@@ -29,8 +29,6 @@ STDERR:
 /tmp/DIR/tmtest.conf: line 2: dotheyspeakbocceonwhat: command not found
 /tmp/DIR/tmtest.conf: line 2: dotheyspeakbocceonwhat: command not found
 STDOUT:
-
-Processing .
 ERR  t1.test                   error in /tmp/DIR/tmtest.conf
 ERR  t2.test                   error in /tmp/DIR/tmtest.conf
 

@@ -33,8 +33,6 @@ STDERR:
 /tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
 /tmp/DIR/tmtest.conf: line 3: dotheyspeakbocceonwhat: command not found
 STDOUT:
-
-Processing .
 ERR  t1.test                   error in /tmp/DIR/tmtest.conf
 ERR  t2.test                   error in /tmp/DIR/tmtest.conf
 

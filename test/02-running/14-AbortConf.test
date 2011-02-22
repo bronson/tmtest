@@ -24,8 +24,6 @@ rm tmtest.conf t1.test t2.test
 
 
 STDOUT:
-
-Processing .
 ABRT t1.test                   by /tmp/DIR/tmtest.conf: bail from config
 
 1 test run, 0 successes, 1 failure.

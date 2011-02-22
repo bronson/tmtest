@@ -22,8 +22,6 @@ rm tmtest.conf t1.test t2.test
 
 
 STDOUT:
-
-Processing .
 dis  t1.test                   by /tmp/DIR/tmtest.conf: this is the reason
 dis  t2.test                   by /tmp/DIR/tmtest.conf: this is the reason
 
