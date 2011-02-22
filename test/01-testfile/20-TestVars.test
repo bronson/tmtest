@@ -4,14 +4,11 @@
 $tmtest $args -o -q - <<-'EOL' | sed "s/^/    /"
 	echo MYFILE:   "$MYFILE"
 	echo TESTFILE: "$TESTFILE"
-	[ "$MYDIR" = "$TESTDIR" ] && echo "they're equal"
 EOL
 
 STDOUT:
     echo MYFILE:   "$MYFILE"
     echo TESTFILE: "$TESTFILE"
-    [ "$MYDIR" = "$TESTDIR" ] && echo "they're equal"
     STDOUT:
     MYFILE: (STDIN)
     TESTFILE: (STDIN)
-    they're equal

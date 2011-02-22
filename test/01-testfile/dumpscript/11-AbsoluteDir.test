@@ -31,15 +31,12 @@ STDOUT:
 	DISABLED  () { echo "DISABLED: $*" >&FD; exit 0; }
 	DISABLE   () { DISABLED $*; }
 	
-	TESTDIR='/tmp/DIR/dd'
 	TESTFILE='/tmp/DIR/dd/tt.test'
 	
 	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
-	MYDIR='...test'
 	MYFILE='...tmtest.sub.conf'
 	. '...tmtest.sub.conf'
 	echo 'CONFIG: /tmp/DIR/dd/tmtest.conf' >&FD
-	MYDIR='/tmp/DIR/dd'
 	MYFILE='/tmp/DIR/dd/tmtest.conf'
 	. '/tmp/DIR/dd/tmtest.conf'
 	
@@ -52,7 +49,6 @@ STDOUT:
 	STDERR: () { exit 0; }
 	
 	echo 'RUNNING: /tmp/DIR/dd/tt.test' >&FD
-	MYDIR='/tmp/DIR/dd'
 	MYFILE='/tmp/DIR/dd/tt.test'
 	exec >&FD FD>&FD FD>&- FD>&-
 	. '/tmp/DIR/dd/tt.test'

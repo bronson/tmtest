@@ -4,9 +4,7 @@
 mkdir -p do/di
 
 cat > do/di/tt.test <<-'EOL'
-	echo MYDIR:    "$MYDIR"
 	echo MYFILE:   "$MYFILE"
-	echo TESTDIR:  "$TESTDIR"
 	echo TESTFILE: "$TESTFILE"
 EOL
 
@@ -17,12 +15,8 @@ rm -rf do
 
 
 STDOUT:
-    echo MYDIR:    "$MYDIR"
     echo MYFILE:   "$MYFILE"
-    echo TESTDIR:  "$TESTDIR"
     echo TESTFILE: "$TESTFILE"
     STDOUT:
-    MYDIR: /tmp/DIR/do/di
     MYFILE: /tmp/DIR/do/di/tt.test
-    TESTDIR: /tmp/DIR/do/di
     TESTFILE: /tmp/DIR/do/di/tt.test

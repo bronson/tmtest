@@ -54,12 +54,6 @@ static int var_testfile(struct test *test, FILE* fp, const char *var)
     return 0;
 }
 
-static int var_testdir(struct test *test, FILE* fp, const char *var)
-{
-    fputs(test->testfiledir, fp);
-    return 0;
-}
-
 
 static int var_testexec(struct test *test, FILE* fp, const char *var)
 {
@@ -181,7 +175,7 @@ static void check_config(struct test *test, FILE *fp,
 
     if(file_exists(buf)) {
         fprintf(fp, "echo 'CONFIG: %s' >&%d\n", buf, test->statusfd);
-        fprintf(fp, "MYDIR='%.*s'\nMYFILE='%s'\n. '%s'\n", len, buf, buf, buf);
+        fprintf(fp, "MYFILE='%s'\n. '%s'\n", buf, buf);
     }
 }
 
@@ -267,7 +261,6 @@ int printvar(struct test *test, FILE *fp, const char *varname)
         { "STATUSFD",       var_statusfd },
         { "TESTFILE",       var_testfile },
         { "TESTEXEC",       var_testexec },
-        { "TESTDIR",        var_testdir },
     };
 
     for(i=0; i<sizeof(funcs)/sizeof(funcs[0]); i++) {

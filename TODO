@@ -101,7 +101,7 @@
 0.98:
 - Document tmtest and testfile with naturaldocs?
   This should be an example of how to print all important variables.
-	for i in MYDIR MYFILE TESTDIR TESTFILE PWD; do
+	for i in MYFILE TESTFILE PWD; do
 		eval o=\$$i
 		echo $i: $o
 	done

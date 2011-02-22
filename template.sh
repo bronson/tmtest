@@ -5,7 +5,6 @@ ABORT ()  { echo "ABORTED: $*" >&%(STATUSFD); exit 0; }
 DISABLED  () { echo "DISABLED: $*" >&%(STATUSFD); exit 0; }
 DISABLE   () { DISABLED $*; }
 
-TESTDIR='%(TESTDIR)'
 TESTFILE='%(TESTFILE)'
 
 %(CONFIG_FILES)
@@ -18,7 +17,6 @@ STDERR () { exit 0; }
 STDERR: () { exit 0; }
 
 echo 'RUNNING: %(TESTFILE)' >&%(STATUSFD)
-MYDIR='%(TESTDIR)'
 MYFILE='%(TESTFILE)'
 exec >&%(OUTFD) 2>&%(ERRFD) %(OUTFD)>&- %(ERRFD)>&-
 %(TESTEXEC)

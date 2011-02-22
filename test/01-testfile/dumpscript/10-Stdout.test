@@ -15,11 +15,9 @@ STDOUT:
 	DISABLED  () { echo "DISABLED: $*" >&FD; exit 0; }
 	DISABLE   () { DISABLED $*; }
 	
-	TESTDIR='...test'
 	TESTFILE='(STDIN)'
 	
 	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
-	MYDIR='...test'
 	MYFILE='...tmtest.sub.conf'
 	. '...tmtest.sub.conf'
 	
@@ -32,7 +30,6 @@ STDOUT:
 	STDERR: () { exit 0; }
 	
 	echo 'RUNNING: (STDIN)' >&FD
-	MYDIR='...test'
 	MYFILE='(STDIN)'
 	exec >&FD FD>&FD FD>&- FD>&-
 	LINENO=0
