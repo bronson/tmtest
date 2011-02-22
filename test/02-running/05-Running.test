@@ -47,11 +47,11 @@ STDOUT:
 ok   mid.test 
 ok   sub/sub.test 
 ok   ../sup.test 
-ok   sub.test 
+ok   sub/sub.test 
 ok   mid.test 
-ok   sub.test 
-ok   sup.test 
+ok   sub/sub.test 
+ok   ../sup.test 
 ok   mid.test 
-ok   sub.test 
+ok   sub/sub.test 
 
 9 tests run, 9 successes, 0 failures.

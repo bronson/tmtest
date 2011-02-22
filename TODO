@@ -1,5 +1,4 @@
 0.960:
-- Just print full path of test being run.
 - git rid of /etc/tmtestrc and ~/.tmtestrc
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
 - Run in print failures only mode by default, -v to get every result.
@@ -12,6 +11,8 @@
 - Read every stream to exhaustion before finishing the test.
 - Get rid of all the gratuitous sleeps in the code and tests.
 - Don't send entire testfile to bash, strip the STDOUT and STDERR ourselves.
+- Get rid of MYFILE and TESTFILE variables.
+- do we test the exit value?  if so, doc it.
 
 0.964
 - Try to get rid of tmtest.conf completely.
@@ -24,6 +25,7 @@
   - Supply the original path in ORIGPATH
   - NO!  Maybe that's not good.  Maybe each test should just declare its deps?
     - No because that fails being able to run tests without tmtest.
+- Then try to get rid of template.sh and all that mess
 - Maybe add a -x command that would run the test under exec 2>&1; set -x
 
 0.966:

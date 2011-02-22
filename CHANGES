@@ -1,3 +1,4 @@
+- removed the .tmtest-ignore feature, just wasn't useful enough
 - removed TESTDIR and MYDIR variables -- set these yourself.
 - We don't install a config file anymore on make install, just the binary.
 - We now run tests in their own private empty directory.

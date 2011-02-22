@@ -196,11 +196,11 @@ void scan_status_file(struct test *test)
             case stRUNNING:
                 if(test->status == test_pending) {
                     test->status = test_was_started;
-                    if(strlen(test->testfilename) < sizeof(lastfile)) {
-                        strcpy(lastfile, test->testfilename);
+                    if(strlen(test->testfile) < sizeof(lastfile)) {
+                        strcpy(lastfile, test->testfile);
                         lastfile_good = 1;
                     } else {
-                        fprintf(stderr, "RUNNING lastfile is not big enough for %s", test->testfilename);
+                        fprintf(stderr, "RUNNING lastfile is not big enough for %s", test->testfile);
                     }
                 } else {
                     fprintf(stderr, "RUNNING but status (%d) wasn't pending on line %d of the status file: '%.*s'\n",
@@ -216,7 +216,7 @@ void scan_status_file(struct test *test)
                             test->status, ss.line, (int)token_length(&ss)-1, token_start(&ss));
                 }
                 break;
-            
+
             case stABORTED:
                 test->status = (test->status >= test_was_started ? test_was_aborted : config_was_aborted);
                 test->status_reason = dup_status_arg(token_start(&ss), token_end(&ss));

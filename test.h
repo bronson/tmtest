@@ -54,7 +54,8 @@ extern char *config_file;
 // all strings are malloc'd and need to be freed when the test is finished.
 
 struct test {
-    const char *testfile;       ///< path to the testfile
+    const char *testfile;       ///< relative or absolute path to the testfile
+    const char *testpath;       ///< always an absolute path to the testfile
     scanstate testscanner;      ///< scans the testfile.  may be stdin so seeking is not allowed.
 
     int rewritefd;              ///< where to dump the rewritten test.  -1 if we're just running the tests, or the fd of the file that should receive the test contents.
@@ -86,7 +87,7 @@ struct test {
 void scan_status_file(struct test *test);
 void test_command_copy(struct test *test, FILE *fp);
 
-void test_results(struct test *test, const char *dispname);
+void test_results(struct test *test);
 void dump_results(struct test *test);
 void print_test_summary(struct timeval *start, struct timeval *stop);
 int check_for_failure(struct test *test, const char *testpath);
