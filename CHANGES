@@ -1,7 +1,9 @@
+- We now run tests in their own private empty directory in /tmp.
+- /etc/tmtest.conf and ~/.tmtestrc are not supported anymore.
 - removed the .tmtest-ignore feature, just wasn't useful enough
-- removed TESTDIR and MYDIR variables -- set these yourself.
+- print relative path to testfiles, don't separate them into dir and file.
+- removed the TESTDIR, TESTFILE, MYDIR, and MYFILE variables.
 - We don't install a config file anymore on make install, just the binary.
-- We now run tests in their own private empty directory.
 - Removed tmlib.sh and put how to solve its few remaining tasks in the faq.
 - Removed unit tests. They were heavy and didn't offer much addl coverage.
 
@@ -35,7 +37,7 @@ Released 0.94 on 2 Mar 2006
 - Now only "\nSTDOUT[ \t\r\n:]" starts a section.  Anything else is just data.
 - Rewrote the re2c parser in C so we should now be totally binary transparent.
 
-- Bump to 0.92
+- Bump to 0.92 around 2004
 - Tests now start with /tmp as the cwd, not the testdir.
   The testdir is supplied in $TESTDIR (or $MYDIR inside the testfile)
 - Added timing information to test summary.  Disable with new -q option.

@@ -1,18 +1,23 @@
-0.960:
+0.96:
 - Run in print failures only mode by default, -v to get every result.
   Print a dot for each success, F for failure, A for abort, and ? for disabled.
-- Munge diff file to have a/file and b/file so there's no need to pass -p0
 
-0.962:
-- Get rid of all re2c scanners.  Make everything memory-based.
+0.97:
+- Force the STDERR section to always come before STDOUT.
+- Get rid of the globals, put all state into struct test.
 - Convert to libev http://software.schmorp.de/pkg/libev.html to get rid of my poorly maintained libio.
 - Read every stream to exhaustion before finishing the test.
+- Get rid of all re2c scanners.  Make everything memory-based.
 - Get rid of all the gratuitous sleeps in the code and tests.
 - Don't send entire testfile to bash, strip the STDOUT and STDERR ourselves.
-- Get rid of MYFILE and TESTFILE variables.
-- do we test the exit value?  if so, doc it.
+- Get rid of MYFILE variables?
+- Get rid of template.sh?
 
-0.964
+0.98
+- Munge diff file to have a/file and b/file so there's no need to pass -p0
+- Allow running more than one test at once.  Add -j option like gmake.
+- Do not run a config file unless it's owned by the user running tmtest.
+  (and print a fat warning if any config files are skipped)
 - Try to get rid of tmtest.conf completely.
   - Scan upward from the current dir to the root dir, adding dirs that contain
     executables to the PATH.
@@ -26,34 +31,18 @@
 - Then try to get rid of template.sh and all that mess
 - Maybe add a -x command that would run the test under exec 2>&1; set -x
 
-0.966:
-- Is it possible to separate STDOUT and STDERR?  Maybe stderr comes first
-  in the testfile with each line prefixed by :.  Then STDOUT.  No need
-  for this delimiter craziness.
-  YES, stderr ALWAYS comes first in the testfile, followed by stdout.
-  Should buffer stderr to memory, then compare stdout on the fly
+0.99
 - Remove the allfiles and quiet options.
-
-0.968+:
+- do we test the exit value?  if so, doc it.
 - Disabled tests are not ignored when running tmtest -d?
   /home/bronson/workspace-tmtest/tmtest/test/02-running/50-OpenFDsTest.test
 - Is this related to tmtest -d showing a bunch of differences even when tmtest doesn't?
-- Get rid of re2c.  Just hand-write the scanners.
-- Put the zutest macro inside the tests (zutest { ... }) instead of outside.
-- Write unit tests for path normalization.  Maybe for CURPATH too.
-- Make tmtest only execute config files owned by either the user or root.
-  Print a big fat warning when the config file is skipped.  This prevents
-  a malicious user from putting a config file in /tmp and having it
-  executed.  But is this a good idea?  I may want to run tests in another
-  user's directory.  Would it be better to just ensure that we never
-  read a config file from /tmp?  No, cause sticky dirs could be anywhere.
-  Maybe here's the deal: if a config file is in or below a world-writable
-  dir, it must be owned by the current user to be exectued.  Not even root.
-  That's probably the most agreeable.
-  We will not read either config or test files from a world-writable directory.
-  Ever.
-  	If you are below a world-writable directory, then we only execute
-	config files owned by you.  If not, we execute them as normal.
+  Or is it due to starting to generate a diff file before we notice the test is disabled?
+- Add a timeout that will terminate stalled tests.  You can set the timeout
+  in the config file or the test itself.
+- Reomve as many TODOs as possible.
+
+1.0+:
 - Add --diff and --shell to change the executables that get launched.
   No, that clutters the arguments up.  Take them from $DIFF and $SHELL.
   No, obviously that's a bad idea.  That prevents people using tcsh
@@ -78,110 +67,42 @@
         // "tmtest -c /a/b/cc /a/t/u/t.test", we will look for config files
         // in /a/t/tmtest.conf and /a/t/u/tmtest.conf.
 - Get rid of all the exit() calls from main.c.
-- Most tmtest.conf files consist of a single line: ctest="$MYDIR/ctest"
-  Is there any way to make this automatic?  How can we make it easier
-  to find the proper binary?  Add all parent dirs with executables to PATH?
-- Ensure it compiles and runs on freebsd.
+- Ensure it compiles and runs on freebsd and mac.
 - Get rid of -g, add -O2.  Make it easy to set these for compilation.
   Yes, have dev and prod modes.  dev would be -O0 and -g and include
-  unit tests.  Prod is -O2, stripped, and no unit tests (unless the
-  unit tests only add 12K or so, where might as well just leave em).
-- If there were failures, should highlight that in the test summary.
-	"%d FAILURES" or somesuch.
-- Write a sample tmtest.conf that walks you through setting -e or not,
-  indenting STDERR or not, etc.
-- Make zutest recursive: there should be no need for zutest_battery.
-  a zutest_suite should be able to contain any number of other
-  zutest_suites.
-- Add the zutest unit tests to the tmtest test battery.
-- Make zutest able to run both quiet (only failures printed) and verbose
-  (everything printed and then some).
+  unit tests.  Prod is -O2 and stripped.
 - Try to re-enable some of the disabled tests.  Especially the openfds
   test; it's helped in the past to ensure that we don't leak fds.
 
-0.98:
+1.1+:
 - Document tmtest and testfile with naturaldocs?
-- Change the I/O scheme to be event based.  Get rid of the tempfiles.
-  Convert to using the async io library.  Don't use temporary files.
-  This would allow us to recognize that the test is disabled before
-  producing a partial diff, blowing away output sections.
-  - Make sure to keep reading both stdin and stderr to eof.
   - This also allows us to get rid of STATUSFD so that NO other fds are open
     when running the test.  OUTFD and ERRFD still need to be open when
 	running the config files though.
-- Allow running more than one test at once.  Add -j option like gmake.
-  Maybe should also read MAKEFLAGS from the environment?
-- Use i/o lib for everything.  No need for temp files.
-  This means that we stream everything EXCEPT stderr, which we memory
-  buffer.  If your stderr is more than 100K or so in size, just redirect
-  it to a file, then cat the file at the end.  We will truncate stderr if it
-  gets too big.  (new maximum, what 2 MB?)
-  - When done, verify that netknife's tests that freeze with -d now pass.
-  - The reason why this is important is that we currently do a wait_for_child
-  to wait for the test to complete.  Instead, we need to wait for EACH fd
-  to close.  The problem is, the child can dup its fds onto other children
-  (process substitution), and those children might not be done writing yet.
-  This is why files randomly get truncated when doing substitution.  So,
-  we'll just wait for all the FDs to close, then we immediately reap the
-  child.  If the child can't be reaped, that means it closed all its FDs
-  but is still runnnig, which makes no sense; print an error and keep on
-  trucking.
 - Is there any way to record memory and swap usage for each test?
   sure, it's in the rusage. prolly add a "tmtest -v" to print it for each test.
-- Well, piping the result of a command to a function destroys the the
-  exit code.  I don't know of any good way around this!  Maybe this
-  is a good argument to have rewriting performed by tmtest itself...
-  I think it is.  So, we can add, "STDOUT: --pipe 'sed -e /.../'"
-  or something.  I don't like that.  Ick. it all sucks.
 - stdin is all buggered up.  why is it that "cat" with no args will print
   the rest of the test script?  And why is it that if you fork, diff freezes?
   They're related problems I suspect.
     Is it because I'm forgetting to close all open filehandles before forking?
-- Shouldn't run every test in a dir if the DISABLED directive is in a config
-  file.
-  Should discover what dir the DISABLED directive came from and refuse
-  to run anything below that.
-  - Yes, if a config file returns DISABLED, then that folder and all its
-    subfolders are skipped.  Just make the test itself call the DISABLED
-	command if you want testing to continue in that subfolder.
-- Tighten up printing a folder name when there are no testfiles in it.
-  No need for double spacing.
 - Add a --continuous argument that will cycle through all tests tmtest
   can find.  It prints nothing if a test succeeds, or the fail notice
   if it fails.  Runs until cancelled with ^C.  Let it run overnight and
   see if any of your tests have intermittent failures.
-- Reomve as many TODOs as possible.
-- Make zutest take the names of tests to run on stdin?
 
-rc series...
-
-1.0!
-
-1.2:
+1.2+:
 - Add the ability to run multiple tests from one testfile.
   See tmtest 0.8 for a potential implementation of this.
   All we'd need to add is a framework to notify the user that multiple
   tests are in progress; bash can take care of the rest.
 
-?:
+2.0+:
+- there's no need to only write testfiles in bash.  we should support any
+  scripting language.  get the interpreter from a shebang or file extn.
 - add gcov support so you can see what sort of coverage your tests provide.
-- Provide some sort of automatable XML output?
-- Could take tests from tarfiles.  We would decompress the tarfile into
-  a temporary directory, run the test, and delete the tarfile.  This will
-  make it easier to maintain tests that all need to be run in a certain
-  directory hierarchy.
 - add the ability to run valgrind over each test and print success/failure
   of that.  (gives deep valgrind coverage)
   - One problem with this will be all the false warnings that valgrind spews.
-- Get rid of exNEW and all the definitions from tfscan.h.  It's uuuugly!
-  Not quite sure how... I mean, I see how to clean it up some but not
-  a lot.  Probably not worth it.  It's an ugly problem.
-- Is it possible to add a SECOND diff to the output from tmtest -d to
-  add a "-n" to the output section?  That way, instead of printing a
-  warning telling the user what to edit, we could just fix it ourselves.
-  See 18-NoNLWarn.test for more.
-- Maybe make an option to run the command from a pty so it looks just
-  like the user is running the command.
 
 ????:
 - Right now we're tied really tightly to bash.  Any chance of getting
@@ -191,24 +112,8 @@ rc series...
 - There should be a way to repeatedly run a single test with only tiny
   differences.  i.e. test all permeutations of a function
   Hopefully that will clean up 05-08-Disable/Abort.test
-- Add a timeout that will terminate stalled tests.  You can set the timeout
-  in the config file or the test itself.
 - I don't like that $tmtest expands to "$tmtest --config=...".  That's
   not what one would normally expect.  However, since it also potentially
   expands to "valgrind tmtest --config..." it's not THAT bad -- it's
   never just a filename.  Maybe change $tmtest to $tmtest_cmd?  In every
   test... arg.  or something!
-
-maybe never:
-- Add STDOUT: trimws and STDERR: trimws - to trim whitespace from
-  the front of each output line.
-  I wanted to add this to simulate the "STDOUT=<<-EOL" heredoc sequence
-  of the original tests (that is nestable, unlinke Bash's.  But now I
-  realize that this problem is pretty much solved from the other direction.
-  Instead of removing indentation from the heredoc, simply add indentation
-  using a MODIFY section (as detailed in the FAQ).
-- Add a "FAILURE-OK" flag for when failure IS an option.  This would print
-  that the test failed, but would not highlight it, and would not count
-  either positively or negatively toward the test results.  That way you
-  can include experimental tests in a production test stack (say you're
-  developing a test and want to know if it's a good idea...)
