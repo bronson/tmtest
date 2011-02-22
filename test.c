@@ -199,11 +199,11 @@ void scan_status_file(struct test *test)
             case stRUNNING:
                 if(test->status == test_pending) {
                     test->status = test_was_started;
-                    if(copy_status_arg(token_start(&ss), token_end(&ss), lastfile, sizeof(lastfile))) {
+                    if(strlen(test->testfilename) < sizeof(lastfile)) {
+                        strcpy(lastfile, test->testfilename);
                         lastfile_good = 1;
                     } else {
-                        fprintf(stderr, "RUNNING needs arg on line %d of the status file: '%.*s'\n",
-                                ss.line, (int)token_length(&ss)-1, token_start(&ss));
+                        fprintf(stderr, "RUNNING lastfile is not big enough for %s", test->testfilename);
                     }
                 } else {
                     fprintf(stderr, "RUNNING but status (%d) wasn't pending on line %d of the status file: '%.*s'\n",

@@ -15,8 +15,6 @@ STDOUT:
 	DISABLED  () { echo "DISABLED: $*" >&FD; exit 0; }
 	DISABLE   () { DISABLED $*; }
 	
-	TESTFILE='(STDIN)'
-	
 	echo 'CONFIG: ...tmtest.sub.conf' >STATUSFD
 	MYFILE='...tmtest.sub.conf'
 	. '...tmtest.sub.conf'
@@ -29,8 +27,7 @@ STDOUT:
 	STDERR () { exit 0; }
 	STDERR: () { exit 0; }
 	
-	echo 'RUNNING: (STDIN)' >&FD
-	MYFILE='(STDIN)'
+	echo RUNNING >&FD
 	exec >&FD FD>&FD FD>&- FD>&-
 	LINENO=0
 	this test is never run but we do need to specify a file so tmtest

@@ -1,3 +1,2 @@
 These tests verify that the testfile can be named on the command
-line in any way possible, yet each config file gets included
-exactly once and MYFILE is normalized and correct each time.
+line in any way possible, yet each config file gets included once.

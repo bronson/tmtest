@@ -69,10 +69,6 @@ Therefore, /home/test/a/b/tmtest.conf overrides /home/test/tmtest.conf
 It executes each config files every time it runs a test.  If you're
 running 40 tests, your config files will each get executed 40 times.
 
-Note that while config files are running, the current directory
-is set to the testfile's directory.  For convenience the MYFILE
-variable gives the full pathname to the currently running config file.
-
 Any output produced by the config files goes straight to the screen.
 It will not contaminate the test results.  tmtest only cares about
 the output produced by the testfile itself.

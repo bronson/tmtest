@@ -34,7 +34,7 @@ HASARG  = WS* ":" ANYN* "\n";
 "START"   NOARG     { return stSTART; }
 "CONFIG"  HASARG    { return stCONFIG; }
 "PREPARE" NOARG     { return stPREPARE; }
-"RUNNING" HASARG    { return stRUNNING; }
+"RUNNING" NOARG     { return stRUNNING; }
 "DONE"    NOARG     { return stDONE; }
 
 "ABORTED"  HASARG   { return stABORTED; }

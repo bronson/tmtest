@@ -41,20 +41,6 @@
  * Everywhere else we use Unix I/O.  Ensure they never mix.
  */
 
-static int var_testfile(struct test *test, FILE* fp, const char *var)
-{
-    if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
-        fprintf(fp, "(STDIN)");
-    } else if(test->testfilename[0] == '/') {
-        fprintf(fp, "%s", test->testfilename);
-    } else {
-        fprintf(fp, "%s/%s", test->testfiledir, test->testfilename);
-    }
-
-    return 0;
-}
-
-
 static int var_testexec(struct test *test, FILE* fp, const char *var)
 {
     // If the filename is a dash, it means we should feed the test
@@ -259,7 +245,6 @@ int printvar(struct test *test, FILE *fp, const char *varname)
         { "OUTFD",          var_outfd },
         { "ERRFD",          var_errfd },
         { "STATUSFD",       var_statusfd },
-        { "TESTFILE",       var_testfile },
         { "TESTEXEC",       var_testexec },
     };
 
