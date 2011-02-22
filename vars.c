@@ -21,7 +21,6 @@
 #include "vars.h"
 
 #define CONFIG_FILE "tmtest.conf"
-#define HOME_CONFIG_FILE ".tmtestrc"
 
 
 /** @file vars.c
@@ -77,30 +76,6 @@ static int var_statusfd(struct test *test, FILE *fp, const char *var)
 {
     fprintf(fp, "%d", test->statusfd);
     return 0;
-}
-
-
-/** Returns the full path to the user's home directory.
- */
-
-static char* get_home_dir(struct test *test)
-{
-    char *cp;
-    struct passwd *entry;
-
-    cp = getenv("HOME");
-    if(cp) return cp;
-    cp = getenv("LOGDIR");
-    if(cp) return cp;
-
-    entry = getpwuid(getuid());
-    if(entry) {
-        cp = entry->pw_dir;
-        if(cp) return cp;
-    }
-
-    test_abort(test, "Could not locate your home directory!  Please set $HOME.\n");
-    return NULL; // will never be executed
 }
 
 
@@ -164,15 +139,6 @@ static void check_config(struct test *test, FILE *fp,
 
 
 /** Prints the shell commands needed to read in all available config files.
- *
- * for instance:
- *
- *     echo 'CONFIG: /etc/tmtest' >&5
- *     . '/etc/tmtest'
- *     echo 'CONFIG: /home/bronson/tmtest/tmtest.conf' >&5
- *     . '/home/bronson/tmtest/tmtest.conf'
- *
- *     and so on...
  */
 
 static int var_config_files(struct test *test, FILE *fp, const char *var)
@@ -197,10 +163,6 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
         *cp = '\0';
         check_config_str(test, fp, buf, cp+1);
         config_file = oldcfg;
-    } else {
-        check_config_str(test, fp, "/etc", CONFIG_FILE);
-        check_config_str(test, fp, "/etc/tmtest", CONFIG_FILE);
-        check_config_str(test, fp, get_home_dir(test), HOME_CONFIG_FILE);
     }
 
     // check config files in the current hierarchy

@@ -66,11 +66,6 @@ endif
 # NOTE: This will remove the configuration file too!
 uninstall: tmtest
 	rm $(bindir)/tmtest
-ifeq ($(prefix), $(HOME))
-	rm $(HOME)/.tmtestrc
-else
-	rm /etc/tmtest.conf
-endif
 
 clean:
 	rm -f tmtest template.c tags

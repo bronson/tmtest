@@ -14,10 +14,10 @@ B<tmtest> [B<-d>|B<-o>] [I<dir>|I<testfile>...]
 
 =item B<-c> B<--config>
 
-Specifies the config file to be read before running the test file.
-Prevents the standard config files (/etc/tmtest.conf, /etc/tmtest/tmtest.conf,
-~/.tmtestrc) from being read.  Also doesn't read config files unless they
-are below the directory that contains the specified file.
+Specifies a config file to be read before running the test file.
+tmtest will still look upward in the file hierarchy for tmtest.conf
+files.  Settings in tmtest.conf files override files specified by
+--config.
 
 =item B<-d> B<--diff>
 
@@ -61,12 +61,12 @@ quieter than it normally is but it certainly isn't silent.
 
 =head1 CONFIGURATION
 
-tmtest reads its configuration first from F</etc/tmtest.conf> and
-F<~/.tmtest.conf>.  Then it starts at the root directory and works
+tmtest first reads the file specified by --config if supplied.
+Then it starts at the root directory and works
 its way up to the current directory looking for files named "tmtest.conf"
 Therefore, /home/test/a/b/tmtest.conf overrides /home/test/tmtest.conf
 (because the latter is read and executed before the former).
-It executes each config files every time it runs a test.  If you're
+It executes each config file every time it runs a test.  If you're
 running 40 tests, your config files will each get executed 40 times.
 
 Any output produced by the config files goes straight to the screen.

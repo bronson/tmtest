@@ -47,8 +47,7 @@ typedef enum {
 // (only print results, no statistics or other useful conversation).
 extern int quiet;
 
-// If this is set, then we should use it as the config file rather than
-// checking /etc/tmtest.conf, ~/.tmtestrc, etc.
+// if set then read this config file before scanning through directories
 extern char *config_file;
 
 // all strings are malloc'd and need to be freed when the test is finished.
