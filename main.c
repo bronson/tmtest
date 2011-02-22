@@ -670,6 +670,12 @@ static int run_test(const char *path, const char *name, const char *dispname, in
         }
         close(pipes[0]);
         close(pipes[1]);
+
+        if(chdir(g_testhome) != 0) {
+            fprintf(stderr, "Could not chdir 2 to %s: %s\n", g_testhome, strerror(errno));
+            exit(runtime_error);
+        }
+
         execl(SHPROG, SHPROG, "-s", (char*)NULL);
         perror("executing " SHPROG " for test");
         exit(runtime_error);
@@ -1089,11 +1095,6 @@ static void start_tests()
 
     if(mkdir(g_testhome, 0700) < 0) {
         fprintf(stderr, "couldn't create %s: %s\n", g_testhome, strerror(errno));
-        exit(initialization_error);
-    }
-
-    if(chdir(g_testhome) != 0) {
-        fprintf(stderr, "Could not chdir 2 to %s: %s\n", g_testhome, strerror(errno));
         exit(initialization_error);
     }
 
