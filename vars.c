@@ -19,7 +19,6 @@
 
 #include "test.h"
 #include "vars.h"
-#include "pathstack.h"
 
 #define CONFIG_FILE "tmtest.conf"
 #define HOME_CONFIG_FILE ".tmtestrc"
@@ -46,18 +45,14 @@ static int var_testexec(struct test *test, FILE* fp, const char *var)
     // If the filename is a dash, it means we should feed the test
     // from stdin.  Otherwise, just have the shell execute the testfile.
 
-    if(test->testfilename[0] == '-' && test->testfilename[1] == '\0') {
+    if(test->testfile[0] == '-' && test->testfile[1] == '\0') {
         // bash3 doesn't support setting LINENO anymore.  Bash2 did.
         // what the hell, it's worth a shot.
         fprintf(fp, "LINENO=0\n");
         test_command_copy(test, fp);
     } else {
         test_command_copy(test, NULL);
-        if(test->testfilename[0] == '/') {
-            fprintf(fp, ". %s", test->testfilename);
-        } else {
-            fprintf(fp, ". '%s/%s'", test->testfiledir, test->testfilename);
-        }
+        fprintf(fp, ". %s", test->testfile);
     }
 
     return 0;
@@ -208,7 +203,8 @@ static int var_config_files(struct test *test, FILE *fp, const char *var)
 
     // check config files in the current hierarchy
     buf[0] = '\0';
-    strncat(buf, test->testfiledir, sizeof(buf) - 1);
+    strncat(buf, test->testfile, sizeof(buf) - 1);
+
     if(config_file) {
         confbaselen = strrchr(config_file, '/') - config_file;
     }

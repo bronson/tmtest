@@ -54,8 +54,7 @@ extern char *config_file;
 // all strings are malloc'd and need to be freed when the test is finished.
 
 struct test {
-    const char *testfilename;   ///< name of the test file.  does not include any directories.  will be "-" if reading from stdin.
-    const char *testfiledir;    ///< full path to the directory containing the testfile.  should never end in a '/'.
+    const char *testfile;       ///< path to the testfile
     scanstate testscanner;      ///< scans the testfile.  may be stdin so seeking is not allowed.
 
     int rewritefd;              ///< where to dump the rewritten test.  -1 if we're just running the tests, or the fd of the file that should receive the test contents.
@@ -102,3 +101,4 @@ void test_abort(struct test *test, const char *fmt, ...);
 // file ends in a newline, false if not.
 size_t write_file(struct test *test, int outfd, int infd, int *ending_nl);
 
+const char *convert_testfile_name(const char *fn);

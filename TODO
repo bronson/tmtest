@@ -1,5 +1,6 @@
 0.960:
 - Just print full path of test being run.
+- git rid of /etc/tmtestrc and ~/.tmtestrc
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
 - Run in print failures only mode by default, -v to get every result.
   Can we sense a terminal and print a running count statusline?

@@ -325,13 +325,11 @@ static int start_diff(struct test *test)
     int pipes[2];
     int child;
     const char *filename = NULL;
-    char buf[PATH_MAX];
-    struct pathstack stack;
 
-    assert(test->testfilename);
+    assert(test->testfile);
     // if the test is coming from stdin, we need to copy it to a
     // real file before we can diff against it.
-    if(is_dash(test->testfilename)) {
+    if(is_dash(test->testfile)) {
         // first, write all of our stdin to a tmpfile.
         write_stdin_to_tmpfile(test);
         // then, read the test from this file instead of stdin.
@@ -358,31 +356,7 @@ static int start_diff(struct test *test)
         close(pipes[0]);
         close(pipes[1]);
 
-        if (!filename) {
-            // need to figure out the filename to pass to diff
-            if (test->testfilename[0] == '/') {
-                // if the path is absolute, we can just use it straight away.
-                filename = test->testfilename;
-            } else {
-                if(pathstack_init(&stack, buf, sizeof(buf), test->testfiledir) != 0) {
-                    fprintf(stderr, "path too long: %s\n", test->testfiledir);
-                    exit(runtime_error);
-                }
-                if(pathstack_push(&stack, test->testfilename, NULL) != 0) {
-                    fprintf(stderr, "path too long: %s\n", test->testfilename);
-                    exit(runtime_error);
-                }
-                filename = pathstack_absolute(&stack);
-            }
-        }
-
-        if(0 != chdir(test->testfiledir)) {
-            fprintf(stderr, "Could not chdir 1 to %s: %s\n",
-                    test->testfiledir, strerror(errno));
-            exit(runtime_error);
-        }
-
-        execl(DIFFPROG, DIFFPROG, "-u", filename, "-", (char*)NULL);
+        execl(DIFFPROG, DIFFPROG, "-u", test->testfile, "-", (char*)NULL);
         perror("executing " DIFFPROG " for test");
         exit(runtime_error);
     }
@@ -423,25 +397,16 @@ static void finish_diff(struct test *test, int diffpid)
 
 static int open_test_file(struct test *test)
 {
-    char buf[PATH_MAX];
     int fd;
 
     // If the filename is a dash then we just use stdin.
-    if(is_dash(test->testfilename)) {
+    if(is_dash(test->testfile)) {
         return STDIN_FILENO;
     }
 
-    if(test->testfilename[0] == '/') {
-        // If the filename is absolute, we use it directly.
-        copy_string(buf, test->testfilename, sizeof(buf));
-    } else {
-        // Otherwise we need to make an absolute path
-        cat_path(buf, test->testfiledir, test->testfilename, sizeof(buf));
-    }
-
-    fd = open(buf, O_RDONLY);
+    fd = open(test->testfile, O_RDONLY);
     if(fd < 0) {
-        fprintf(stderr, "Could not open %s: %s\n", buf, strerror(errno));
+        fprintf(stderr, "Could not open %s: %s\n", test->testfile, strerror(errno));
         exit(runtime_error);
     }
 
@@ -584,7 +549,7 @@ static void verify_testhome(struct test *test)
  * @returns 1 if we should keep testing, 0 if we should stop now.
  */
 
-static int run_test(const char *path, const char *name, const char *dispname, int warn_suffix)
+static int run_test(const char *name, int warn_suffix)
 {
     struct test test;
     char buf[BUFSIZ];   // scan buffer for the testfile
@@ -620,8 +585,7 @@ static int run_test(const char *path, const char *name, const char *dispname, in
         exit(runtime_error);
     }
 
-    test.testfilename = name;
-    test.testfiledir = path;
+    test.testfile = name;
     test.outfd = g_outfd;
     test.errfd = g_errfd;
     test.statusfd = g_statusfd;
@@ -728,7 +692,7 @@ static int run_test(const char *path, const char *name, const char *dispname, in
         // process and output the test results
         switch(outmode) {
             case outmode_test:
-                test_results(&test, dispname);
+                test_results(&test);
                 break;
             case outmode_dump:
                 dump_results(&test);
@@ -770,11 +734,10 @@ static int run_test(const char *path, const char *name, const char *dispname, in
  * @returns 1 if we should continue testing, 0 if we should abort.
  */
 
-static int process_absolute_file(const char *abspath, const char *origpath, int warn_suffix)
+static int process_absolute_file(const char *abspath, int warn_suffix)
 {
     char buf[PATH_MAX];
     struct pathstack stack;
-    char *file, *dir;
 
     if(pathstack_init(&stack, buf, sizeof(buf), abspath) != 0) {
         fprintf(stderr, "path too long: %s\n", abspath);
@@ -785,21 +748,7 @@ static int process_absolute_file(const char *abspath, const char *origpath, int 
     normalize_absolute_path(stack.buf);
     stack.curlen = strlen(stack.buf);
 
-    dir = pathstack_absolute(&stack);
-    file = strrchr(dir, '/');
-    if(!file) {
-        fprintf(stderr, "Path wasn't absolute in process_absolute file!?  %s\n", abspath);
-        return 0;
-    }
-
-    *file++ = '\0';   // separate the path and the filename
-    // If the file was in the root directory, ensure we don't blow away
-    // the leading slash.
-    if(dir[0] == '\0') {
-        dir = "/";
-    }
-
-    return run_test(dir, file, origpath, warn_suffix);
+    return run_test(pathstack_absolute(&stack), warn_suffix);
 }
 
 
@@ -890,19 +839,14 @@ static int process_ents(struct pathstack *ps, char **ents, int print_absolute)
             if(ents[i][0] == '/') {
                 // we know the path has already been fully normalized.
                 assert(print_absolute == -1); // it should be impossible to get here if we've already recursed
-                keepontruckin = process_absolute_file(ents[i], ents[i], 1);
+                keepontruckin = process_absolute_file(ents[i], 1);
             } else {
-                if(strchr(ents[i], '.') || strchr(ents[i], '/')) {
-                    // if there are potential non-normals in the path, we need to normalize it.
-                    if(pathstack_push(ps, ents[i], &save) != 0) {
-                        fprintf(stderr, "path too long: %s\n", ents[i]);
-                        exit(runtime_error);
-                    }
-                    keepontruckin = process_absolute_file(pathstack_absolute(ps), ents[i], print_absolute == -1);
-                    pathstack_pop(ps, &save);
-                } else {
-                    keepontruckin = run_test(pathstack_absolute(ps), ents[i], ents[i], print_absolute == -1);
+                if(pathstack_push(ps, ents[i], &save) != 0) {
+                    fprintf(stderr, "path too long: %s\n", ents[i]);
+                    exit(runtime_error);
                 }
+                keepontruckin = process_absolute_file(pathstack_absolute(ps), print_absolute == -1);
+                pathstack_pop(ps, &save);
             }
             if(!keepontruckin) {
                 goto abort;

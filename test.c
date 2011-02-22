@@ -35,6 +35,9 @@ static int test_successes = 0;
 static int test_failures = 0;
 
 
+/** Returns a human-readable testfile name (i.e. (STDIN) instead of -)
+ */
+
 const char *convert_testfile_name(const char *fn)
 {
     if(fn[0] == '-' && fn[1] == '\0') {
@@ -42,12 +45,6 @@ const char *convert_testfile_name(const char *fn)
     }
 
     return fn;
-}
-
-
-const char* get_testfile_name(struct test *test)
-{
-    return convert_testfile_name(test->testfilename);
 }
 
 
@@ -473,14 +470,14 @@ int start_output_section(struct test *test, const char *tok,
     int suppress_trailing_newline = 0;
 
     parse_section_args(tok, toklen,
-            get_testfile_name(test), test->testscanner.line,
+            convert_testfile_name(test->testfile), test->testscanner.line,
             start_output_section_argproc, 
             (void*)&suppress_trailing_newline);
 
     if(val != match_unknown) {
         // we've already obtained a value for this section!
         fprintf(stderr, "%s line %d Error: duplicate %s "
-                "section.  Ignored.\n", get_testfile_name(test),
+                "section.  Ignored.\n", convert_testfile_name(test->testfile),
                 test->testscanner.line, secname);
         return 0;
     }
@@ -505,7 +502,7 @@ void warn_section_newline(struct test *test, const char *name)
 {
     fprintf(stderr, "WARNING: %s didn't end with a newline!\n"
             "   Add a -n to %s line %d if this is the expected behavior.\n",
-            name, get_testfile_name(test), test->testscanner.line);
+            name, convert_testfile_name(test->testfile), test->testscanner.line);
 }
 
 
@@ -545,7 +542,7 @@ enum matchval end_output_section(struct test *test, scanstate *cmpscan,
         fprintf(stderr,
             "WARNING: %s is marked -n but it ends with multiple newlines!\n"
             "    Please remove all but one newline from %s around line %d.\n",
-            name, get_testfile_name(test), test->testscanner.line);
+            name, convert_testfile_name(test->testfile), test->testscanner.line);
         return match_no;
     }
 
@@ -692,7 +689,7 @@ void scan_sections(struct test *test, scanstate *scanner,
 
 static void print_reason(struct test *test, const char *name, const char *prep)
 {
-    printf("%s %-25s ", name, get_testfile_name(test));
+    printf("%s %-25s ", name, convert_testfile_name(test->testfile));
     if(!was_started(test->status)) {
         printf("%s %s", prep, test->last_file_processed);
         if(test->status_reason) {
@@ -763,7 +760,7 @@ static void test_analyze_results(struct test *test, int *stdo, int *stde)
  * dispname is the name we should display for the test.
  */
 
-void test_results(struct test *test, const char *dispname)
+void test_results(struct test *test)
 {
     int stdo, stde; // true if there are differences.
 
@@ -790,9 +787,9 @@ void test_results(struct test *test, const char *dispname)
     }
 
     if(!stdo && !stde && !test->exitsignal) {
-        printf("ok   %s \n", convert_testfile_name(dispname));
+        printf("ok   %s \n", convert_testfile_name(test->testfile));
     } else {
-        printf("FAIL %-25s ", convert_testfile_name(dispname));
+        printf("FAIL %-25s ", convert_testfile_name(test->testfile));
         if(test->exitsignal) {
             printf("terminated by signal %d%s", test->exitsignal,
                     (test->exitcored ? " with core" : ""));
@@ -886,7 +883,7 @@ static void write_section(struct test *test, const char *datap, int len,
     int has_nl;
 
     parse_section_args(datap, len,
-            get_testfile_name(test), test->testscanner.line,
+            convert_testfile_name(test->testfile), test->testscanner.line,
             start_output_section_argproc, &marked_no_nl);
 
     write(test->rewritefd, datap, len);
@@ -985,7 +982,7 @@ void dump_results(struct test *test)
 
     if(!was_started(test->status)) {
         fprintf(stderr, "Error: %s was not started due to errors in %s.\n",
-                get_testfile_name(test), test->last_file_processed);
+                convert_testfile_name(test->testfile), test->last_file_processed);
         test_failures++;
         return;
     }
