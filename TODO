@@ -2,7 +2,6 @@
 - Run in print failures only mode by default, -v to get every result.
   Print a dot for each success, F for failure, A for abort, and ? for disabled.
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
-- Config file runs all tests with -e.  Fix and remove all "set +e" from tests.
 
 0.962:
 - Get rid of all re2c scanners.  Make everything memory-based.
