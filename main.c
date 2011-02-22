@@ -677,18 +677,18 @@ static int run_test(const char *path, const char *name, const char *dispname, in
 
     // create the testfile scanner.  it will either scan from
     // the testfile itself or from stdin if filename is "-".
-    scanstate_init(&test.testfile, buf, sizeof(buf));
+    scanstate_init(&test.testscanner, buf, sizeof(buf));
     if(test.diffname) {
         if(lseek(test.diff_fd, 0, SEEK_SET) < 0) {
             fprintf(stderr, "Couldn't seek to start of %s: %s\n",
                     test.diffname, strerror(errno));
             exit(runtime_error);
         }
-        readfd_attach(&test.testfile, test.diff_fd);
+        readfd_attach(&test.testscanner, test.diff_fd);
     } else {
-        readfd_attach(&test.testfile, open_test_file(&test));
+        readfd_attach(&test.testscanner, open_test_file(&test));
     }
-    tfscan_attach(&test.testfile);
+    tfscan_attach(&test.testscanner);
 
     if(dumpscript) {
         print_template(&test, exec_template, stdout);

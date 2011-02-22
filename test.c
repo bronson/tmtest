@@ -288,8 +288,8 @@ void test_command_copy(struct test *test, FILE *fp)
     int oldline;
 
     do {
-        oldline = test->testfile.line;
-        int tokno = scan_next_token(&test->testfile);
+        oldline = test->testscanner.line;
+        int tokno = scan_next_token(&test->testscanner);
         if(tokno < 0) {
             test_abort(test, "Error %d pulling status tokens: %s\n", 
                     tokno, strerror(errno));
@@ -301,14 +301,14 @@ void test_command_copy(struct test *test, FILE *fp)
 
         if(tokno != exCOMMAND) {
             // now we attempt to push the token back on the stream...
-            scan_pushback(&test->testfile);
-            test->testfile.line = oldline;
+            scan_pushback(&test->testscanner);
+            test->testscanner.line = oldline;
             // The pushback reset the stream, and I restored the line number,
             // but the scanner is still in a different state.
             // We need it to be in a COMMAND state, so that when it feeds
             // the new SECTION token it marks it NEW.  Reattaching resets
             // the state to a command state, so we can just do that.
-            tfscan_attach(&test->testfile);
+            tfscan_attach(&test->testscanner);
             // Now we're done dumping the command and the scanner
             // is poised to return the correct section start to the
             // next client.
@@ -316,13 +316,13 @@ void test_command_copy(struct test *test, FILE *fp)
         }
 
         // print the modified data to the output stream.
-        rewrite_command_section(test, tokno, token_start(&test->testfile), token_length(&test->testfile));
+        rewrite_command_section(test, tokno, token_start(&test->testscanner), token_length(&test->testscanner));
 
         if(fp) {
             // print the unmodified data to the command script.
-            fwrite(token_start(&test->testfile), token_length(&test->testfile), 1, fp);
+            fwrite(token_start(&test->testscanner), token_length(&test->testscanner), 1, fp);
         }
-    } while(!scan_is_finished(&test->testfile));
+    } while(!scan_is_finished(&test->testscanner));
 
     rewrite_command_section(test, 0, NULL, 0);
 }
@@ -473,7 +473,7 @@ int start_output_section(struct test *test, const char *tok,
     int suppress_trailing_newline = 0;
 
     parse_section_args(tok, toklen,
-            get_testfile_name(test), test->testfile.line,
+            get_testfile_name(test), test->testscanner.line,
             start_output_section_argproc, 
             (void*)&suppress_trailing_newline);
 
@@ -481,7 +481,7 @@ int start_output_section(struct test *test, const char *tok,
         // we've already obtained a value for this section!
         fprintf(stderr, "%s line %d Error: duplicate %s "
                 "section.  Ignored.\n", get_testfile_name(test),
-                test->testfile.line, secname);
+                test->testscanner.line, secname);
         return 0;
     }
 
@@ -505,7 +505,7 @@ void warn_section_newline(struct test *test, const char *name)
 {
     fprintf(stderr, "WARNING: %s didn't end with a newline!\n"
             "   Add a -n to %s line %d if this is the expected behavior.\n",
-            name, get_testfile_name(test), test->testfile.line);
+            name, get_testfile_name(test), test->testscanner.line);
 }
 
 
@@ -545,7 +545,7 @@ enum matchval end_output_section(struct test *test, scanstate *cmpscan,
         fprintf(stderr,
             "WARNING: %s is marked -n but it ends with multiple newlines!\n"
             "    Please remove all but one newline from %s around line %d.\n",
-            name, get_testfile_name(test), test->testfile.line);
+            name, get_testfile_name(test), test->testscanner.line);
         return match_no;
     }
 
@@ -736,7 +736,7 @@ static void test_analyze_results(struct test *test, int *stdo, int *stde)
     test->stderr_match = match_unknown;
 
     scanstate_init(&scanner, scanbuf, sizeof(scanbuf));
-    scan_sections(test, &test->testfile, parse_section_compare, &scanner);
+    scan_sections(test, &test->testscanner, parse_section_compare, &scanner);
 
     assert(test->stdout_match != match_inprogress);
     assert(test->stderr_match != match_inprogress);
@@ -886,7 +886,7 @@ static void write_section(struct test *test, const char *datap, int len,
     int has_nl;
 
     parse_section_args(datap, len,
-            get_testfile_name(test), test->testfile.line,
+            get_testfile_name(test), test->testscanner.line,
             start_output_section_argproc, &marked_no_nl);
 
     write(test->rewritefd, datap, len);
@@ -996,7 +996,7 @@ void dump_results(struct test *test)
     test->stdout_match = match_unknown;
     test->stderr_match = match_unknown;
 
-    scan_sections(test, &test->testfile, parse_section_output, &tempref);
+    scan_sections(test, &test->testscanner, parse_section_output, &tempref);
 
     // if any sections haven't been output, but they differ from
     // the default, then they need to be output here at the end.
