@@ -17,7 +17,7 @@ cat > t2.test <<-EOs
 	he
 EOs
 
-$tmtest -q | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+$tmtest -v -q | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 rm tmtest.conf t1.test t2.test
 
 

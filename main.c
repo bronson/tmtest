@@ -48,6 +48,7 @@ int outmode = outmode_test;
 int allfiles = 0;     // run a testfile even if it begins with a dash
 int dumpscript = 0;   // print the script instead of running it
 int quiet = 0;
+int verbose = 0;
 char *config_file;    // absolute path to the user-specified config file
                       // null if user didn't specify a config file.
 
@@ -967,6 +968,7 @@ static void usage()
             "  -o: output the test file with the new output.\n"
             "  -d: output a diff between the expected and actual outputs.\n"
             "  -q --quiet: be quiet when running tests\n"
+            "  -v --verbose: print more when running tests\n"
             "  -V --version: print the version of this program.\n"
             "  -h --help: prints this help text\n"
             "Run tmtest with no arguments to run all tests in the current directory.\n"
@@ -990,6 +992,7 @@ static void process_args(int argc, char **argv)
         {"help", 0, 0, 'h'},
         {"output", 0, 0, 'o'},
         {"quiet", 0, 0, 'q'},
+        {"verbose", 0, 0, 'v'},
         {"version", 0, 0, 'V'},
         {0, 0, 0, 0},
     };
@@ -1029,6 +1032,10 @@ static void process_args(int argc, char **argv)
 
             case 'q':
                 quiet++;
+                break;
+
+            case 'v':
+                verbose++;
                 break;
 
             case 'V':

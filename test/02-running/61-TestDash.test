@@ -9,7 +9,7 @@ cat > blah <<-EOL
 	Howdy pardner.
 EOL
 
-$tmtest -q --ignore-extension blah | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+$tmtest -v -q --ignore-extension blah | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 
 rm blah
 

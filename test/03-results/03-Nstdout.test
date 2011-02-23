@@ -4,7 +4,7 @@
 # there's an extra space after the Howdy in the stdout.
 
 
-$tmtest -q - <<-EOL
+$tmtest -q -v - <<-EOL
 	echo Howdy
 
 	STDOUT:

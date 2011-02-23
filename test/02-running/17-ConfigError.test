@@ -22,7 +22,7 @@ cat > t2.test <<-EOs
 EOs
 
 # need to fix paths in both stdout and stderr
-$tmtest -q \
+$tmtest -v -q \
   2> >(sed "s/${PWD//\//\\/}/\/tmp\/DIR/g" >&2) \
   | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 

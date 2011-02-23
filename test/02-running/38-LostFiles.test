@@ -18,7 +18,7 @@ cat > 2.test <<-EOL
 EOL
 
 set +e   # ensure the test doesn't stop here even though tmtest returns a failure
-$tmtest -q 1.test 2.test
+$tmtest -v -q 1.test 2.test
 
 rm 1.test 2.test
 

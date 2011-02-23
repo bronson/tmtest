@@ -13,7 +13,7 @@ cat > '12".test' <<-EOs
 	hi
 EOs
 
-$tmtest -q | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+$tmtest -v -q | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 rm "vl'hurg.test" '12".test'
 
 

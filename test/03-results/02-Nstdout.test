@@ -4,7 +4,7 @@
 # (Howdy vs. howdy).
 
 
-$tmtest -q - <<-EOL
+$tmtest -q -v - <<-EOL
 	echo Howdy
 	STDOUT:
 	howdy

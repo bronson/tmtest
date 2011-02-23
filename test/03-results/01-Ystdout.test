@@ -1,4 +1,6 @@
-$tmtest -q - <<-EOL
+# Ensures lack of a stderr section won't affect the test results.
+
+$tmtest -q -v - <<-EOL
 	echo Howdy
 	STDOUT :
 	Howdy

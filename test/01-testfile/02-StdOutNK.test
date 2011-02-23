@@ -2,7 +2,7 @@
 # following char isn't a delimiter ("STDOUT ", "STDOUT:" and "STDOUT\n"
 # are all keywords, "STDOUTx" is not).
 
-$tmtest -q - <<-EOL
+$tmtest -v -q - <<-EOL
 	echo STDOUTx
 	STDOUT:
 	STDOUTx

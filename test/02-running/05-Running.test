@@ -37,7 +37,7 @@ cat > sub/test <<-EOL
 	skip
 EOL
 
-$tmtest -q mid.test sub/sub.test ../sup.test sub . ..
+$tmtest -v -q mid.test sub/sub.test ../sup.test sub . ..
 
 # clean up after ourselves
 rm -rf ../sup.test ../mid

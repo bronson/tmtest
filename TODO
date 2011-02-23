@@ -1,6 +1,5 @@
 0.96:
-- Run in print failures only mode by default, -v to get every result.
-  Print a dot for each success, F for failure, A for abort, and ? for disabled.
+- Print failures and errors after the test is finished running.
 
 0.97:
 - Force the STDERR section to always come before STDOUT.

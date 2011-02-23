@@ -43,9 +43,10 @@ typedef enum {
 #define was_disabled(st) ((st) == config_was_disabled || (st) == test_was_disabled)
 
 
-// Nonzero if we want to be as silent as possible
-// (only print results, no statistics or other useful conversation).
+// flags for how test output should be printed
 extern int quiet;
+extern int verbose;
+
 
 // if set then read this config file before scanning through directories
 extern char *config_file;

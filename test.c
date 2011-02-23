@@ -1,7 +1,7 @@
 /* test.c
  * 30 Dec 2004
  * Copyright (C) 2004 Scott Bronson
- * 
+ *
  * Contains the routines to check/diff/etc test output.
  *
  * This file is covered by the MIT license.
@@ -248,7 +248,7 @@ void scan_status_file(struct test *test)
  * section needs to be printed to the appropriate command.
  *
  * @param test The test being run.
- * @param tok The type of data this is (from tfscan.h).  If 0 then 
+ * @param tok The type of data this is (from tfscan.h).  If 0 then
  *            this is the EOF and this routine won't be called anymore.
  * @param ptr The data to write.  If tok==0 then ptr is undefined.
  * @param len The amount of data to write.  If tok==0 then len==0.
@@ -288,7 +288,7 @@ void test_command_copy(struct test *test, FILE *fp)
         oldline = test->testscanner.line;
         int tokno = scan_next_token(&test->testscanner);
         if(tokno < 0) {
-            test_abort(test, "Error %d pulling status tokens: %s\n", 
+            test_abort(test, "Error %d pulling status tokens: %s\n",
                     tokno, strerror(errno));
         } else if(tokno == 0) {
             // if the test file is totally empty.
@@ -376,7 +376,7 @@ const char *skip_section_name(const char *cp, int len)
  */
 
 int parse_section_args(const char *tok, int toklen, const char *file, int line,
-        int (*argproc)(int index, const char *buf, const char *end, 
+        int (*argproc)(int index, const char *buf, const char *end,
             const char *file, int line, void *refcon),
         void *refcon)
 {
@@ -471,7 +471,7 @@ int start_output_section(struct test *test, const char *tok,
 
     parse_section_args(tok, toklen,
             convert_testfile_name(test->testfile), test->testscanner.line,
-            start_output_section_argproc, 
+            start_output_section_argproc,
             (void*)&suppress_trailing_newline);
 
     if(val != match_unknown) {
@@ -492,7 +492,7 @@ int start_output_section(struct test *test, const char *tok,
 }
 
 
-/** 
+/**
  * If the actual test results were found to not end in a newline,
  * but the expected results were marked in the testfile as expecting
  * a newline, this function prints the warning.
@@ -667,7 +667,7 @@ void scan_sections(struct test *test, scanstate *scanner,
     if(scan_is_finished(scanner)) {
         return;
     }
-    
+
     do {
         int tokno = scan_next_token(scanner);
         if(tokno < 0) {
@@ -707,7 +707,7 @@ static void test_analyze_results(struct test *test, int *stdo, int *stde)
 {
     scanstate scanner;
     char scanbuf[BUFSIZ];
-    
+
     *stdo = *stde = -1;
 
     if(was_aborted(test->status)) {
@@ -765,46 +765,68 @@ void test_results(struct test *test)
     int stdo, stde; // true if there are differences.
 
     test_analyze_results(test, &stdo, &stde);
-    
+
     if(was_aborted(test->status)) {
         print_reason(test, "ABRT", "by");
         return;
     }
 
     if(was_disabled(test->status)) {
-        print_reason(test, "dis ", "by");
+        if(verbose) {
+            print_reason(test, "dis ", "by");
+        }
         return;
     }
 
     if(test->status == test_has_failed) {
-        print_reason(test, "FAIL", "by");
+        if(verbose) {
+            print_reason(test, "FAIL", "by");
+        } else {
+            putchar('F');
+            fflush(stdout);
+        }
         return;
     }
 
     if(!was_started(test->status)) {
-        print_reason(test, "ERR ", "error in");
+        if(verbose) {
+            print_reason(test, "ERR ", "error in");
+        } else {
+            putchar('E');
+            fflush(stdout);
+        }
         return;
     }
 
     if(!stdo && !stde && !test->exitsignal) {
-        printf("ok   %s \n", convert_testfile_name(test->testfile));
-    } else {
-        printf("FAIL %-25s ", convert_testfile_name(test->testfile));
-        if(test->exitsignal) {
-            printf("terminated by signal %d%s", test->exitsignal,
-                    (test->exitcored ? " with core" : ""));
+        if(verbose) {
+            printf("ok   %s \n", convert_testfile_name(test->testfile));
         } else {
-            printf("%c%c  ",
-                    (stdo ? 'O' : '.'),
-                    (stde ? 'E' : '.'));
-            if(stdo || stde) {
-                if(stdo) printf("stdout ");
-                if(stdo && stde) printf("and ");
-                if(stde) printf("stderr ");
-                printf("differed");
-            }
+            putchar('.');
+            fflush(stdout);
         }
-        printf("\n");
+    } else {
+        if(verbose) {
+            printf("FAIL %-25s ", convert_testfile_name(test->testfile));
+            if(test->exitsignal) {
+                printf("terminated by signal %d%s", test->exitsignal,
+                        (test->exitcored ? " with core" : ""));
+            } else {
+                printf("%c%c  ",
+                        (stdo ? 'O' : '.'),
+                        (stde ? 'E' : '.'));
+                if(stdo || stde) {
+                    if(stdo) printf("stdout ");
+                    if(stdo && stde) printf("and ");
+                    if(stde) printf("stderr ");
+                    printf("differed");
+                }
+            }
+            printf("\n");
+        } else {
+            putchar('F');
+            fflush(stdout);
+        }
     }
 
     return;
@@ -1020,7 +1042,7 @@ void print_test_summary(struct timeval *start, struct timeval *stop)
         printf(", in ");
         print_rusage(start, stop);
     }
-    
+
     printf(".\n");
 }
 

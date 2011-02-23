@@ -19,7 +19,7 @@ cat > t2.test <<-EOs
 EOs
 
 # need to fix filenames on both stdout and stderr
-$tmtest -q 2> >(sed "s/${PWD//\//\\/}/\/tmp\/DIR/g" >&2) | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+$tmtest -v -q 2> >(sed "s/${PWD//\//\\/}/\/tmp\/DIR/g" >&2) | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 
 rm tmtest.conf t1.test t2.test
 sleep 0.2   # arg!!

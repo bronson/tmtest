@@ -12,7 +12,7 @@ cat > dir/-.test <<-EOL
 	Howdy pardner.
 EOL
 
-$tmtest -q dir/-.test | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
+$tmtest -v -q dir/-.test | sed "s/${PWD//\//\\/}/\/tmp\/DIR/g"
 
 rm -rf dir
 

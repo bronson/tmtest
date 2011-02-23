@@ -4,7 +4,7 @@
 # no stderr, and an exit code of 0.
 
 
-$tmtest -q - <<-EOL
+$tmtest -v -q - <<-EOL
 EOL
 
 

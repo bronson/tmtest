@@ -5,7 +5,7 @@
 
 
 
-$tmtest -q - <<-EOL
+$tmtest -v -q - <<-EOL
 	DISABLED
 	echo "right output"
 	STDOUT:

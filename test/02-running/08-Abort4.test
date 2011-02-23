@@ -5,7 +5,7 @@
 # only whitespace as a reason.
 
 
-$tmtest -q - <<-EOL
+$tmtest -v -q - <<-EOL
 	ABORT "   "
 	echo "right output"
 	STDOUT
