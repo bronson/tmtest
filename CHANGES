@@ -6,6 +6,7 @@
 - We don't install a config file anymore on make install, just the binary.
 - Removed tmlib.sh and put how to solve its few remaining tasks in the faq.
 - Removed unit tests. They were heavy and didn't offer much addl coverage.
+- Removed binary transparency tests, binary in testfiles is not maintainable.
 
 0.95 was never released, it would have been 2008 or 2009
 - Add a path element to the diff files so so need to specify -p0 when patching.
