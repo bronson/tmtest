@@ -1,5 +1,8 @@
 0.96:
+- Theres a crasher every time longjmp is called.
+  Write a test somehow to ensure that longjmp works.
 - Print failures and errors after the test is finished running.
+- Try to clean up and re enable the newline tests
 
 0.97:
 - Force the STDERR section to always come before STDOUT.
@@ -11,6 +14,15 @@
 - Don't send entire testfile to bash, strip the STDOUT and STDERR ourselves.
 - Get rid of MYFILE variables?
 - Get rid of template.sh?
+- This friggin buserrors:
+    head -c -1 <<-EOL | tmtest -d -v -q -
+        echo -n Howdy
+        STDOUT:
+        Howdy
+    EOL
+  It's because we never set diff_fd but we start with a zeroed test struct so
+  we just end up using diff_fd=0.  stdin.  Shocking that it works at all.
+  This should just go away once we're membuffering tests and reading to exhaustion.
 
 0.98
 - Munge diff file to have a/file and b/file so there's no need to pass -p0
